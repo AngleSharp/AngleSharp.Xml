@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <Description>Adds a powerful XML and DTD parser to AngleSharp.</Description>
+    <Product>AngleSharp.Xml</Product>
+    <Version>0.11.0</Version>
+  </PropertyGroup>
+</Project>
