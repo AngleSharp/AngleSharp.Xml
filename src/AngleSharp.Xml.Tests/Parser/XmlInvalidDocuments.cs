@@ -1,10 +1,8 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using AngleSharp;
-
-namespace UnitTests
+namespace AngleSharp.Xml.Tests.Parser
 {
-    [TestClass]
+    using NUnit.Framework;
+
+    [TestFixture]
     public class XmlInvalidDocuments
     {
         /// <summary>
@@ -12,15 +10,15 @@ namespace UnitTests
         /// Here the section(s) 3 apply. This test is taken from the collection Sun
         /// Microsystems XML Tests.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidEl01()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE root [
+            var document = (@"<!DOCTYPE root [
 <!ELEMENT root ANY>
 ]>
 <root> <undeclared/> </root>
 
-");
+").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -30,14 +28,14 @@ namespace UnitTests
         /// model. Here the section(s) 3 apply. This test is taken from the collection Sun
         /// Microsystems XML Tests.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidEl02()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE root [
+            var document = (@"<!DOCTYPE root [
 <!ELEMENT root EMPTY>
 ]>
 <root><root/></root>
-");
+").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -47,15 +45,15 @@ namespace UnitTests
         /// by a mixed content model. Here the section(s) 3 apply. This test is taken from the
         /// collection Sun Microsystems XML Tests.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidEl03()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE root [
+            var document = (@"<!DOCTYPE root [
 <!ELEMENT root (#PCDATA|root)*>
 <!ELEMENT exception (#PCDATA)>
 ]>
 <root>this is ok <exception>this isn't</exception> </root>
-");
+").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -65,16 +63,16 @@ namespace UnitTests
         /// entities inside an EMPTY content model. Here the section(s) 3 apply. This test
         /// is taken from the collection Sun Microsystems XML Tests.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidEl06()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE root [
+            var document = (@"<!DOCTYPE root [
 <!ELEMENT root EMPTY>
     <!-- in case parsers special-case builtin entities incorrectly -->
 ]>
 <root>&amp;</root>
 
-");
+").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -85,10 +83,10 @@ namespace UnitTests
         /// with this input file. Here the section(s) 3 apply. This test is taken from the
         /// collection IBM XML Conformance Test Suite - Production 39.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmInvalidP39Ibm39i01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = (@"<?xml version=""1.0""?>
 <!DOCTYPE root [
   <!ELEMENT root (a,b)>
   <!ELEMENT a EMPTY>
@@ -102,7 +100,7 @@ namespace UnitTests
    content of b element
 </b></root>
 
-");
+").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -113,10 +111,10 @@ namespace UnitTests
         /// associated with this input file. Here the section(s) 3 apply. This test is taken
         /// from the collection IBM XML Conformance Test Suite - Production 39.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmInvalidP39Ibm39i02()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = (@"<?xml version=""1.0""?>
 <!DOCTYPE root [
   <!ELEMENT root (a,b)>
   <!ELEMENT a EMPTY>
@@ -132,7 +130,7 @@ namespace UnitTests
    content of b element
 </b></root>
 
-");
+").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -142,10 +140,10 @@ namespace UnitTests
         /// content of Mixed type. There is an output test associated with this input file. Here
         /// the section(s) 3 apply. This test is taken from the collection IBM XML Conformance Test Suite - Production 39.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmInvalidP39Ibm39i03()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = (@"<?xml version=""1.0""?>
 <!DOCTYPE root [
   <!ELEMENT root (a,b)>
   <!ELEMENT a EMPTY>
@@ -160,7 +158,7 @@ namespace UnitTests
    could not have 'a' as 'b's content
 </b></root>
 
-");
+").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -171,10 +169,10 @@ namespace UnitTests
         /// file. Here the section(s) 3 apply. This test is taken from the collection IBM
         /// XML Conformance Test Suite - Production 39.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmInvalidP39Ibm39i04()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = (@"<?xml version=""1.0""?>
 <!DOCTYPE root [
   <!ELEMENT root (a,b)>
   <!ELEMENT a EMPTY>
@@ -191,7 +189,7 @@ namespace UnitTests
    </c>
 </b></root>
 
-");
+").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -202,10 +200,10 @@ namespace UnitTests
         /// file. Here the section(s) 3.1 apply. This test is taken from the collection
         /// IBM XML Conformance Test Suite - Production 41.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmIbmInvalidP41Ibm41i01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = (@"<?xml version=""1.0""?>
 <!DOCTYPE root [
   <!ELEMENT root (#PCDATA|b)* >
   <!ELEMENT b (#PCDATA) >
@@ -216,7 +214,7 @@ namespace UnitTests
   <b attr1=""value1"" attr2=""def"" attr3=""fixed"">attr1 not declared</b>
 </root>
 <!--* testing VC:Attribute Value Type  *-->
-");
+").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -228,10 +226,10 @@ namespace UnitTests
         /// apply. This test is taken from the collection IBM XML Conformance Test
         /// Suite - Production 41.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmInvalidP41Ibm41i02()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = (@"<?xml version=""1.0""?>
 <!DOCTYPE root [
   <!ELEMENT root (PCDATA|b)* >
   <!ELEMENT b (#PCDATA) >
@@ -243,7 +241,7 @@ namespace UnitTests
   <b attr1=""value1"" attr2=""abc"" attr3=""shoudbefixed"">attr3 value not fixed</b>
 </root>
 <!--* testing P41 VC: AtributeValueType*-->
-");
+").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -252,10 +250,10 @@ namespace UnitTests
         /// Elements content can be empty. Here the section(s) 3.1 [40] apply.
         /// This test is taken from the collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidOP40pass1()
         {
-            var document = DocumentBuilder.Xml(@"<doc></doc>");
+            var document = (@"<doc></doc>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -264,12 +262,12 @@ namespace UnitTests
         /// Whitespace is valid within a Start-tag. Here the section(s) 3.1 [40] apply.
         /// This test is taken from the collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidOP40pass2()
         {
-            var document = DocumentBuilder.Xml(@"<doc
+            var document = (@"<doc
  
-></doc>");
+></doc>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -279,12 +277,12 @@ namespace UnitTests
         /// the section(s) 3.1 [40] apply. This test is taken from the collection
         /// OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidOP40pass4()
         {
-            var document = DocumentBuilder.Xml(@"<doc att=""val"" att2=""val2""
+            var document = (@"<doc att=""val"" att2=""val2""
 att3=""val3""
-></doc>");
+></doc>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -293,10 +291,10 @@ att3=""val3""
         /// Attributes are valid within a Start-tag. Here the section(s) 3.1 [40] [41]
         /// apply. This test is taken from the collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidOP40pass3()
         {
-            var document = DocumentBuilder.Xml(@"<doc att=""val""></doc>");
+            var document = (@"<doc att=""val""></doc>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -305,10 +303,10 @@ att3=""val3""
         /// Attributes are valid within a Start-tag. Here the section(s) 3.1 [41] apply.
         /// This test is taken from the collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidOP41pass1()
         {
-            var document = DocumentBuilder.Xml(@"<doc att=""val""></doc>");
+            var document = (@"<doc att=""val""></doc>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -318,12 +316,12 @@ att3=""val3""
         /// 3.1 [41] apply. This test is taken from the collection OASIS/NIST TESTS,
         /// 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidOP41pass2()
         {
-            var document = DocumentBuilder.Xml(@"<doc att
+            var document = (@"<doc att
  =
-  ""val""></doc>");
+  ""val""></doc>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -332,10 +330,10 @@ att3=""val3""
         /// Test shows proper syntax for an End-tag. Here the section(s) 3.1 [42] apply.
         /// This test is taken from the collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidOP42pass1()
         {
-            var document = DocumentBuilder.Xml(@"<doc></doc>");
+            var document = (@"<doc></doc>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -344,11 +342,11 @@ att3=""val3""
         /// Whitespace is valid after name in End-tag. Here the section(s) 3.1 [42] apply.
         /// This test is taken from the collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidOP42pass2()
         {
-            var document = DocumentBuilder.Xml(@"<doc></doc  
->");
+            var document = (@"<doc></doc  
+>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -357,10 +355,10 @@ att3=""val3""
         /// Valid display of an Empty Element Tag. Here the section(s) 3.1 [44] apply.
         /// This test is taken from the collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidOP44pass1()
         {
-            var document = DocumentBuilder.Xml(@"<doc/>");
+            var document = (@"<doc/>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -369,10 +367,10 @@ att3=""val3""
         /// Empty Element Tags can contain an Attribute. Here the section(s) 3.1 [44]
         /// apply. This test is taken from the collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidOP44pass2()
         {
-            var document = DocumentBuilder.Xml(@"<doc att=""val""/>");
+            var document = (@"<doc att=""val""/>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -382,13 +380,13 @@ att3=""val3""
         /// the attribute value. Here the section(s) 3.1 [44] apply. This test
         /// is taken from the collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidOP44pass3()
         {
-            var document = DocumentBuilder.Xml(@"<doc att=""val""
+            var document = (@"<doc att=""val""
 
 
-/>");
+/>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -398,12 +396,12 @@ att3=""val3""
         /// section(s) 3.1 [44] apply. This test is taken from the collection
         /// OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidOP44pass4()
         {
-            var document = DocumentBuilder.Xml(@"<doc
+            var document = (@"<doc
   
-/>");
+/>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -413,11 +411,11 @@ att3=""val3""
         /// Here the section(s) 3.1 [44] apply. This test is taken from the collection
         /// OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidOP44pass5()
         {
-            var document = DocumentBuilder.Xml(@"<doc att=""val""
-att2=""val2"" att3=""val3""/>");
+            var document = (@"<doc att=""val""
+att2=""val2"" att3=""val3""/>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -427,17 +425,17 @@ att2=""val2"" att3=""val3""/>");
         /// Here the section(s) 3.1 2.10 apply. This test is taken from the collection
         /// Sun Microsystems XML Tests.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidInvRequired01()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE root [
+            var document = (@"<!DOCTYPE root [
     <!ELEMENT root EMPTY>
 ]>
 
 <root xml:space='preserve'/>
 
     <!-- all attributes must be declared -->
-");
+").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -446,10 +444,10 @@ att2=""val2"" att3=""val3""/>");
         /// PE name immediately followed by ";" Here the section(s) 4.1 [69] apply.
         /// This test is taken from the collection Sun Microsystems XML Tests.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidDtd03()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE violation [
+            var document = (@"<!DOCTYPE violation [
 <!ELEMENT violation (a,a,a,b)>
 <!ELEMENT a EMPTY>
 <!ELEMENT b EMPTY>
@@ -463,7 +461,7 @@ att2=""val2"" att3=""val3""/>");
     <a/>
     <b/>
 </violation>
-");
+").ToXmlDocument();
 
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
@@ -474,10 +472,10 @@ att2=""val2"" att3=""val3""/>");
         /// Here the section(s) 3.1 2.12 apply. This test is taken from the collection
         /// Sun Microsystems XML Tests.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidInvRequired02()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE root [
+            var document = (@"<!DOCTYPE root [
     <!ELEMENT root EMPTY>
 ]>
 
@@ -485,7 +483,7 @@ att2=""val2"" att3=""val3""/>");
 
     <!-- all attributes must be declared -->
 
-");
+").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -495,16 +493,16 @@ att2=""val2"" att3=""val3""/>");
         /// 3.2 apply. This test is taken from the collection Sun Microsystems
         /// XML Tests.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlInvalidEl04()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE root [
+            var document = (@"<!DOCTYPE root [
 <!ELEMENT root ANY>
 <!ELEMENT exception (#PCDATA)>
 <!ELEMENT exception (#PCDATA)>
 ]>
 <root/>
-");
+").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }
@@ -515,10 +513,10 @@ att2=""val2"" att3=""val3""/>");
         /// this input file. Here the section(s) 3.2 apply. This test is taken from the
         /// collection IBM XML Conformance Test Suite - Production 45.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmInvalidP45Ibm45i01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = (@"<?xml version=""1.0""?>
 <!DOCTYPE root [
   <!ELEMENT root (#PCDATA|b)* >
   <!ELEMENT b EMPTY>
@@ -537,7 +535,7 @@ att2=""val2"" att3=""val3""/>");
   <b attr1=""value1"" attr2=""value2"" attr3 = ""value3""/>
 </root>
 <!--* a invalid test: testing P45 VC unique element type decl  *-->
-");
+").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsFalse(document.IsValid);
         }

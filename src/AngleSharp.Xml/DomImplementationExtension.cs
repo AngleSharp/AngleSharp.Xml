@@ -14,6 +14,7 @@ namespace AngleSharp.Xml
         /// <summary>
         /// Creates and returns an XMLDocument.
         /// </summary>
+        /// <param name="impl">The implementation instance to extend.</param>
         /// <param name="namespaceUri">
         /// The namespace URI of the document to be created, or null if the
         /// document doesn't belong to one.
@@ -30,6 +31,7 @@ namespace AngleSharp.Xml
         public static IXmlDocument CreateDocument(this IImplementation impl, String namespaceUri = null, String qualifiedName = null, IDocumentType doctype = null)
         {
             var document = new XmlDocument();
+            var ownerRef = impl.CreateDocumentType("xml", String.Empty, String.Empty);
 
             if (doctype != null)
             {
@@ -46,8 +48,7 @@ namespace AngleSharp.Xml
                 }
             }
 
-
-            document.BaseUrl = _owner.BaseUrl;
+            document.BaseUrl = ownerRef.BaseUrl;
             return document;
         }
     }

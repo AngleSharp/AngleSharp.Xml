@@ -1,15 +1,14 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using AngleSharp;
-using AngleSharp.DOM;
-
-namespace UnitTests.Xml
+namespace AngleSharp.Xml.Tests.Parser
 {
+    using AngleSharp.Dom;
+    using NUnit.Framework;
+    using System;
+
     /// <summary>
     /// (Conformance) Tests taken from
     /// http://www.w3.org/XML/Test/xmlconf-20031210.html
     /// </summary>
-    [TestClass]
+    [TestFixture]
     public class XmlValidDocuments
     {
         /// <summary>
@@ -18,10 +17,10 @@ namespace UnitTests.Xml
         /// apply. This test is taken from the collection IBM XML Conformance Test Suite -
         /// Production 1.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP01Ibm01v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes"" ?>
+            var document = @"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes"" ?>
 <!-- Above is XMLDecl -->
 <!DOCTYPE animal [
 <!ELEMENT animal (cat|tiger|leopard)+>
@@ -45,7 +44,7 @@ namespace UnitTests.Xml
 </animal>
 <!-- Above is element animal -->
 
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -57,11 +56,11 @@ namespace UnitTests.Xml
         /// test associated with this input file. Here the section(s) 2.10 apply. This
         /// test is taken from the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa084()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [<!ELEMENT doc (#PCDATA)>]><doc></doc>
-", new DocumentOptions(validating: true));
+            var document = @"<!DOCTYPE doc [<!ELEMENT doc (#PCDATA)>]><doc></doc>
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -73,17 +72,17 @@ namespace UnitTests.Xml
         /// with this input file. Here the section(s) 2.10 apply. This test is taken 
         /// from the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa093()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc>
 
 
 </doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -95,15 +94,15 @@ namespace UnitTests.Xml
         /// apply. This test is taken from the collection James Clark XMLTEST cases, 
         /// 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa116()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc><![CDATA[
 ]]></doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -115,15 +114,15 @@ namespace UnitTests.Xml
         /// this input file. Here the section(s) 2.11 apply. This test is taken from 
         /// the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidExtSa001()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY e SYSTEM ""001.ent"">
 ]>
 <doc>&e;</doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -135,15 +134,15 @@ namespace UnitTests.Xml
         /// file. Here the section(s) 2.11 apply. This test is taken from the collection 
         /// James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidExtSa002()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY e SYSTEM ""002.ent"">
 ]>
 <doc>&e;</doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -155,15 +154,15 @@ namespace UnitTests.Xml
         /// file. Here the section(s) 2.11 apply. This test is taken from the 
         /// collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidExtSa004()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY e SYSTEM ""004.ent"">
 ]>
 <doc>&e;</doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -175,15 +174,15 @@ namespace UnitTests.Xml
         /// file. Here the section(s) 2.11 apply. This test is taken from the 
         /// collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidExtSa009()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY e SYSTEM ""009.ent"">
 ]>
 <doc>&e;</doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -196,17 +195,17 @@ namespace UnitTests.Xml
         /// This test is taken from the collection James Clark XMLTEST cases, 
         /// 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa108()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY e ""
 "">
 <!ATTLIST doc a CDATA #IMPLIED>
 ]>
 <doc a=""x&e;y""></doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -220,15 +219,15 @@ namespace UnitTests.Xml
         /// with this input file. Here the section(s) 2.11, 4.5 apply. This test 
         /// is taken from the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa068()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY e ""&#13;"">
 ]>
 <doc>&e;</doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -243,16 +242,16 @@ namespace UnitTests.Xml
         /// apply. This test is taken from the collection James Clark XMLTEST cases, 
         /// 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidExtSa006()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA|e)*>
 <!ELEMENT e EMPTY>
 <!ENTITY e SYSTEM ""006.ent"">
 ]>
 <doc>&e;</doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -266,15 +265,15 @@ namespace UnitTests.Xml
         /// apply. This test is taken from the collection James Clark XMLTEST cases, 
         /// 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidExtSa011()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY e PUBLIC ""a not very interesting file"" ""011.ent"">
 ]>
 <doc>&e;</doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -285,15 +284,15 @@ namespace UnitTests.Xml
         /// with this input file. Here the section(s) 2.12 apply. This test is taken from
         /// the collection IBM XML Conformance Test Suite - Production 33.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP33Ibm33v01()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE book [
+            var document = @"<!DOCTYPE book [
    <!ELEMENT book ANY>
    <!ATTLIST book xml:lang CDATA #REQUIRED>
 ]>
 <book xml:lang=""en-US"">It is written in English</book>
-<!-- Tests LanguageID with Langcode - Subcode -->", new DocumentOptions(validating: true));
+<!-- Tests LanguageID with Langcode - Subcode -->".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -304,15 +303,15 @@ namespace UnitTests.Xml
         /// input file. Here the section(s) 2.12 apply. This test is taken from the
         /// collection IBM XML Conformance Test Suite - Production 34.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP34Ibm34v01()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE book [
+            var document = @"<!DOCTYPE book [
    <!ELEMENT book ANY>
    <!ATTLIST book xml:lang CDATA #REQUIRED>
 ]>
 <book xml:lang=""en-US"">It is written in English</book>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -323,15 +322,15 @@ namespace UnitTests.Xml
         /// Here the section(s) 2.12 apply. This test is taken from the collection IBM
         /// XML Conformance Test Suite - Production 35.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP35Ibm35v01()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE book [
+            var document = @"<!DOCTYPE book [
    <!ELEMENT book ANY>
    <!ATTLIST book xml:lang CDATA #REQUIRED>
 ]>
 <book xml:lang=""en"">It is written in English</book>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -342,15 +341,15 @@ namespace UnitTests.Xml
         /// Here the section(s) 2.12 apply. This test is taken from the collection
         /// IBM XML Conformance Test Suite - Production 36.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP36Ibm36v01()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE book [
+            var document = @"<!DOCTYPE book [
    <!ELEMENT book ANY>
    <!ATTLIST book xml:lang CDATA #REQUIRED>
 ]>
 <book xml:lang=""i-BS-ABCD"">It is written in English</book>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -361,15 +360,15 @@ namespace UnitTests.Xml
         /// Here the section(s) 2.12 apply. This test is taken from the collection
         /// IBM XML Conformance Test Suite - Production 37.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP37Ibm37v01()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE book [
+            var document = @"<!DOCTYPE book [
    <!ELEMENT book ANY>
    <!ATTLIST book xml:lang CDATA #REQUIRED>
 ]>
 <book xml:lang=""x-uk-eng"">It is written in English</book>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -380,15 +379,15 @@ namespace UnitTests.Xml
         /// the section(s) 2.12 apply. This test is taken from the collection IBM XML
         /// Conformance Test Suite - Production 38.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP38Ibm38v01()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE book [
+            var document = @"<!DOCTYPE book [
    <!ELEMENT book ANY>
    <!ATTLIST book xml:lang CDATA #REQUIRED>
 ]>
 <book xml:lang=""en-USa"">It is written in English</book>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -399,15 +398,15 @@ namespace UnitTests.Xml
         /// this input file. Here the section(s) 2.12 [35] apply. This test is taken from
         /// the collection Sun Microsystems XML Tests.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidVLang01()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE root [
+            var document = @"<!DOCTYPE root [
 <!ELEMENT root EMPTY>
 <!ATTLIST root xml:lang CDATA #IMPLIED>
 ]>
 <root xml:lang=""en""/>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -418,16 +417,16 @@ namespace UnitTests.Xml
         /// with this input file. Here the section(s) 2.12 [35] apply. This test is taken
         /// from the collection Sun Microsystems XML Tests.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidVLang02()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE root [
+            var document = @"<!DOCTYPE root [
 <!ELEMENT root EMPTY>
 <!ATTLIST root xml:lang CDATA #IMPLIED>
 ]>
 <root xml:lang=""en-IN""/>
 
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -438,16 +437,16 @@ namespace UnitTests.Xml
         /// this input file. Here the section(s) 2.12 [35] apply. This test is taken from
         /// the collection Sun Microsystems XML Tests.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidVLang05()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE root [
+            var document = @"<!DOCTYPE root [
 <!ELEMENT root EMPTY>
 <!ATTLIST root xml:lang CDATA #IMPLIED>
 ]>
 <root xml:lang=""DE""/>
 
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -458,16 +457,16 @@ namespace UnitTests.Xml
         /// with this input file. Here the section(s) 2.12 [36] apply. This test is taken
         /// from the collection Sun Microsystems XML Tests.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidVLang03()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE root [
+            var document = @"<!DOCTYPE root [
 <!ELEMENT root EMPTY>
 <!ATTLIST root xml:lang CDATA #IMPLIED>
 ]>
 <root xml:lang=""i-klingon-whorf""/>
 
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -478,16 +477,16 @@ namespace UnitTests.Xml
         /// with this input file. Here the section(s) 2.12 [37] apply. This test is taken
         /// from the collection Sun Microsystems XML Tests.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidVLang04()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE root [
+            var document = @"<!DOCTYPE root [
 <!ELEMENT root EMPTY>
 <!ATTLIST root xml:lang CDATA #IMPLIED>
 ]>
 <root xml:lang=""x-dialect-valleygirl""/>
 
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -498,16 +497,16 @@ namespace UnitTests.Xml
         /// Here the section(s) 2.12 [37] apply. This test is taken from the collection Sun
         /// Microsystems XML Tests.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidVLang06()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE root [
+            var document = @"<!DOCTYPE root [
 <!ELEMENT root EMPTY>
 <!ATTLIST root xml:lang CDATA #IMPLIED>
 ]>
 <root xml:lang=""X-Java""/>
 
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -518,10 +517,10 @@ namespace UnitTests.Xml
         /// plus #x20 #x9 #xD #xA Here the section(s) 2.2 apply. This test is taken from the
         /// collection IBM XML Conformance Test Suite - Production 2.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP02Ibm02v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0"" encoding=""UTF-8"" ?>
+            var document = @"<?xml version=""1.0"" encoding=""UTF-8"" ?>
 <!DOCTYPE book [
 <!ELEMENT book ANY>
 <!-- This test case covers     legal character ranges plus
@@ -531,7 +530,7 @@ _0D-
 _20- _D7FF-퟿_6c0f-氏_E000-_FFFD-�_effe-_010000-𐀀_10FFFF-􏿿_08ffff-򏿿 This is a PI target ?>
 ]>
 <book/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -541,10 +540,10 @@ _20- _D7FF-퟿_6c0f-氏_E000-_FFFD-�_effe-_010000-𐀀_10FFFF-􏿿_08fff
         /// various Misc items where they can occur Here the section(s) 2.2 [1] apply.
         /// This test is taken from the collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidOP01pass2()
         {
-            var document = DocumentBuilder.Xml(@"<?PI before document element?>
+            var document = @"<?PI before document element?>
 <!-- comment after document element-->
 <?PI before document element?>
 <!-- comment after document element-->
@@ -567,7 +566,7 @@ _20- _D7FF-퟿_6c0f-氏_E000-_FFFD-�_effe-_010000-𐀀_10FFFF-􏿿_08fff
 <?PI after document element?>
 <!-- comment after document element-->
 <?PI after document element?>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -579,14 +578,14 @@ _20- _D7FF-퟿_6c0f-氏_E000-_FFFD-�_effe-_010000-𐀀_10FFFF-􏿿_08fff
         /// Here the section(s) 2.2 [2] apply. This test is taken from the collection
         /// James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa049()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc>£</doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -598,14 +597,14 @@ _20- _D7FF-퟿_6c0f-氏_E000-_FFFD-�_effe-_010000-𐀀_10FFFF-􏿿_08fff
         /// section(s) 2.2 [2] apply. This test is taken from the collection James Clark
         /// XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa050()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc>เจมส์</doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -617,14 +616,14 @@ _20- _D7FF-퟿_6c0f-氏_E000-_FFFD-�_effe-_010000-𐀀_10FFFF-􏿿_08fff
         /// file. Here the section(s) 2.2 [2] apply. This test is taken from the collection
         /// James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa051()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE เจมส์ [
+            var document = @"<!DOCTYPE เจมส์ [
 <!ELEMENT เจมส์  (#PCDATA)>
 ]>
 <เจมส์></เจมส์>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -637,14 +636,14 @@ _20- _D7FF-퟿_6c0f-氏_E000-_FFFD-�_effe-_010000-𐀀_10FFFF-􏿿_08fff
         /// input file. Here the section(s) 2.2 [2] apply. This test is taken from the
         /// collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa052()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc>𐀀􏿽</doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -655,10 +654,10 @@ _20- _D7FF-퟿_6c0f-氏_E000-_FFFD-�_effe-_010000-𐀀_10FFFF-􏿿_08fff
         /// section(s) 2.3 apply. This test is taken from the collection IBM XML
         /// Conformance Test Suite - Production 3.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP03Ibm03v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0"" encoding=""UTF-8"" ?>
+            var document = @"<?xml version=""1.0"" encoding=""UTF-8"" ?>
 
 <!DOCTYPE book [
 
@@ -677,7 +676,7 @@ _0A-
 
 <book/>
 
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -688,10 +687,10 @@ _0A-
         /// this input file. Here the section(s) 2.3 apply. This test is taken
         /// from the collection IBM XML Conformance Test Suite - Production 9.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP09Ibm09v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)> 
  	<!ENTITY FullName """">
@@ -711,7 +710,7 @@ _0A-
 
 
 
- ", new DocumentOptions(validating : true));
+ ".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -722,16 +721,16 @@ _0A-
         /// this input file. Here the section(s) 2.3 apply. This test is taken
         /// from the collection IBM XML Conformance Test Suite - Production 9.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP09Ibm09v02()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)> 
  	<!ENTITY FullName ""SnowMan"">
 ]>
 
-<student>My Name is &FullName;. </student>", new DocumentOptions(validating : true));
+<student>My Name is &FullName;. </student>".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -742,10 +741,10 @@ _0A-
         /// with this input file. Here the section(s) 2.3 apply. This test is taken from the
         /// collection IBM XML Conformance Test Suite - Production 9.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP09Ibm09v04()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?> 
+            var document = @"<?xml version=""1.0""?> 
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)>
 <!-- testing entity value with Reference -->
@@ -753,7 +752,7 @@ _0A-
  	<!ENTITY FullName ""&RealName;"">
 ]>
 
-<student>My Name is &FullName;. </student>", new DocumentOptions(validating : true));
+<student>My Name is &FullName;. </student>".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -765,10 +764,10 @@ _0A-
         /// 2.3 apply. This test is taken from the collection IBM XML Conformance
         /// Test Suite - Production 10.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP10Ibm10v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)>
 	<!ATTLIST student
@@ -787,7 +786,7 @@ _0A-
 
 
 
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -798,10 +797,10 @@ _0A-
         /// test associated with this input file. Here the section(s) 2.3 apply. This test
         /// is taken from the collection IBM XML Conformance Test Suite - Production 10.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP10Ibm10v02()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)>
 	<!ATTLIST student
@@ -815,7 +814,7 @@ _0A-
 <!-- testing AttValue with empty char inside single quote -->
 <student first='' last=''>My Name is Snow &mylast; Man. </student>
 
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -827,10 +826,10 @@ _0A-
         /// 2.3 apply. This test is taken from the collection IBM XML Conformance Test
         /// Suite - Production 10.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP10Ibm10v03()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)>
 	<!ATTLIST student
@@ -842,7 +841,7 @@ _0A-
 	<!ENTITY mylast ""Man'"">
 ]>
 <!-- testing AttValue string with a single quote inside -->
-<student first=""Snow'"" last=""Man"">My Name is &myfirst; &mylast;. </student>", new DocumentOptions(validating : true));
+<student first=""Snow'"" last=""Man"">My Name is &myfirst; &mylast;. </student>".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -854,10 +853,10 @@ _0A-
         /// 2.3 apply. This test is taken from the collection IBM XML Conformance Test
         /// Suite - Production 10.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP10Ibm10v04()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)>
 	<!ATTLIST student
@@ -871,7 +870,7 @@ _0A-
 <!-- testing AttValue string with a double quote inside -->
 <student first='Snow""' last='Man'>My Name is &myfirst; &mylast;. </student>
 
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
         }
@@ -881,10 +880,10 @@ _0A-
         /// is an output test associated with this input file. Here the section(s) 2.3 apply.
         /// This test is taken from the collection IBM XML Conformance Test Suite - Production 10.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP10Ibm10v05()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)>
 	<!ATTLIST student
@@ -898,7 +897,7 @@ _0A-
 <!-- testing AttValue with a reference in double quote -->
 <student first=""&myfirst;"" last=""mylast;"">My Name is &mylast;. </student>
 
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -910,10 +909,10 @@ _0A-
         /// This test is taken from the collection IBM XML Conformance Test Suite -
         /// Production 10.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP10Ibm10v06()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)>
 	<!ATTLIST student
@@ -927,7 +926,7 @@ _0A-
 <!-- testing AttValue with a reference in single quote -->
 <student first='&myfirst;' last='&mylast;'>My Name is &mylast;. </student>
 
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -939,10 +938,10 @@ _0A-
         /// This test is taken from the collection IBM XML Conformance Test Suite -
         /// Production 10.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP10Ibm10v07()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)>
 	<!ATTLIST student
@@ -955,7 +954,7 @@ _0A-
 ]>
 <!-- testing AttValue with references combination in double quotes -->
 <student first=""Full Name &myfirst; &#x31; and &mylast; &mylast; &#x63;"" last=""&mylast;"" >My first Name is &myfirst; and my last name is &mylast;. </student>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -966,10 +965,10 @@ _0A-
         /// this input file. Here the section(s) 2.3 apply. This test is taken from the collection
         /// IBM XML Conformance Test Suite - Production 11.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP11Ibm11v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
    <!ELEMENT student (#PCDATA)>
    <!ENTITY unref SYSTEM """">
@@ -985,7 +984,7 @@ _0A-
 
 
 
- ", new DocumentOptions(validating : true));
+ ".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -996,10 +995,10 @@ _0A-
         /// an output test associated with this input file. Here the section(s) 2.3 apply. This
         /// test is taken from the collection IBM XML Conformance Test Suite - Production 10.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP10Ibm10v08()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)>
 	<!ATTLIST student
@@ -1013,7 +1012,7 @@ _0A-
 <!-- testing AttValue with references combination in single quote -->
 <student first='Full Name &myfirst; and &#x22;&mylast;&#x22; &mylast;' last='&mylast;'>My first Name is &myfirst; and my last name is &mylast;. </student>
 
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1024,10 +1023,10 @@ _0A-
         /// associated with this input file. Here the section(s) 2.3 apply. This test
         /// is taken from the collection IBM XML Conformance Test Suite - Production 11.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP11Ibm11v02()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
    <!ELEMENT student (#PCDATA)>
    <!ENTITY unref SYSTEM ''>
@@ -1035,7 +1034,7 @@ _0A-
 
 <!-- testing systemliteral with nothing between the single quotes -->
 <student>My Name is SnowMan. </student>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1049,15 +1048,15 @@ _0A-
         /// output test associated with this input file. Here the section(s) 2.3 [12] apply.
         /// This test is taken from the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa100()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ENTITY e PUBLIC "";!*#@$_%"" ""100.xml"">
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1066,10 +1065,10 @@ _0A-
         /// system literals may not contain URI fragments. Here the section(s) 2.3,
         /// 4.2.2 [11] apply. This test is taken from the collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidOP11pass1()
         {
-            var document = DocumentBuilder.Xml(@"<!--Inability to resolve a notation should not be reported as an error-->
+            var document = @"<!--Inability to resolve a notation should not be reported as an error-->
 <!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
@@ -1080,17 +1079,17 @@ _0A-
 <!NOTATION not4 SYSTEM ''>
 ]>
 <doc/>
-");
+".ToXmlDocument();
         }
 
         /// <summary>
         /// valid public IDs. Here the section(s) 2.3 [12] apply. This test is taken from
         /// the collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidOP12pass1()
         {
-            var document = DocumentBuilder.Xml(@"<!--Inability to resolve a notation should not be reported as an error-->
+            var document = @"<!--Inability to resolve a notation should not be reported as an error-->
 <!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
@@ -1100,7 +1099,7 @@ cdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"">
 <!NOTATION not3 PUBLIC ""0123456789-()+,.'/:=?;!*#@$_%"">
 ]>
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1112,15 +1111,15 @@ cdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"">
         /// this input file. Here the section(s) 2.3 [4] apply. This test is taken from
         /// the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa012()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ATTLIST doc : CDATA #IMPLIED>
 ]>
 <doc :=""v1""></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1132,14 +1131,14 @@ cdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"">
         /// Here the section(s) 2.3 [5] apply. This test is taken from the collection
         /// James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa063()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE เจมส์ [
+            var document = @"<!DOCTYPE เจมส์ [
 <!ELEMENT เจมส์ (#PCDATA)>
 ]>
 <เจมส์></เจมส์>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1150,10 +1149,10 @@ cdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"">
         /// section(s) 2.3 [6] apply. This test is taken from the collection OASIS/NIST
         /// TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidOP06pass1()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc
+            var document = @"<!DOCTYPE doc
 [
 <!ELEMENT doc (a|refs)*>
 <!ELEMENT a EMPTY>
@@ -1167,7 +1166,7 @@ cdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"">
 <refs refs=""A1
 A2	A3""/>
 <refs refs=""A1""/>
-</doc>", new DocumentOptions(validating : true));
+</doc>".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1178,15 +1177,15 @@ A2	A3""/>
         /// section(s) 2.3 [7] apply. This test is taken from the collection OASIS/NIST
         /// TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidOP07pass1()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc
+            var document = @"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att (0|35a|A|-a|:a|a:|.|_a) #IMPLIED>
 ]>
-<doc/>", new DocumentOptions(validating : true));
+<doc/>".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1196,10 +1195,10 @@ A2	A3""/>
         /// various satisfaction of an NMTOKENS attribute value. Here the section(s) 2.3
         /// [8] apply. This test is taken from the collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidOP08pass1()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc
+            var document = @"<!DOCTYPE doc
 [
 <!ELEMENT doc (A*)>
 <!ELEMENT A EMPTY>
@@ -1210,7 +1209,7 @@ A2	A3""/>
 abc
 def
 ""/>
-</doc>", new DocumentOptions(validating : true));
+</doc>".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1222,10 +1221,10 @@ def
         /// section(s) 2.3 2.10 apply. This test is taken from the collection James Clark
         /// XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa092()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (a)*>
 <!ELEMENT a EMPTY>
 ]>
@@ -1235,7 +1234,7 @@ def
 
 
 </doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1247,15 +1246,15 @@ def
         /// apply. This test is taken from the collection James Clark XMLTEST cases,
         /// 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa109()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ATTLIST doc a CDATA #IMPLIED>
 ]>
 <doc a=""""></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
         }
@@ -1266,15 +1265,15 @@ def
         /// input file. Here the section(s) 2.3 3.1 [13] [40] apply. This test is taken
         /// from the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa013()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ATTLIST doc _.-0123456789 CDATA #IMPLIED>
 ]>
 <doc _.-0123456789=""v1""></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1286,15 +1285,15 @@ def
         /// section(s) 2.3 3.1 [13] [40] apply. This test is taken from the collection James
         /// Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa014()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ATTLIST doc abcdefghijklmnopqrstuvwxyz CDATA #IMPLIED>
 ]>
 <doc abcdefghijklmnopqrstuvwxyz=""v1""></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1306,15 +1305,15 @@ def
         /// section(s) 2.3 3.1 [13] [40] apply. This test is taken from the collection James
         /// Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa015()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ATTLIST doc ABCDEFGHIJKLMNOPQRSTUVWXYZ CDATA #IMPLIED>
 ]>
 <doc ABCDEFGHIJKLMNOPQRSTUVWXYZ=""v1""></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1326,14 +1325,14 @@ def
         /// apply. This test is taken from the collection James Clark XMLTEST cases,
         /// 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa009()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc>&#x20;</doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1344,10 +1343,10 @@ def
         /// input file. Here the section(s) 2.4 apply. This test is taken from the collection
         /// IBM XML Conformance Test Suite - Production 14.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP14Ibm14v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)>
 	<!ATTLIST student first CDATA #REQUIRED
@@ -1358,7 +1357,7 @@ def
 <student first=""Snow""></student>
 
 
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1369,10 +1368,10 @@ def
         /// with this input file. Here the section(s) 2.4 apply. This test is taken from the
         /// collection IBM XML Conformance Test Suite - Production 14.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP14Ibm14v02()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)>
 	<!ATTLIST student first CDATA #REQUIRED
@@ -1383,7 +1382,7 @@ def
 <student first=""Eric""> &#x0A; &#x09; &#x0D;&#x20;</student>
 
 
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1394,10 +1393,10 @@ def
         /// this input file. Here the section(s) 2.4 apply. This test is taken from the collection
         /// IBM XML Conformance Test Suite - Production 14.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP14Ibm14v03()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)>
 	<!ATTLIST student first CDATA #REQUIRED
@@ -1405,7 +1404,7 @@ def
 ]>
 
 <!-- testing chardata with a string of sample legal char except '<' and '&' nor does it contain sequence ""]]>"" -->
-<student first=""Snow"" last=""Man"">This is a test</student>", new DocumentOptions(validating : true));
+<student first=""Snow"" last=""Man"">This is a test</student>".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1416,10 +1415,10 @@ def
         /// within the start and end tag. Here the section(s) 2.4 2.5 2.6 2.7 [15] [16] [18]
         /// apply. This test is taken from the collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidOP43pass1()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE elem
+            var document = @"<!DOCTYPE elem
 [
 <!ELEMENT elem (#PCDATA|elem)*>
 <!ENTITY ent ""<elem>CharData</elem>"">
@@ -1446,7 +1445,7 @@ CharData
 <?pi?>&ent;&quot;
 CharData
 </elem>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1457,14 +1456,14 @@ CharData
         /// test associated with this input file. Here the section(s) 2.4 3.1 [14] [43] apply.
         /// This test is taken from the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa048()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc>]</doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1475,14 +1474,14 @@ CharData
         /// output test associated with this input file. Here the section(s) 2.4 3.1 [43] apply.
         /// This test is taken from the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa008()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc>&amp;&lt;&gt;&quot;&apos;</doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1493,14 +1492,14 @@ CharData
         /// is an output test associated with this input file. Here the section(s) 2.5 apply. This
         /// test is taken from the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa119()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc ANY>
 ]>
 <doc><!-- -á --></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1511,10 +1510,10 @@ CharData
         /// section(s) 2.5 apply. This test is taken from the collection IBM XML Conformance Test
         /// Suite - Production 15.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP15Ibm15v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)> 
 ]>
@@ -1523,7 +1522,7 @@ CharData
 <student>My Name is SnowMan. </student>
 
 
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1534,16 +1533,16 @@ CharData
         /// Here the section(s) 2.5 apply. This test is taken from the collection IBM XML Conformance
         /// Test Suite - Production 15.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP15Ibm15v02()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)> 
 ]>
 
 <!-- Student's name -->
-<student>My Name is SnowMan. </student>", new DocumentOptions(validating : true));
+<student>My Name is SnowMan. </student>".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1554,16 +1553,16 @@ CharData
         /// Here the section(s) 2.5 apply. This test is taken from the collection IBM XML Conformance
         /// Test Suite - Production 15.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP15Ibm15v03()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)> 
 ]>
 
 <!-- student file-1 -->
-<student>My Name is SnowMan. </student>", new DocumentOptions(validating : true));
+<student>My Name is SnowMan. </student>".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1574,17 +1573,17 @@ CharData
         /// input file. Here the section(s) 2.5 apply. This test is taken from the collection IBM XML
         /// Conformance Test Suite - Production 15.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP15Ibm15v04()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)> 
 ]>
 
 <!--student phone number 408-398 (387)-4758 -->
 <student>My Name is SnowMan. </student>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1595,17 +1594,17 @@ CharData
         /// input file. Here the section(s) 2.5 [15] apply. This test is taken from the collection Sun
         /// Microsystems XML Tests.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidDtd01()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE root [
+            var document = @"<!DOCTYPE root [
     <!ELEMENT y (#PCDATA|x|x)*>
     <!-- element types can't repeat in mixed content -->
     <!ELEMENT root ANY>
 ]>
 
 <root/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1616,14 +1615,14 @@ CharData
         /// with this input file. Here the section(s) 2.5 3.1 [15] [43] apply. This test is taken from
         /// the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa021()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc><!-- a comment --></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1635,14 +1634,14 @@ CharData
         /// output test associated with this input file. Here the section(s) 2.5 3.1 [15] [43] apply.
         /// This test is taken from the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa022()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc><!-- a comment ->--></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1653,10 +1652,10 @@ CharData
         /// associated with this input file. Here the section(s) 2.6 apply. This test is taken from
         /// the collection IBM XML Conformance Test Suite - Production 16.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP16Ibm16v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)> 
 ]>
@@ -1665,7 +1664,7 @@ CharData
 <student>My Name is SnowMan. </student>
 
 
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1676,16 +1675,16 @@ CharData
         /// associated with this input file. Here the section(s) 2.6 apply. This test is taken from
         /// the collection IBM XML Conformance Test Suite - Production 16.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP16Ibm16v02()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)> 
 ]>
 
 <?MyInstruct ?>
-<student>My Name is SnowMan. </student>", new DocumentOptions(validating : true));
+<student>My Name is SnowMan. </student>".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1696,16 +1695,16 @@ CharData
         /// angle. There is an output test associated with this input file. Here the section(s) 2.6
         /// apply. This test is taken from the collection IBM XML Conformance Test Suite - Production 16.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP16Ibm16v03()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)> 
 ]>
 
 <?MyInstruct AVOID ? BEFORE > IN PI ?>
-<student>My Name is SnowMan. </student>", new DocumentOptions(validating : true));
+<student>My Name is SnowMan. </student>".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1716,10 +1715,10 @@ CharData
         /// section(s) 2.6 apply. This test is taken from the collection IBM XML Conformance Test
         /// Suite - Production 17.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP17Ibm17v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)> 
 ]>
@@ -1728,7 +1727,7 @@ CharData
 <student>My Name is SnowMan. </student>
 
 
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1740,16 +1739,16 @@ CharData
         /// the section(s) 2.6 [15] apply. This test is taken from the collection James Clark
         /// XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa037()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc></doc>
 <!-- comment -->
 
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1761,16 +1760,16 @@ CharData
         /// Here the section(s) 2.6 [15] apply. This test is taken from the collection James
         /// Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa038()
         {
-            var document = DocumentBuilder.Xml(@"<!-- comment -->
+            var document = @"<!-- comment -->
 <!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc></doc>
 
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1781,15 +1780,15 @@ CharData
         /// with this input file. Here the section(s) 2.6 [16] apply. This test is taken from the
         /// collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa036()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc></doc>
 <?pi data?>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1801,15 +1800,15 @@ CharData
         /// section(s) 2.6 [16] apply. This test is taken from the collection James Clark XMLTEST
         /// cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa039()
         {
-            var document = DocumentBuilder.Xml(@"<?pi data?>
+            var document = @"<?pi data?>
 <!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1821,15 +1820,15 @@ CharData
         /// Here the section(s) 2.6 2.10 [16] apply. This test is taken from the collection James
         /// Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa055()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <?pi  data?>
 <doc></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1841,15 +1840,15 @@ CharData
         /// Here the section(s) 2.6 2.10 [16] apply. This test is taken from the collection James
         /// Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa098()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc><?pi x
 y?></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1860,14 +1859,14 @@ y?></doc>
         /// output test associated with this input file. Here the section(s) 2.6 3.1 [16] [43]
         /// apply. This test is taken from the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa016()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc><?pi?></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1879,14 +1878,14 @@ y?></doc>
         /// the section(s) 2.6 3.1 [16] [43] apply. This test is taken from the collection James
         /// Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa017()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc><?pi some data ? > <??></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1897,10 +1896,10 @@ y?></doc>
         /// input file. Here the section(s) 2.7 apply. This test is taken from the collection
         /// IBM XML Conformance Test Suite - Production 18.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP18Ibm18v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)> 
 ]>
@@ -1909,7 +1908,7 @@ y?></doc>
 
 <student>My Name is SnowMan. <![CDATA[This is <normal> text]]> </student>
 
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1921,10 +1920,10 @@ y?></doc>
         /// 2.7 apply. This test is taken from the collection IBM XML Conformance Test Suite -
         /// Production 19.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP19Ibm19v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)> 
 ]>
@@ -1933,7 +1932,7 @@ y?></doc>
 <student>My Name is SnowMan. <![CDATA[This is a test]]> </student>
 
 
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1945,10 +1944,10 @@ y?></doc>
         /// Here the section(s) 2.7 apply. This test is taken from the collection IBM XML Conformance
         /// Test Suite - Production 20.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP20Ibm20v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)> 
 ]>
@@ -1958,7 +1957,7 @@ y?></doc>
 <student>My Name is SnowMan. <![CDATA[]]></student>
 
 
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1970,17 +1969,17 @@ y?></doc>
         /// Here the section(s) 2.7 apply. This test is taken from the collection IBM XML Conformance
         /// Test Suite - Production 20.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP20Ibm20v02()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)> 
 ]>
 
 <!-- testing CData with legal chars -->
 
-<student>My Name is SnowMan. <![CDATA[<testing>This is a test</testing>]]></student>", new DocumentOptions(validating : true));
+<student>My Name is SnowMan. <![CDATA[<testing>This is a test</testing>]]></student>".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -1992,10 +1991,10 @@ y?></doc>
         /// 2.7 apply. This test is taken from the collection IBM XML Conformance Test Suite -
         /// Production 21.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP21Ibm21v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student [
 	<!ELEMENT student (#PCDATA)> 
 ]>
@@ -2005,7 +2004,7 @@ y?></doc>
 <student>My Name is SnowMan. <![CDATA[This is a test]]> </student>
 
 
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2018,15 +2017,15 @@ y?></doc>
         /// section(s) 2.7 [20] apply. This test is taken from the collection James Clark XMLTEST
         /// cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa114()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY e ""<![CDATA[&foo;]]>"">
 ]>
 <doc>&e;</doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2038,14 +2037,14 @@ y?></doc>
         /// associated with this input file. Here the section(s) 2.7 3.1 [18] [43] apply. This test is
         /// taken from the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa018()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc><![CDATA[<foo>]]></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2058,14 +2057,14 @@ y?></doc>
         /// 2.7 3.1 [18] [43] apply. This test is taken from the collection James Clark XMLTEST cases,
         /// 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa019()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc><![CDATA[<&]]></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2077,14 +2076,14 @@ y?></doc>
         /// with this input file. Here the section(s) 2.7 3.1 [18] [43] apply. This test is taken from the
         /// collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa020()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc><![CDATA[<&]>]]]></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2095,15 +2094,15 @@ y?></doc>
         /// Here the section(s) 2.8 apply. This test is taken from the collection IBM XML Conformance Test
         /// Suite - Production 22.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP22Ibm22v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0"" encoding=""utf-8"" ?>
+            var document = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2114,14 +2113,14 @@ y?></doc>
         /// section(s) 2.8 apply. This test is taken from the collection IBM XML Conformance Test Suite -
         /// Production 22.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP22Ibm22v02()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2132,15 +2131,15 @@ y?></doc>
         /// the section(s) 2.8 apply. This test is taken from the collection IBM XML Conformance Test Suite -
         /// Production 22.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP22Ibm22v03()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 ]>
 <!-- This is a Misc -->
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2151,15 +2150,15 @@ y?></doc>
         /// the section(s) 2.8 apply. This test is taken from the collection IBM XML Conformance Test Suite -
         /// Production 22.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP22Ibm22v04()
         {
-            var document = DocumentBuilder.Xml(@"<!-- This is a Misc -->
+            var document = @"<!-- This is a Misc -->
 <!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2170,16 +2169,16 @@ y?></doc>
         /// file. Here the section(s) 2.8 apply. This test is taken from the collection IBM XML Conformance
         /// Test Suite - Production 22.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP22Ibm22v05()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0"" encoding=""utf-8"" ?>
+            var document = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <!-- This is a Misc -->
 <!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2190,16 +2189,16 @@ y?></doc>
         /// file. Here the section(s) 2.8 apply. This test is taken from the collection IBM XML Conformance
         /// Test Suite - Production 22.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP22Ibm22v06()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0"" encoding=""utf-8"" ?>
+            var document = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 ]>
 <!-- This is a Misc -->
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2210,17 +2209,17 @@ y?></doc>
         /// input file. Here the section(s) 2.8 apply. This test is taken from the collection IBM XML
         /// Conformance Test Suite - Production 22.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP22Ibm22v07()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0"" encoding=""utf-8"" ?>
+            var document = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <!-- This is a Misc -->
 <!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 ]>
 <!-- This is a Misc -->
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2231,15 +2230,15 @@ y?></doc>
         /// Here the section(s) 2.8 apply. This test is taken from the collection IBM XML Conformance Test
         /// Suite - Production 23.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP23Ibm23v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version='1.0'?>
+            var document = @"<?xml version='1.0'?>
 <!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2250,15 +2249,15 @@ y?></doc>
         /// file. Here the section(s) 2.8 apply. This test is taken from the collection IBM XML Conformance
         /// Test Suite - Production 23.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP23Ibm23v02()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version='1.0' encoding='UTF-8' ?>
+            var document = @"<?xml version='1.0' encoding='UTF-8' ?>
 <!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2269,15 +2268,15 @@ y?></doc>
         /// Here the section(s) 2.8 apply. This test is taken from the collection IBM XML Conformance Test
         /// Suite - Production 23.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP23Ibm23v03()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version='1.0' standalone='yes' ?>
+            var document = @"<?xml version='1.0' standalone='yes' ?>
 <!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2288,15 +2287,15 @@ y?></doc>
         /// with this input file. Here the section(s) 2.8 apply. This test is taken from the collection IBM
         /// XML Conformance Test Suite - Production 23.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP23Ibm23v04()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version='1.0' ?>
+            var document = @"<?xml version='1.0' ?>
 <!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2307,15 +2306,15 @@ y?></doc>
         /// input file. Here the section(s) 2.8 apply. This test is taken from the collection IBM XML
         /// Conformance Test Suite - Production 23.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP23Ibm23v05()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
+            var document = @"<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
 <!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2326,15 +2325,15 @@ y?></doc>
         /// test associated with this input file. Here the section(s) 2.8 apply. This test is taken from
         /// the collection IBM XML Conformance Test Suite - Production 23.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP23Ibm23v06()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
+            var document = @"<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
 <!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2345,15 +2344,15 @@ y?></doc>
         /// Here the section(s) 2.8 apply. This test is taken from the collection IBM XML Conformance Test
         /// Suite - Production 24.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP24Ibm24v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version='1.0'?>
+            var document = @"<?xml version='1.0'?>
 <!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2364,15 +2363,15 @@ y?></doc>
         /// Here the section(s) 2.8 apply. This test is taken from the collection IBM XML Conformance
         /// Test Suite - Production 24.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP24Ibm24v02()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2382,15 +2381,15 @@ y?></doc>
         /// Tests EQ with =. There is an output test associated with this input file. Here the section(s) 2.8
         /// apply. This test is taken from the collection IBM XML Conformance Test Suite - Production 25.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP25Ibm25v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version='1.0'?>
+            var document = @"<?xml version='1.0'?>
 <!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2401,15 +2400,15 @@ y?></doc>
         /// Here the section(s) 2.8 apply. This test is taken from the collection IBM XML Conformance Test
         /// Suite - Production 25.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP25Ibm25v02()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version ='1.0'?>
+            var document = @"<?xml version ='1.0'?>
 <!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2420,15 +2419,15 @@ y?></doc>
         /// Here the section(s) 2.8 apply. This test is taken from the collection IBM XML Conformance Test
         /// Suite - Production 25.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP25Ibm25v03()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version= '1.0'?>
+            var document = @"<?xml version= '1.0'?>
 <!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2439,15 +2438,15 @@ y?></doc>
         /// the section(s) 2.8 apply. This test is taken from the collection IBM XML Conformance Test Suite -
         /// Production 25.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP25Ibm25v04()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version = '1.0'?>
+            var document = @"<?xml version = '1.0'?>
 <!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2457,15 +2456,15 @@ y?></doc>
         /// Tests VersionNum 1.0. There is an output test associated with this input file. Here the section(s)
         /// 2.8 apply. This test is taken from the collection IBM XML Conformance Test Suite - Production 26.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP26Ibm26v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version='1.0' ?>
+            var document = @"<?xml version='1.0' ?>
 <!DOCTYPE doc [
    <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2475,15 +2474,15 @@ y?></doc>
         /// Tests Misc with comment. There is an output test associated with this input file. Here the section(s)
         /// 2.8 apply. This test is taken from the collection IBM XML Conformance Test Suite - Production 27.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP27Ibm27v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version='1.0' ?>
+            var document = @"<?xml version='1.0' ?>
 <!DOCTYPE doc [
    <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-<!-- This is a comment in Misc -->", new DocumentOptions(validating : true));
+<!-- This is a comment in Misc -->".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2493,15 +2492,15 @@ y?></doc>
         /// Tests Misc with PI. There is an output test associated with this input file. Here the section(s) 2.8 apply.
         /// This test is taken from the collection IBM XML Conformance Test Suite - Production 27.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP27Ibm27v02()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version='1.0' ?>
+            var document = @"<?xml version='1.0' ?>
 <!DOCTYPE doc [
    <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-<?sound ""This is a PI in Misc ?>", new DocumentOptions(validating : true));
+<?sound ""This is a PI in Misc ?>".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2512,15 +2511,15 @@ y?></doc>
         /// section(s) 2.8 apply. This test is taken from the collection IBM XML Conformance Test Suite -
         /// Production 27.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP27Ibm27v03()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version='1.0' ?>
+            var document = @"<?xml version='1.0' ?>
 <!DOCTYPE doc [
    <!ELEMENT doc ANY>
 ]>
 <doc>S is in the following Misc</doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2531,16 +2530,16 @@ y?></doc>
         /// Here the section(s) 2.8 apply. This test is taken from the collection IBM XML Conformance Test
         /// Suite - Production 28.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP28Ibm28v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0"" encoding='UTF-8'?>
+            var document = @"<?xml version=""1.0"" encoding='UTF-8'?>
 <!DOCTYPE animal [
    <!ELEMENT animal EMPTY>
 ]>
 <!-- This a valid test file for production [28] --> 
 <animal/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2551,10 +2550,10 @@ y?></doc>
         /// and comment. There is an output test associated with this input file. Here the section(s) 2.8
         /// apply. This test is taken from the collection IBM XML Conformance Test Suite - Production 29.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP29Ibm29v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0"" encoding=""utf-8"" ?>
+            var document = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <!DOCTYPE animal [
    <!ELEMENT animal (cat|tiger|leopard)+>
    <!NOTATION animal_class SYSTEM ""ibm29v01.txt"">
@@ -2578,7 +2577,7 @@ y?></doc>
       <big/>
    </leopard>
 </animal>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2589,10 +2588,10 @@ y?></doc>
         /// this input file. Here the section(s) 2.8 apply. This test is taken from the collection IBM
         /// XML Conformance Test Suite - Production 29.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP29Ibm29v02()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0"" encoding=""utf-8"" ?>
+            var document = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <!DOCTYPE animal [
    <!ELEMENT animal (cat|tiger|leopard)+>
    <!NOTATION animal_class SYSTEM ""ibm29v01.txt"">
@@ -2617,7 +2616,7 @@ y?></doc>
       <big/>
    </leopard>
 </animal>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2628,15 +2627,15 @@ y?></doc>
         /// with this input file. Here the section(s) 2.8 apply. This test is taken from the collection
         /// IBM XML Conformance Test Suite - Production 30.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP30Ibm30v01()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE animal [
+            var document = @"<!DOCTYPE animal [
   <!ELEMENT animal EMPTY>
 ]>
 <animal/>
 <!-- tests extSubset with extSubsetDecl only in the dtd file -->
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2647,10 +2646,10 @@ y?></doc>
         /// and white spaces. There is an output test associated with this input file. Here the section(s)
         /// 2.8 apply. This test is taken from the collection IBM XML Conformance Test Suite - Production 31.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP31Ibm31v01()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE animal [
+            var document = @"<!DOCTYPE animal [
   <!ENTITY % rootElement ""<!ELEMENT animal ANY>"">
   %rootElement;
   <!-- Following is a makupdecl -->
@@ -2661,7 +2660,7 @@ y?></doc>
    <tiger/>
 </animal>
 <!-- tests extSubsetDecl with combinations of markupdecls, conditionalSects, PEReferences and white spaces -->
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2671,10 +2670,10 @@ y?></doc>
         /// XML decl and doctypedecl Here the section(s) 2.8 [22] apply. This test is taken
         /// from the collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidOP22pass4()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!--comment--> <?pi?>
 <!DOCTYPE doc
 [
@@ -2684,7 +2683,7 @@ y?></doc>
 <!--comment--> <?pi?>
 
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2694,10 +2693,10 @@ y?></doc>
         /// just doctypedecl Here the section(s) 2.8 [22] apply. This test is taken from the
         /// collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidOP22pass5()
         {
-            var document = DocumentBuilder.Xml(@"<!--comment--> <?pi?>
+            var document = @"<!--comment--> <?pi?>
 <!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
@@ -2706,7 +2705,7 @@ y?></doc>
 <!--comment--> <?pi?>
 
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2716,14 +2715,14 @@ y?></doc>
         /// S between decls is not required Here the section(s) 2.8 [22] apply. This test is
         /// taken from the collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidOP22pass6()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?><!DOCTYPE doc
+            var document = @"<?xml version=""1.0""?><!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 ]><doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2734,15 +2733,15 @@ y?></doc>
         /// There is an output test associated with this input file. Here the section(s) 2.8 [23]
         /// apply. This test is taken from the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa033()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version='1.0' encoding=""UTF-8"" standalone='yes'?>
+            var document = @"<?xml version='1.0' encoding=""UTF-8"" standalone='yes'?>
 <!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2754,15 +2753,15 @@ y?></doc>
         /// section(s) 2.8 [24] apply. This test is taken from the collection James Clark XMLTEST
         /// cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa028()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2774,15 +2773,15 @@ y?></doc>
         /// section(s) 2.8 [24] apply. This test is taken from the collection James Clark
         /// XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa029()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version='1.0'?>
+            var document = @"<?xml version='1.0'?>
 <!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2794,15 +2793,15 @@ y?></doc>
         /// this input file. Here the section(s) 2.8 [25] apply. This test is taken from
         /// the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa030()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version = ""1.0""?>
+            var document = @"<?xml version = ""1.0""?>
 <!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc></doc>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2812,10 +2811,10 @@ y?></doc>
         /// Valid types of markupdecl. Here the section(s) 2.8 [29] apply. This test is
         /// taken from the collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidOP29pass1()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <?Pi?><!--comment-->
 <!ELEMENT doc EMPTY>
 <?Pi?><!--comment-->
@@ -2827,7 +2826,7 @@ y?></doc>
 <?Pi?><!--comment-->
 ]>
 <doc/>
-", new DocumentOptions(validating : true));
+".ToXmlDocument(validating : true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2838,15 +2837,15 @@ y?></doc>
         /// entity must precede any reference to it. Here the section(s) 2.8 4.1 [28] [69] apply.
         /// This test is taken from the collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidOP28pass3()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ENTITY % eldecl ""<!ELEMENT doc EMPTY>"">
 %eldecl;
 ]>
 <doc/>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2856,17 +2855,17 @@ y?></doc>
         /// Valid PEReferences. Here the section(s) 4.1 [69] apply. This test is taken from
         /// the collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidOP69pass1()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc
+            var document = @"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY % pe ""<!---->"">
 %pe;<!---->%pe;
 ]>
 <doc/>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2877,16 +2876,16 @@ y?></doc>
         /// the binding one. There is an output test associated with this input file. Here the section(s) 4.2 apply
         /// This test is taken from the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa086()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY e """">
 <!ENTITY e ""<foo>"">
 ]>
 <doc>&e;</doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2902,15 +2901,15 @@ y?></doc>
         /// input file. Here the section(s) 2.9 [32] apply. This test is taken from the collection James
         /// Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa032()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version='1.0' standalone='yes'?>
+            var document = @"<?xml version='1.0' standalone='yes'?>
 <!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc></doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2921,10 +2920,10 @@ y?></doc>
         /// DTD subset. There is an output test associated with this input file. Here the section(s) 2.9
         /// [32] apply. This test is taken from the collection Sun Microsystems XML Tests.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version='1.0' standalone='yes'?>
+            var document = @"<?xml version='1.0' standalone='yes'?>
 
 <!DOCTYPE root [
     <!ELEMENT root (child)*>
@@ -2937,7 +2936,7 @@ y?></doc>
     invalid as standalone were the DTD external.
     </child>
 </root>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -2948,10 +2947,10 @@ y?></doc>
         /// the internal DTD subset. There is an output test associated with this input file. Here the section(s)
         /// 2.9 [32] apply. This test is taken from the collection Sun Microsystems XML Tests.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa02()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version='1.0' standalone='yes'?>
+            var document = @"<?xml version='1.0' standalone='yes'?>
 
 <!DOCTYPE attributes [
     <!ELEMENT attributes EMPTY>
@@ -3003,7 +3002,7 @@ y?></doc>
     entities =	""unparsed-1 unparsed-2""
     cdata =	""nothing happens to this one!""
     />
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3014,10 +3013,10 @@ y?></doc>
         /// with this input file. Here the section(s) 3 apply. This test is taken from the collection Sun
         /// Microsystems XML Tests.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidElement()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE root [
+            var document = @"<!DOCTYPE root [
 <!ELEMENT root ANY>
 <!ELEMENT empty EMPTY>
 <!ELEMENT mixed1 (#PCDATA)>
@@ -3055,7 +3054,7 @@ y?></doc>
     <mixed3><empty/> too</mixed3>
 
 </root>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3067,10 +3066,10 @@ y?></doc>
         /// with this input file. Here the section(s) 3 apply. This test is taken from the collection
         /// IBM XML Conformance Test Suite - Production 39.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP39Ibm39v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE root [
   <!ELEMENT root (a,b)>
   <!ELEMENT a EMPTY>
@@ -3088,7 +3087,7 @@ y?></doc>
    </c>
 </b></root>
 <!--* test P39's syntax and Element Valid VC *-->
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3099,10 +3098,10 @@ y?></doc>
         /// There is an output test associated with this input file. Here the section(s) 3.1 apply.
         /// This test is taken from the collection IBM XML Conformance Test Suite - Production 40.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP40Ibm40v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE root [
   <!ELEMENT root (#PCDATA|b)* >
   <!ELEMENT b (#PCDATA) >
@@ -3117,7 +3116,7 @@ y?></doc>
   <b attr1=""value1"" attr2=""value2"" attr3 = ""value3"">one attribute</b>
 </root>
 <!--* testing P40 *-->
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3128,10 +3127,10 @@ y?></doc>
         /// test associated with this input file. Here the section(s) 3.1 apply. This test is taken
         /// from the collection IBM XML Conformance Test Suite - Production 41.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP41Ibm41v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE root [
   <!ELEMENT root (#PCDATA|b)* >
   <!ELEMENT b (#PCDATA) >
@@ -3143,7 +3142,7 @@ y?></doc>
   <b attr1=""value1"" attr2=""def"" attr3=""fixed"">Name eq AttValue</b>
 </root>
 <!--* testing P41 *-->
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3154,10 +3153,10 @@ y?></doc>
         /// with this input file. Here the section(s) 3.1 apply. This test is taken from the collection
         /// IBM XML Conformance Test Suite - Production 42.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP42Ibm42v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE root [
   <!ELEMENT root (a,b)>
   <!ELEMENT a EMPTY>
@@ -3170,7 +3169,7 @@ y?></doc>
 </b></root>
 <!--* test P42 *-->
 
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3181,10 +3180,10 @@ y?></doc>
         /// There is an output test associated with this input file. Here the section(s) 3.1 apply. This test
         /// is taken from the collection IBM XML Conformance Test Suite - Production 43.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP43Ibm43v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE root [
   <!ELEMENT root (a,b)>
   <!ELEMENT a EMPTY>
@@ -3208,7 +3207,7 @@ y?></doc>
 </b>
 </root>
 <!--* test P43 *-->
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3219,10 +3218,10 @@ y?></doc>
         /// associated with this input file. Here the section(s) 3.1 apply. This test is taken from
         /// the collection IBM XML Conformance Test Suite - Production 44.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP44Ibm44v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE root [
   <!ELEMENT root (#PCDATA|b)* >
   <!ELEMENT b EMPTY >
@@ -3240,7 +3239,7 @@ y?></doc>
 
 
 
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3251,14 +3250,14 @@ y?></doc>
         /// is an output test associated with this input file. Here the section(s) 3.1 [40] apply.
         /// This test is taken from the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa002()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc ></doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3270,15 +3269,15 @@ y?></doc>
         /// the section(s) 3.1 [40] apply. This test is taken from the collection James Clark XMLTEST cases, 
         /// 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa005()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ATTLIST doc a1 CDATA #IMPLIED>
 ]>
 <doc a1 = ""v1""></doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3289,15 +3288,15 @@ y?></doc>
         /// test associated with this input file. Here the section(s) 3.1 [40] apply. This test is taken from the
         /// collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa010()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ATTLIST doc a1 CDATA #IMPLIED>
 ]>
 <doc a1=""v1"" ></doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3308,15 +3307,15 @@ y?></doc>
         /// associated with this input file. Here the section(s) 3.1 [40] apply. This test is taken
         /// from the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa011()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ATTLIST doc a1 CDATA #IMPLIED a2 CDATA #IMPLIED>
 ]>
 <doc a1=""v1"" a2=""v2""></doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3328,15 +3327,15 @@ y?></doc>
         /// section(s) 3.1 [40] apply. This test is taken from the collection James Clark XMLTEST cases,
         /// 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa104()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ATTLIST doc a CDATA #IMPLIED>
 ]>
 <doc a=""x	y""></doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3348,10 +3347,10 @@ y?></doc>
         /// 3.1 [40] [42] apply. This test is taken from the collection James Clark XMLTEST cases,
         /// 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa054()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 
@@ -3361,7 +3360,7 @@ y?></doc>
 >
 
 
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3372,15 +3371,15 @@ y?></doc>
         /// associated with this input file. Here the section(s) 3.1 [41] apply. This test is taken from
         /// the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa004()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ATTLIST doc a1 CDATA #IMPLIED>
 ]>
 <doc a1=""v1""></doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3391,15 +3390,15 @@ y?></doc>
         /// There is an output test associated with this input file. Here the section(s) 3.1 [41] apply.
         /// This test is taken from the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa006()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ATTLIST doc a1 CDATA #IMPLIED>
 ]>
 <doc a1='v1'></doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3410,14 +3409,14 @@ y?></doc>
         /// test associated with this input file. Here the section(s) 3.1 [42] apply. This test is taken from
         /// the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa003()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc></doc >
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3428,15 +3427,15 @@ y?></doc>
         /// with this input file. Here the section(s) 3.1 [43] apply. This test is taken from the collection James
         /// Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa023()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY e """">
 ]>
 <doc>&e;</doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3447,15 +3446,15 @@ y?></doc>
         /// associated with this input file. Here the section(s) 3.1 [43] apply. This test is taken from the collection
         /// James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa047()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc>X
 Y</doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3465,10 +3464,10 @@ Y</doc>
         /// Empty-element tag must be used for element which are declared EMPTY. Here the section(s) 3.1 [43] [44] apply.
         /// This test is taken from the collection OASIS/NIST TESTS, 1-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidOP28pass1()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE 
+            var document = @"<!DOCTYPE 
 
 doc
 
@@ -3476,7 +3475,7 @@ doc
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3487,14 +3486,14 @@ doc
         /// input file. Here the section(s) 3.1 [44] apply. This test is taken from the collection James Clark XMLTEST
         /// cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa034()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc/>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3505,14 +3504,14 @@ doc
         /// test associated with this input file. Here the section(s) 3.1 [44] apply. This test is taken from the
         /// collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa035()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc />
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3523,10 +3522,10 @@ doc
         /// There is an output test associated with this input file. Here the section(s) 3.1 [44] apply. This
         /// test is taken from the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa044()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (e*)>
 <!ELEMENT e EMPTY>
 <!ATTLIST e a1 CDATA ""v1"" a2 CDATA ""v2"" a3 CDATA #IMPLIED>
@@ -3536,7 +3535,7 @@ doc
 <e a1=""w1""/>
 <e a2=""w2"" a3=""v3""/>
 </doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3547,16 +3546,16 @@ doc
         /// Entity Declaration. There is an output test associated with this input file. Here the section(s)
         /// 3.1 4.1 [43] [66] apply. This test is taken from the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa024()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (foo)>
 <!ELEMENT foo (#PCDATA)>
 <!ENTITY e ""&#60;foo></foo>"">
 ]>
 <doc>&e;</doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3567,14 +3566,14 @@ doc
         /// an output test associated with this input file. Here the section(s) 3.1 4.6 [43] apply.
         /// This test is taken from the collection James Clark XMLTEST cases, 18-Nov-1998.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlValidSa007()
         {
-            var document = DocumentBuilder.Xml(@"<!DOCTYPE doc [
+            var document = @"<!DOCTYPE doc [
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc>&#32;</doc>
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3585,10 +3584,10 @@ doc
         /// There is an output test associated with this input file. Here the section(s) 3.2 apply. This
         /// test is taken from the collection IBM XML Conformance Test Suite - Production 45.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP45Ibm45v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE root [
   <!ELEMENT root (#PCDATA|b)* >
   <!--* P45 no space before the end bracket *-->
@@ -3609,7 +3608,7 @@ doc
 </root>
 <!--* !!! testing both P45 and p46 *-->
 
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -3620,10 +3619,10 @@ doc
         /// associated with this input file. Here the section(s) 3.2.1 apply. This test is taken from the
         /// collection IBM XML Conformance Test Suite - Production 47.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XmlIbmValidP47Ibm47v01()
         {
-            var document = DocumentBuilder.Xml(@"<?xml version=""1.0""?>
+            var document = @"<?xml version=""1.0""?>
 <!DOCTYPE root [
   <!ELEMENT root (a,b)>
   <!ELEMENT a EMPTY>
@@ -3650,7 +3649,7 @@ doc
 </b></root>
 <!--* a valid test: tests P47,P48,P49,P50*-->
 
-", new DocumentOptions(validating: true));
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);

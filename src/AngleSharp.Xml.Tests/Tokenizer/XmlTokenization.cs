@@ -1,10 +1,9 @@
-﻿namespace AngleSharp.Core.Tests.Xml
+namespace AngleSharp.Xml.Tests.Tokenizer
 {
-    using AngleSharp.Core.Tests.Mocks;
     using AngleSharp.Text;
-    using AngleSharp.Xml;
     using AngleSharp.Xml.Parser;
     using AngleSharp.Xml.Parser.Tokens;
+    using AngleSharp.Xml.Tests.Mocks;
     using NUnit.Framework;
 
     [TestFixture]

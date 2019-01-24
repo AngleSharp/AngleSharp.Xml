@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Core.Tests.Xml
+namespace AngleSharp.Xml.Tests.Dom
 {
     using AngleSharp.Dom;
     using NUnit.Framework;

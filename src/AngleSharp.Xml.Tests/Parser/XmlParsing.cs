@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Core.Tests.Xml
+namespace AngleSharp.Xml.Tests.Parser
 {
     using AngleSharp.Xml.Parser;
     using NUnit.Framework;

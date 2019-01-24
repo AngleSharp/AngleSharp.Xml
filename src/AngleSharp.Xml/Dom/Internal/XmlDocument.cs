@@ -37,6 +37,8 @@ namespace AngleSharp.Xml.Dom
             get { return Context.GetProvider<IEntityProvider>() ?? XmlEntityProvider.Resolver; }
         }
 
+        public Boolean IsValid => true;
+
         #endregion
 
         #region Methods
