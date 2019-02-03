@@ -13,7 +13,7 @@ namespace AngleSharp.Svg.Dom
     {
         #region Fields
 
-        private readonly IElementFactory<Document, ISvgElement> _factory;
+        private readonly IElementFactory<Document, SvgElement> _factory;
 
         #endregion
 
@@ -23,7 +23,7 @@ namespace AngleSharp.Svg.Dom
             : base(context ?? BrowsingContext.New(), source)
         {
             ContentType = MimeTypeNames.Svg;
-            _factory = Context.GetFactory<IElementFactory<Document, ISvgElement>>();
+            _factory = Context.GetFactory<IElementFactory<Document, SvgElement>>();
         }
 
         internal SvgDocument(IBrowsingContext context = null)

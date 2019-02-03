@@ -25,6 +25,9 @@ namespace AngleSharp.Xml
             
             if (documentFactory != null)
             {
+                documentFactory.Unregister(MimeTypeNames.Xml);
+                documentFactory.Unregister(MimeTypeNames.ApplicationXml);
+                documentFactory.Unregister(MimeTypeNames.Svg);
                 documentFactory.Register(MimeTypeNames.Xml, LoadXmlAsync);
                 documentFactory.Register(MimeTypeNames.ApplicationXml, LoadXmlAsync);
                 documentFactory.Register(MimeTypeNames.Svg, LoadSvgAsync);

@@ -8,7 +8,7 @@ namespace AngleSharp.Xml.Tests.Parser
     /// (Conformance) Tests taken from
     /// http://www.w3.org/XML/Test/xmlconf-20031210.html
     /// </summary>
-    [TestFixture]
+    [TestFixture(Ignore = "Activate later when DTD is provided")]
     public class XmlValidDocuments
     {
         /// <summary>

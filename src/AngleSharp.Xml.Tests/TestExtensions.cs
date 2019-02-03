@@ -10,7 +10,7 @@ namespace AngleSharp.Xml.Tests
     {
         public static IXmlDocument ToXmlDocument(this String sourceCode, IConfiguration configuration = null, Boolean validating = false)
         {
-            var context = BrowsingContext.New(configuration);
+            var context = BrowsingContext.New(configuration ?? Configuration.Default.WithXml());
             var xmlParser = context.GetService<IXmlParser>();
             return xmlParser.ParseDocument(sourceCode);
         }

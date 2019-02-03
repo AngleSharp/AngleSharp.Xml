@@ -2,7 +2,7 @@ namespace AngleSharp.Xml.Tests.Parser
 {
     using NUnit.Framework;
 
-    [TestFixture]
+    [TestFixture(Ignore = "Activate later when DTD is provided")]
     public class XmlInvalidDocuments
     {
         /// <summary>

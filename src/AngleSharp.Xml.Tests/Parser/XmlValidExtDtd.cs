@@ -3,7 +3,7 @@ namespace AngleSharp.Xml.Tests.Parser
     using NUnit.Framework;
     using System;
 
-    [TestFixture]
+    [TestFixture(Ignore = "Activate later when DTD is provided")]
     public class XmlValidExtDtd
     {
         /// <summary>

@@ -6,7 +6,7 @@ namespace AngleSharp.Xml.Tests.Parser
     /// <summary>
     /// (Conformance) Tests taken from
     /// http://www.w3.org/XML/Test/xmlconf-20031210.html
-    [TestFixture]
+    [TestFixture(Ignore = "Activate later when DTD is provided")]
     public class XmlNotWfDocuments
     {
         /// <summary>
