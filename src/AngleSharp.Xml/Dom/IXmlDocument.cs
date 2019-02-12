@@ -1,7 +1,8 @@
-﻿namespace AngleSharp.Xml.Dom
+namespace AngleSharp.Xml.Dom
 {
     using AngleSharp.Attributes;
     using AngleSharp.Dom;
+    using System;
 
     /// <summary>
     /// The interface represent an XML document.
@@ -9,5 +10,9 @@
     [DomName("XMLDocument")]
     public interface IXmlDocument : IDocument
     {
+        /// <summary>
+        /// Gets if the document is actually valid.
+        /// </summary>
+        Boolean IsValid { get; }
     }
 }

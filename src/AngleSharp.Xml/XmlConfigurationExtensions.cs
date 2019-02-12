@@ -5,6 +5,7 @@ namespace AngleSharp.Xml
     using AngleSharp.Svg.Dom;
     using AngleSharp.Xml.Dom;
     using AngleSharp.Xml.Parser;
+    using System;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -25,6 +26,9 @@ namespace AngleSharp.Xml
             
             if (documentFactory != null)
             {
+                documentFactory.Unregister(MimeTypeNames.Xml);
+                documentFactory.Unregister(MimeTypeNames.ApplicationXml);
+                documentFactory.Unregister(MimeTypeNames.Svg);
                 documentFactory.Register(MimeTypeNames.Xml, LoadXmlAsync);
                 documentFactory.Register(MimeTypeNames.ApplicationXml, LoadXmlAsync);
                 documentFactory.Register(MimeTypeNames.Svg, LoadSvgAsync);
@@ -35,7 +39,7 @@ namespace AngleSharp.Xml
 
         private static Task<IDocument> LoadXmlAsync(IBrowsingContext context, CreateDocumentOptions options, CancellationToken cancellationToken)
         {
-            var parser = context.GetService<IXmlParser>();
+            var parser = context.GetService<IXmlParser>() ?? throw new InvalidOperationException("The IXmlParser service has been removed. Cannot continue.");
             var document = new XmlDocument(context, options.Source);
             document.Setup(options.Response, options.ContentType, options.ImportAncestor);
             context.NavigateTo(document);
@@ -44,7 +48,7 @@ namespace AngleSharp.Xml
 
         private static Task<IDocument> LoadSvgAsync(IBrowsingContext context, CreateDocumentOptions options, CancellationToken cancellationToken)
         {
-            var parser = context.GetService<IXmlParser>();
+            var parser = context.GetService<IXmlParser>() ?? throw new InvalidOperationException("The IXmlParser service has been removed. Cannot continue.");
             var document = new SvgDocument(context, options.Source);
             document.Setup(options.Response, options.ContentType, options.ImportAncestor);
             context.NavigateTo(document);

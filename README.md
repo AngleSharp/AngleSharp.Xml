@@ -24,7 +24,9 @@ This will register a parser for XML related content.
 
 ## Advantages of AngleSharp.Xml over System.Xml
 
-(tbd)
+The main advantage is that AngleSharp.Xml is part of the AngleSharp ecosystem and integrates well, e.g., by allowing remove XML files to be loaded, interpreting SVG documents or XHTML. A major point is AngleSharp.Xml also contains parts of a DTD parser, which could be used to validate XML documents.
+
+Finally, the integration of AngleSharp.Xml in AngleSharp means that not only HTML documents may refer or use XML freely, but also the other way round. This is therefore as close to XML in a browser as you may get in .NET.
 
 ## Features
 

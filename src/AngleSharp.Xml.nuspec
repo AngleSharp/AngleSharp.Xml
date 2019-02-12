@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <metadata>
-    <id>AngleSharp.Io</id>
+    <id>AngleSharp.Xml</id>
     <version>$version$</version>
     <authors>AngleSharp</authors>
     <owners>Florian Rappl</owners>
