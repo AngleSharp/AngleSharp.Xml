@@ -1,6 +1,6 @@
 namespace AngleSharp.Xml.Dtd.Parser
 {
-    using AngleSharp.Xml.Dom;
+    using AngleSharp.Dom;
     using System;
 
     sealed class DtdNotationToken : DtdToken
@@ -68,7 +68,7 @@ namespace AngleSharp.Xml.Dtd.Parser
 
         public Notation ToElement()
         {
-            return new Notation(Name)
+            return new Notation(null, Name)
             {
                 PublicId = PublicIdentifier,
                 SystemId = SystemIdentifier

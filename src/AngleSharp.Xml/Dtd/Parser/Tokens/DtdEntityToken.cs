@@ -1,6 +1,6 @@
 namespace AngleSharp.Xml.Dtd.Parser
 {
-    using AngleSharp.Xml.Dom;
+    using AngleSharp.Dom;
     using System;
 
     sealed class DtdEntityToken : DtdToken
@@ -66,7 +66,7 @@ namespace AngleSharp.Xml.Dtd.Parser
 
         public Entity ToElement()
         {
-            return new Entity(Name)
+            return new Entity(null, Name)
             {
                 NotationName = null,
                 NodeValue = Value
