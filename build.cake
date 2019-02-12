@@ -91,14 +91,8 @@ Task("Copy-Files")
     {
         var mapping = new Dictionary<String, String>
         {
-            { "net46", "net46" },
-            { "netstandard2.0", "netstandard2.0" }
+            { "netstandard1.3", "netstandard1.3" }
         };
-
-        if (!isRunningOnWindows)
-        {
-            mapping.Remove("net46");
-        }
 
         foreach (var item in mapping)
         {
