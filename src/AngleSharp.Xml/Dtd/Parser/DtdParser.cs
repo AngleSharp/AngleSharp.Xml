@@ -53,8 +53,8 @@ namespace AngleSharp.Xml.Dtd.Parser
         /// </summary>
         public Boolean IsInternal
         {
-            get { return _tokenizer.IsExternal; }
-            set { _tokenizer.IsExternal = !value; }
+            get => _tokenizer.IsExternal;
+            set => _tokenizer.IsExternal = !value;
         }
 
         /// <summary>

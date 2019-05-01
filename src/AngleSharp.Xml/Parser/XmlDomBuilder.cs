@@ -119,6 +119,23 @@ namespace AngleSharp.Xml.Parser
             return _document;
         }
 
+        /// <summary>
+        /// Switches to the fragment algorithm with the specified context
+        /// element. Then parses the given source and creates the document.
+        /// </summary>
+        /// <param name="options">The options to use for parsing.</param>
+        /// <param name="context">
+        /// The context element where the algorithm is applied to.
+        /// </param>
+        public Document ParseFragment(XmlParserOptions options, Element context)
+        {
+            context = context ?? throw new ArgumentNullException(nameof(context));
+            var root = new XmlElement(_document, context.LocalName);
+            _document.AddNode(root);
+            _openElements.Add(root);
+            return Parse(options);
+        }
+
         #endregion
 
         #region States

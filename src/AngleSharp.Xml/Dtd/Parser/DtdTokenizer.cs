@@ -78,7 +78,7 @@ namespace AngleSharp.Xml.Dtd.Parser
         /// </summary>
         public Boolean IsExternal
         {
-            get { return _external; }
+            get => _external;
             set
             {
                 _external = value;

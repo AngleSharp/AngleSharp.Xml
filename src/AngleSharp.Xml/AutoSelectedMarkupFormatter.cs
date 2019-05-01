@@ -53,10 +53,7 @@ namespace AngleSharp.Xml
 
                 return childFormatter ?? HtmlMarkupFormatter.Instance;
             }
-            set
-            {
-                childFormatter = value;
-            }
+            set => childFormatter = value;
         }
 
         #endregion
@@ -68,10 +65,7 @@ namespace AngleSharp.Xml
         /// </summary>
         /// <param name="attribute">The attribute to serialize.</param>
         /// <returns>The formatted attribute.</returns>
-        public String Attribute(IAttr attribute)
-        {
-            return ChildFormatter.Attribute(attribute);
-        }
+        public String Attribute(IAttr attribute) => ChildFormatter.Attribute(attribute);
 
         /// <summary>
         /// Formats opening a tag with the given name.
@@ -143,10 +137,7 @@ namespace AngleSharp.Xml
         /// </summary>
         /// <param name="text">The text to sanatize.</param>
         /// <returns>The formatted text.</returns>
-        public String Text(ICharacterData text)
-        {
-            return ChildFormatter.Text(text);
-        }
+        public String Text(ICharacterData text) => ChildFormatter.Text(text);
 
         #endregion
 

@@ -66,7 +66,7 @@ namespace AngleSharp.Xml.Dtd.Parser
         /// </summary>
         public Boolean IsInvalid
         {
-            get { return _invalid; }
+            get => _invalid;
             private set
             {
                 _invalid = value;
@@ -90,8 +90,8 @@ namespace AngleSharp.Xml.Dtd.Parser
         /// </summary>
         public String Url
         {
-            get { return _url ?? (Parent != null ? Parent.BaseUri : String.Empty); }
-            set { _url = value; }
+            get => _url ?? (Parent != null ? Parent.BaseUri : String.Empty);
+            set => _url = value;
         }
 
         /// <summary>

@@ -46,8 +46,8 @@ namespace AngleSharp.Xml.Dtd.Declaration
 
         public ElementQuantifier Quantifier
         {
-            get { return _quantifier; }
-            set { _quantifier = value; }
+            get => _quantifier;
+            set => _quantifier = value;
         }
     }
 

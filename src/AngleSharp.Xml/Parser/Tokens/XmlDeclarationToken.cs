@@ -43,8 +43,8 @@ namespace AngleSharp.Xml.Parser.Tokens
         /// </summary>
         public String Version
         {
-            get { return _version; }
-            set { _version = value; }
+            get => _version;
+            set => _version = value;
         }
 
         /// <summary>
@@ -52,8 +52,8 @@ namespace AngleSharp.Xml.Parser.Tokens
         /// </summary>
         public String Encoding
         {
-            get { return _encoding ?? String.Empty; }
-            set { _encoding = value; }
+            get => _encoding ?? String.Empty;
+            set => _encoding = value;
         }
 
         /// <summary>
@@ -61,8 +61,8 @@ namespace AngleSharp.Xml.Parser.Tokens
         /// </summary>
         public Boolean Standalone
         {
-            get { return _standalone; }
-            set { _standalone = value; }
+            get => _standalone;
+            set => _standalone = value;
         }
 
         #endregion

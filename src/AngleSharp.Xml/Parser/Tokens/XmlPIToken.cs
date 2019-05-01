@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Xml.Parser.Tokens
+namespace AngleSharp.Xml.Parser.Tokens
 {
     using AngleSharp.Text;
     using System;
@@ -34,10 +34,10 @@
         /// <summary>
         /// Gets or sets the target data.
         /// </summary>
-        public String Target 
+        public String Target
         {
-            get { return _target; }
-            set { _target = value; }
+            get => _target;
+            set => _target = value;
         }
 
         /// <summary>
@@ -45,8 +45,8 @@
         /// </summary>
         public String Content
         {
-            get { return _content; }
-            set { _content = value; }
+            get => _content;
+            set => _content = value;
         }
 
         #endregion

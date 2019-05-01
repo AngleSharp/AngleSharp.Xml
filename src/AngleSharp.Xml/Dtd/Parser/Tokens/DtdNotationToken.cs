@@ -49,8 +49,8 @@ namespace AngleSharp.Xml.Dtd.Parser
         /// </summary>
         public String PublicIdentifier
         {
-            get { return _publicIdentifier ?? String.Empty; }
-            set { _publicIdentifier = value; }
+            get => _publicIdentifier ?? String.Empty;
+            set => _publicIdentifier = value;
         }
 
         /// <summary>
@@ -58,8 +58,8 @@ namespace AngleSharp.Xml.Dtd.Parser
         /// </summary>
         public String SystemIdentifier
         {
-            get { return _systemIdentifier ?? String.Empty; }
-            set { _systemIdentifier = value; }
+            get => _systemIdentifier ?? String.Empty;
+            set => _systemIdentifier = value;
         }
 
         #endregion
