@@ -68,10 +68,7 @@ namespace AngleSharp.Xml.Dtd.Parser
         /// <summary>
         /// Gets the parsed content.
         /// </summary>
-        public String Content
-        {
-            get { return _stream.Content; }
-        }
+        public String Content => _stream.Content;
 
         /// <summary>
         /// Gets or sets if the DTD is from an external source.

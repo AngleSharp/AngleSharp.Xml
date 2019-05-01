@@ -30,19 +30,13 @@ namespace AngleSharp.Xml.Dtd.Parser
         /// Gets if the declaration is an external id (the system identifier
         /// has been set directly or indirectly).
         /// </summary>
-        public Boolean IsExternalId
-        {
-            get { return !String.IsNullOrEmpty(_systemIdentifier); }
-        }
+        public Boolean IsExternalId => !String.IsNullOrEmpty(_systemIdentifier);
 
         /// <summary>
         /// Gets if the declaration is an external id (the system identifier
         /// has been set directly or indirectly).
         /// </summary>
-        public Boolean IsPublicId
-        {
-            get { return !String.IsNullOrEmpty(_publicIdentifier) && String.IsNullOrEmpty(_systemIdentifier); }
-        }
+        public Boolean IsPublicId => !String.IsNullOrEmpty(_publicIdentifier) && String.IsNullOrEmpty(_systemIdentifier);
 
         /// <summary>
         /// Gets or sets the value of the public identifier.

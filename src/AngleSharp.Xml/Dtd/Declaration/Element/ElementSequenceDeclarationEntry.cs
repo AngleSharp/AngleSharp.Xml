@@ -5,10 +5,7 @@ namespace AngleSharp.Xml.Dtd.Declaration
 
     sealed class ElementSequenceDeclarationEntry : ElementChildrenDeclarationEntry
     {
-        public List<ElementQuantifiedDeclarationEntry> Sequence
-        {
-            get { return _children; }
-        }
+        public List<ElementQuantifiedDeclarationEntry> Sequence => _children;
 
         public override Boolean Check(NodeInspector inspector)
         {

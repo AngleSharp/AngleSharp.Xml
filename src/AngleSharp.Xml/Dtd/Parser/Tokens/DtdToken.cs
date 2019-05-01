@@ -22,19 +22,13 @@ namespace AngleSharp.Xml.Dtd.Parser
         /// <summary>
         /// Gets the end of file token.
         /// </summary>
-        public static DtdEndOfFileToken EOF
-        {
-            get { return eof ?? (eof = new DtdEndOfFileToken()); }
-        }
+        public static DtdEndOfFileToken EOF => eof ?? (eof = new DtdEndOfFileToken());
 
         #endregion
 
         #region Properties
 
-        public DtdTokenType Type
-        {
-            get { return _type; }
-        }
+        public DtdTokenType Type => _type;
 
         public String Name
         {

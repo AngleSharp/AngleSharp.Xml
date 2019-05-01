@@ -402,11 +402,6 @@ namespace AngleSharp.Xml.Parser
 
         #region Helpers
 
-        private static Element CreateElement(Document document, String name, String prefix)
-        {
-            return new XmlElement(document, name, prefix);
-        }
-
         private Element CreateElement(String name)
         {
             var prefix = default(String);

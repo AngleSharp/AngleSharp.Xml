@@ -16,20 +16,11 @@ namespace AngleSharp.Xml.Dtd.Declaration
 
         #region Properties
 
-        public ElementContentType Type
-        {
-            get { return _type; }
-        }
+        public ElementContentType Type => _type;
 
-        public static ElementAnyDeclarationEntry Any
-        {
-            get { return _any ?? (_any = new ElementAnyDeclarationEntry()); }
-        }
+        public static ElementAnyDeclarationEntry Any => _any ?? (_any = new ElementAnyDeclarationEntry());
 
-        public static ElementEmptyDeclarationEntry Empty
-        {
-            get { return _empty ?? (_empty = new ElementEmptyDeclarationEntry()); }
-        }
+        public static ElementEmptyDeclarationEntry Empty => _empty ?? (_empty = new ElementEmptyDeclarationEntry());
 
         #endregion
 

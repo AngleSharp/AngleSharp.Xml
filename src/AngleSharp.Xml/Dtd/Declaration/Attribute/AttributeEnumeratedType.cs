@@ -29,10 +29,7 @@ namespace AngleSharp.Xml.Dtd.Declaration
             set;
         }
 
-        public List<String> Names
-        {
-            get { return _names; }
-        }
+        public List<String> Names => _names;
 
         #endregion
 

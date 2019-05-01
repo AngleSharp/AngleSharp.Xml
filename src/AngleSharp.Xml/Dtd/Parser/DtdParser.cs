@@ -60,10 +60,7 @@ namespace AngleSharp.Xml.Dtd.Parser
         /// <summary>
         /// Gets the DtdContainer, i.e. the result of the computation.
         /// </summary>
-        public DtdContainer Result
-        {
-            get { return _result; }
-        }
+        public DtdContainer Result => _result;
 
         #endregion
 
