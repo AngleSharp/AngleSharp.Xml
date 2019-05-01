@@ -70,5 +70,17 @@ namespace AngleSharp.Xml.Tests.Dom
             //Assert.AreEqual(12, xml.DocumentElement.ChildElementCount);
             //Assert.AreEqual(6, xml.DocumentElement.Children[2].ChildElementCount);
         }
+
+        [Test]
+        public void FragmentParsing_Issue1()
+        {
+            var xmlParser = new XmlParser();
+            var xmlDocument = xmlParser.ParseDocument("<div></div>");
+            var querySelector = xmlDocument.QuerySelector("div");
+
+            querySelector.InnerHtml = "<a></a>";
+
+            Assert.AreEqual("<div><a></a></div>", xmlDocument.ToHtml());
+        }
     }
 }
