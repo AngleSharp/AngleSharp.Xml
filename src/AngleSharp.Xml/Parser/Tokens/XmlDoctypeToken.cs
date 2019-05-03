@@ -53,8 +53,8 @@ namespace AngleSharp.Xml.Parser.Tokens
         /// </summary>
         public String Name
         {
-            get { return _name ?? String.Empty; }
-            set { _name = value; }
+            get => _name ?? String.Empty;
+            set => _name = value;
         }
 
         /// <summary>
@@ -62,8 +62,8 @@ namespace AngleSharp.Xml.Parser.Tokens
         /// </summary>
         public String PublicIdentifier
         {
-            get { return _publicIdentifier ?? String.Empty; }
-            set { _publicIdentifier = value; }
+            get => _publicIdentifier ?? String.Empty;
+            set => _publicIdentifier = value;
         }
 
         /// <summary>
@@ -71,8 +71,8 @@ namespace AngleSharp.Xml.Parser.Tokens
         /// </summary>
         public String SystemIdentifier
         {
-            get { return _systemIdentifier ?? String.Empty; }
-            set { _systemIdentifier = value; }
+            get => _systemIdentifier ?? String.Empty;
+            set => _systemIdentifier = value;
         }
 
         /// <summary>

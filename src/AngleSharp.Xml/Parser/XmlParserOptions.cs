@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Xml.Parser
+namespace AngleSharp.Xml.Parser
 {
     using AngleSharp.Dom;
     using AngleSharp.Text;
@@ -16,6 +16,16 @@
         public Boolean IsSuppressingErrors 
         { 
             get; 
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets if references to the original source document
+        /// should be kept on the elements in form of their tokens.
+        /// </summary>
+        public Boolean IsKeepingSourceReferences
+        {
+            get;
             set;
         }
 

@@ -29,10 +29,7 @@ namespace AngleSharp.Xml.Dtd.Parser
         /// <summary>
         /// Gets the list of attributes defined.
         /// </summary>
-        public List<AttributeDeclarationEntry> Attributes
-        {
-            get { return _attributes; }
-        }
+        public List<AttributeDeclarationEntry> Attributes => _attributes;
 
         #endregion
 

@@ -66,7 +66,7 @@ namespace AngleSharp.Xml.Dtd.Parser
         /// </summary>
         public Boolean IsInvalid
         {
-            get { return _invalid; }
+            get => _invalid;
             private set
             {
                 _invalid = value;
@@ -90,25 +90,19 @@ namespace AngleSharp.Xml.Dtd.Parser
         /// </summary>
         public String Url
         {
-            get { return _url ?? (Parent != null ? Parent.BaseUri : String.Empty); }
-            set { _url = value; }
+            get => _url ?? (Parent != null ? Parent.BaseUri : String.Empty);
+            set => _url = value;
         }
 
         /// <summary>
         /// Gets the root container.
         /// </summary>
-        public DtdContainer Root
-        {
-            get { return (_parent != null) ? _parent.Root : this; }
-        }
+        public DtdContainer Root => (_parent != null) ? _parent.Root : this;
 
         /// <summary>
         /// Gets the number of rules / nodes in this DTD (without the parent).
         /// </summary>
-        public Int32 Count
-        {
-            get { return _nodes.Count; }
-        }
+        public Int32 Count => _nodes.Count;
 
         /// <summary>
         /// Gets the text of this DTD (without the parents text).
@@ -122,42 +116,27 @@ namespace AngleSharp.Xml.Dtd.Parser
         /// <summary>
         /// Gets the enumeration over all the contained (self and parent) notations.
         /// </summary>
-        public IEnumerable<Notation> Notations
-        {
-            get { return _notations.Items(m => m._notations); }
-        }
+        public IEnumerable<Notation> Notations => _notations.Items(m => m._notations);
 
         /// <summary>
         /// Gets the enumeration over all the contained (self and parent) entities.
         /// </summary>
-        public IEnumerable<Entity> Entities
-        {
-            get { return _entities.Items(m => m._entities); }
-        }
+        public IEnumerable<Entity> Entities => _entities.Items(m => m._entities);
 
         /// <summary>
         /// Gets the enumeration over all the contained (self and parent) parameters.
         /// </summary>
-        public IEnumerable<Entity> Parameters
-        {
-            get { return _parameters.Items(m => m._parameters); }
-        }
+        public IEnumerable<Entity> Parameters => _parameters.Items(m => m._parameters);
 
         /// <summary>
         /// Gets the enumeration over all the contained (self and parent) attributes.
         /// </summary>
-        public IEnumerable<AttributeDeclaration> Attributes
-        {
-            get { return _attributes.Items(m => m._attributes); }
-        }
+        public IEnumerable<AttributeDeclaration> Attributes => _attributes.Items(m => m._attributes);
 
         /// <summary>
         /// Gets the enumeration over all the contained (self and parent) elements.
         /// </summary>
-        public IEnumerable<ElementDeclaration> Elements
-        {
-            get { return _elements.Items(m => m._elements); }
-        }
+        public IEnumerable<ElementDeclaration> Elements => _elements.Items(m => m._elements);
 
         #endregion
 
@@ -309,10 +288,7 @@ namespace AngleSharp.Xml.Dtd.Parser
                 array[i] = _nodes[j];
         }
 
-        public Boolean IsReadOnly
-        {
-            get { return false; }
-        }
+        public Boolean IsReadOnly => false;
 
         public Boolean Remove(Node item)
         {

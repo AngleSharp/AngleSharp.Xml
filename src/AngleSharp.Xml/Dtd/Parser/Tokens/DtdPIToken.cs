@@ -28,8 +28,8 @@ namespace AngleSharp.Xml.Dtd.Parser
         /// </summary>
         public String Target
         {
-            get { return _target; }
-            set { _target = value; }
+            get => _target;
+            set => _target = value;
         }
 
         /// <summary>
@@ -37,8 +37,8 @@ namespace AngleSharp.Xml.Dtd.Parser
         /// </summary>
         public String Content
         {
-            get { return _content; }
-            set { _content = value; }
+            get => _content;
+            set => _content = value;
         }
 
         #endregion

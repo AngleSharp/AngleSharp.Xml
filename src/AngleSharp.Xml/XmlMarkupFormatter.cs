@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Xml
+namespace AngleSharp.Xml
 {
     using AngleSharp.Dom;
     using AngleSharp.Text;
@@ -28,10 +28,7 @@
             return selfClosing ? String.Empty : String.Concat("</", tag, ">");
         }
 
-        String IMarkupFormatter.Comment(IComment comment)
-        {
-            return String.Concat("<!--", comment.Data, "-->");
-        }
+        String IMarkupFormatter.Comment(IComment comment) => String.Concat("<!--", comment.Data, "-->");
 
         String IMarkupFormatter.Doctype(IDocumentType doctype)
         {

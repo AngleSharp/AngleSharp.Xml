@@ -274,10 +274,7 @@ namespace AngleSharp.Xml.Dtd.Parser
             /// <summary>
             /// The content (of the original stream).
             /// </summary>
-            public String Content
-            {
-                get { return _base.Text; }
-            }
+            public String Content => _base.Text;
 
             /// <summary>
             /// The next character.
@@ -310,10 +307,7 @@ namespace AngleSharp.Xml.Dtd.Parser
             /// <summary>
             /// The current character.
             /// </summary>
-            public Char Current
-            {
-                get { return _texts.Count == 0 ? _base.Text[_base.Index] : _texts.Peek()[_pos.Peek()]; }
-            }
+            public Char Current => _texts.Count == 0 ? _base.Text[_base.Index] : _texts.Peek()[_pos.Peek()];
 
             #endregion
 

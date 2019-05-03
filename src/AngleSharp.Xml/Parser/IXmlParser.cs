@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Xml.Parser
+namespace AngleSharp.Xml.Parser
 {
     using AngleSharp.Browser;
     using AngleSharp.Dom;
@@ -22,7 +22,12 @@
         /// Parses the stream and returns the result.
         /// </summary>
         IXmlDocument ParseDocument(Stream source);
-        
+
+        /// <summary>
+        /// Parses the string and returns the result.
+        /// </summary>
+        INodeList ParseFragment(String source, IElement contextElement);
+
         /// <summary>
         /// Parses the string asynchronously with option to cancel.
         /// </summary>

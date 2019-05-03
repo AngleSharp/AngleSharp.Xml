@@ -6,6 +6,7 @@ namespace AngleSharp.Xml.Parser
     using AngleSharp.Xml.Dom.Events;
     using System;
     using System.IO;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -143,6 +144,30 @@ namespace AngleSharp.Xml.Parser
         {
             var document = CreateDocument(source);
             return ParseAsync(document, cancel);
+        }
+
+        /// <summary>
+        /// Parses the string and returns the result.
+        /// </summary>
+        public INodeList ParseFragment(String source, IElement contextElement)
+        {
+            var document = CreateDocument(source);
+            var parser = new XmlDomBuilder(document);
+            var node = default(INode);
+
+            if (contextElement is Element element)
+            {
+                var context = document.Context;
+                element = document.CreateElementFrom(contextElement.LocalName, contextElement.Prefix);
+                var fragment = parser.ParseFragment(_options, element).DocumentElement;
+                element.AppendNodes(fragment.ChildNodes.ToArray());
+                node = element;
+            } else
+            {
+                node = parser.Parse(_options);
+            }
+
+            return node?.ChildNodes;
         }
 
         async Task<IDocument> IXmlParser.ParseDocumentAsync(IDocument document, CancellationToken cancel)

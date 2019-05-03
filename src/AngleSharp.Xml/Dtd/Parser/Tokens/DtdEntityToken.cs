@@ -37,10 +37,7 @@ namespace AngleSharp.Xml.Dtd.Parser
             set;
         }
 
-        public Boolean IsPublic
-        {
-            get { return PublicIdentifier != null; }
-        }
+        public Boolean IsPublic => PublicIdentifier != null;
 
         public Boolean IsExtern
         {

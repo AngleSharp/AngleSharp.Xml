@@ -27,15 +27,9 @@ namespace AngleSharp.Xml.Dom
 
         #region Properties
 
-        public override IElement DocumentElement
-        {
-            get { return this.FindChild<IElement>(); }
-        }
+        public override IElement DocumentElement => this.FindChild<IElement>();
 
-        public override IEntityProvider Entities
-        {
-            get { return Context.GetProvider<IEntityProvider>() ?? XmlEntityProvider.Resolver; }
-        }
+        public override IEntityProvider Entities => Context.GetProvider<IEntityProvider>() ?? XmlEntityProvider.Resolver;
 
         public Boolean IsValid => true;
 
@@ -43,10 +37,7 @@ namespace AngleSharp.Xml.Dom
 
         #region Methods
 
-        public override Element CreateElementFrom(String name, String prefix)
-        {
-            return new XmlElement(this, name, prefix);
-        }
+        public override Element CreateElementFrom(String name, String prefix) => new XmlElement(this, name, prefix);
 
         public override Node Clone(Document owner, Boolean deep)
         {
