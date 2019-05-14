@@ -1,4 +1,4 @@
-namespace AngleSharp.Xml
+namespace AngleSharp
 {
     using AngleSharp.Dom;
     using AngleSharp.Io;
@@ -23,7 +23,7 @@ namespace AngleSharp.Xml
         public static IConfiguration WithXml(this IConfiguration configuration)
         {
             var documentFactory = configuration.Services.OfType<DefaultDocumentFactory>().FirstOrDefault();
-            
+
             if (documentFactory != null)
             {
                 documentFactory.Unregister(MimeTypeNames.Xml);
