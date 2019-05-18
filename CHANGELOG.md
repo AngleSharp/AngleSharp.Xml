@@ -2,7 +2,7 @@
 
 (tbd)
 
--
+- Added `ToXml` and `ToMarkup` extensions for the formatting
 
 # 0.12.1
 
