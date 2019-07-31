@@ -1062,7 +1062,7 @@ namespace AngleSharp.Xml.Parser
                 if (c == Symbols.EndOfFile)
                     throw XmlParseError.EOF.At(GetCurrentPosition());
 
-                if (c == Symbols.LessThan)
+                if (c == Symbols.LessThan && !IsSuppressingErrors)
                     throw XmlParseError.XmlLtInAttributeValue.At(GetCurrentPosition());
 
                 if (c == Symbols.Ampersand)
