@@ -184,6 +184,35 @@ namespace AngleSharp.Xml.Tests.Tokenizer
         }
 
         [Test]
+        public void XmlTokenizerTagWithInvalidReferenceThrows()
+        {
+            var s = new TextSource("<foo bar=\"&#34\" baz=\"123\"/>");
+            var t = CreateTokenizer(s);
+            t.IsSuppressingErrors = false;
+            Assert.Throws<XmlParseException>(() => t.Get());
+        }
+
+
+        [Test]
+        public void XmlTokenizerTagWithInvalidReferenceSuppresses()
+        {
+            var s = new TextSource("<foo bar=\"&#34\" baz=\"123\">");
+            var t = CreateTokenizer(s);
+            t.IsSuppressingErrors = true;
+            var foo = t.Get() as XmlTagToken;
+
+            Assert.IsNotNull(foo);
+            Assert.AreEqual(XmlTokenType.StartTag, foo.Type);
+            Assert.IsFalse(foo.IsSelfClosing);
+            Assert.AreEqual("foo", foo.Name);
+            Assert.AreEqual(2, foo.Attributes.Count);
+            Assert.AreEqual("bar", foo.Attributes[0].Key);
+            Assert.AreEqual("&#34", foo.Attributes[0].Value);
+            Assert.AreEqual("baz", foo.Attributes[1].Key);
+            Assert.AreEqual("123", foo.Attributes[1].Value);
+        }
+
+        [Test]
         public void XmlTokenizerTagThrowsWithADiamond()
         {
             var s = new TextSource("<foo bar=\"a < b\">");

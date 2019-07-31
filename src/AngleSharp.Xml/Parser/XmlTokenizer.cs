@@ -247,7 +247,23 @@ namespace AngleSharp.Xml.Parser
             if (!IsSuppressingErrors)
                 throw XmlParseError.CharacterReferenceNotTerminated.At(GetCurrentPosition());
 
-            StringBuffer.Insert(start, Symbols.Ampersand);
+            if (c == Symbols.DoubleQuote)
+            {
+                this.Back();
+            }
+
+            StringBuffer.Insert(start++, Symbols.Ampersand);
+
+            if (numeric)
+            {
+                StringBuffer.Insert(start++, Symbols.Num);
+            }
+
+            if (hex)
+            {
+                StringBuffer.Insert(start++, 'x');
+            }
+
             return String.Empty;
         }
 
