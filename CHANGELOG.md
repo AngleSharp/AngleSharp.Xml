@@ -1,3 +1,9 @@
+# 0.13.0
+
+Released on Friday, September 6 2019.
+
+- Added `ToXml` and `ToMarkup` extensions for the formatting
+
 # 0.12.1
 
 Released on Wednesday, May 15 2019.
