@@ -23,6 +23,24 @@ var config = Configuration.Default
 
 This will register a parser for XML related content.
 
+## XML Parser
+
+Alternatively, you can also the `XmlParser` directly:
+
+```cs
+var parser = new XmlParser();
+parser.ParseDocument(@"<?xml version=""1.0"" encoding=""ISO-8859-1""?>
+    <note>
+        <to>Tove</to>
+        <from>Jani</from>
+        <heading>Reminder</heading>
+        <body>Don't forget me this weekend!</body>
+    </note>"
+);
+```
+
+The `XmlParser` supports a variety of options, most notably it can suppress (i.e., not throw on) errors.
+
 ## Advantages of AngleSharp.Xml over System.Xml
 
 The main advantage is that AngleSharp.Xml is part of the AngleSharp ecosystem and integrates well, e.g., by allowing remove XML files to be loaded, interpreting SVG documents or XHTML. A major point is AngleSharp.Xml also contains parts of a DTD parser, which could be used to validate XML documents.
