@@ -1,3 +1,11 @@
+# 0.14.0
+
+Released on ?.
+
+- Added more overloads for `ToXml` and `ToMarkup`
+- Allow transforming all empty elements to self closing tags
+- Serialize self-closing tags correctly (#11)
+
 # 0.13.0
 
 Released on Friday, September 6 2019.
