@@ -414,8 +414,7 @@ namespace AngleSharp.Xml.Parser
                 name = name.Substring(colon + 1);
             }
 
-            //TODO transport flags
-            return _document.CreateElementFrom(name, prefix);
+            return _document.CreateElementFrom(name, prefix, flags);
         }
 
         private Attr CreateAttribute(String name, String value)

@@ -139,6 +139,8 @@ namespace AngleSharp.Xml
         /// <returns>The formatted text.</returns>
         public String Text(ICharacterData text) => ChildFormatter.Text(text);
 
+        String IMarkupFormatter.LiteralText(ICharacterData text) => ChildFormatter.LiteralText(text);
+
         #endregion
 
         #region Helpers
