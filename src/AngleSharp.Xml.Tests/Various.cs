@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Xml.Tests
+namespace AngleSharp.Xml.Tests
 {
     using AngleSharp.Dom;
     using AngleSharp.Io;
@@ -61,6 +61,40 @@
             Assert.IsInstanceOf<SvgDocument>(document);
             Assert.AreEqual("svg", document.DocumentElement.NodeName);
             Assert.AreEqual("path", document.DocumentElement.FirstElementChild.NodeName);
+        }
+
+        [Test]
+        public void SelfClosingTagsAreSerializedCorrectlyByDefaultFormatter_Issue11()
+        {
+            var parser = new XmlParser();
+            var xmlDoc = parser.ParseDocument(
+                @"<Project Sdk=""Microsoft.NET.Sdk"">
+            <ItemGroup>
+                <PackageReference Include=""AngleSharp"" Version=""0.12.1"" />
+                <PackageReference></PackageReference>
+            </ItemGroup>
+        </Project>");
+            var xml = xmlDoc.ToXml();
+            Assert.AreEqual("<Project Sdk=\"Microsoft.NET.Sdk\">\n            <ItemGroup>\n                <PackageReference Include=\"AngleSharp\" Version=\"0.12.1\" />\n                <PackageReference></PackageReference>\n            </ItemGroup>\n        </Project>", xml);
+        }
+
+        [Test]
+        public void EmptyTagsAreSerializedCorrectlyWithStandardFormatterWithOption_Issue11()
+        {
+            var parser = new XmlParser();
+            var xmlDoc = parser.ParseDocument(
+                @"<Project Sdk=""Microsoft.NET.Sdk"">
+            <ItemGroup>
+                <PackageReference Include=""AngleSharp"" Version=""0.12.1"" />
+                <PackageReference></PackageReference>
+            </ItemGroup>
+        </Project>");
+            var formatter = new XmlMarkupFormatter
+            {
+                IsAlwaysSelfClosing = true,
+            };
+            var xml = xmlDoc.ToHtml(formatter);
+            Assert.AreEqual("<Project Sdk=\"Microsoft.NET.Sdk\">\n            <ItemGroup>\n                <PackageReference Include=\"AngleSharp\" Version=\"0.12.1\" />\n                <PackageReference />\n            </ItemGroup>\n        </Project>", xml);
         }
 
         private static Task<IDocument> GenerateDocument(String content, String contentType)

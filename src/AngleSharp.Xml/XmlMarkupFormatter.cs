@@ -18,6 +18,16 @@ namespace AngleSharp.Xml
 
         #endregion
 
+        #region Properties
+
+        /// <summary>
+        /// Gets or sets if empty elements should always be considered self-closing.
+        /// Otherwise, requires the element to have a self-closing flag.
+        /// </summary>
+        public Boolean IsAlwaysSelfClosing { get; set; }
+
+        #endregion
+
         #region Methods
 
         String IMarkupFormatter.CloseTag(IElement element, Boolean selfClosing)
@@ -25,7 +35,8 @@ namespace AngleSharp.Xml
             var prefix = element.Prefix;
             var name = element.LocalName;
             var tag = !String.IsNullOrEmpty(prefix) ? String.Concat(prefix, ":", name) : name;
-            return selfClosing ? String.Empty : String.Concat("</", tag, ">");
+            var closed = selfClosing || IsAlwaysSelfClosing && !element.HasChildNodes;
+            return closed ? String.Empty : String.Concat("</", tag, ">");
         }
 
         String IMarkupFormatter.Comment(IComment comment) => String.Concat("<!--", comment.Data, "-->");
@@ -59,7 +70,7 @@ namespace AngleSharp.Xml
                 temp.Append(" ").Append(Instance.Attribute(attribute));
             }
 
-            if (selfClosing)
+            if (selfClosing || (IsAlwaysSelfClosing && !element.HasChildNodes))
             {
                 temp.Append(" /");
             }
