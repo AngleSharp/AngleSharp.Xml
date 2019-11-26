@@ -9,11 +9,11 @@ namespace AngleSharp.Xml.Dom
     /// The object representation of an XMLElement.
     /// </summary>
     sealed class XmlElement : Element
-    {        
+    {
         #region ctor
 
-        public XmlElement(Document owner, String name, String prefix = null, String namespaceUri = null, NodeFlags flags = NodeFlags.None)
-            : base(owner, name, prefix, namespaceUri, flags)
+        public XmlElement(Document owner, String name, String prefix = "", String namespaceUri = null, NodeFlags flags = NodeFlags.None)
+            : base(owner, string.IsNullOrEmpty(prefix) ? name : prefix + ":" + name, name, prefix ?? "", namespaceUri, flags)
         {
         }
 

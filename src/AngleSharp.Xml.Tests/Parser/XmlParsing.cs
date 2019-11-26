@@ -71,5 +71,14 @@ namespace AngleSharp.Xml.Tests.Parser
             var document = parser.ParseDocument(source);
             Assert.AreEqual("&nbsp;", document.DocumentElement.TextContent);
         }
+
+        [Test]
+        public void ParseValidXmlPrefixShouldBeEmpty()
+        {
+            var source = "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\" />";
+            var parser = new XmlParser();
+            var document = parser.ParseDocument(source);
+            Assert.AreEqual("", document.DocumentElement.Prefix);
+        }
     }
 }
