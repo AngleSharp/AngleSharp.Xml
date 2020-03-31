@@ -1,10 +1,11 @@
 # 0.14.0
 
-Released on ?.
+Released on Tuesday, March 31 2020.
 
 - Added more overloads for `ToXml` and `ToMarkup`
 - Allow transforming all empty elements to self closing tags
 - Serialize self-closing tags correctly (#11)
+- Updated the `IMarkupFormatter` implementations
 
 # 0.13.0
 
