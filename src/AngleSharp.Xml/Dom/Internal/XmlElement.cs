@@ -12,8 +12,8 @@ namespace AngleSharp.Xml.Dom
     {        
         #region ctor
 
-        public XmlElement(Document owner, String name, String prefix = null)
-            : base(owner, name, prefix, null)
+        public XmlElement(Document owner, String name, String prefix = null, String namespaceUri = null, NodeFlags flags = NodeFlags.None)
+            : base(owner, name, prefix, namespaceUri, flags)
         {
         }
 

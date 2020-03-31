@@ -45,10 +45,7 @@ namespace AngleSharp.Svg.Dom
 
         #region Methods
 
-        public override Element CreateElementFrom(String name, String prefix)
-        {
-            return _factory.Create(this, name, prefix) as Element;
-        }
+        public override Element CreateElementFrom(String name, String prefix, NodeFlags flags = NodeFlags.None) => _factory.Create(this, name, prefix, flags);
 
         public override Node Clone(Document owner, Boolean deep)
         {

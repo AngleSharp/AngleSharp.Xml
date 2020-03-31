@@ -271,7 +271,7 @@ namespace AngleSharp.Xml.Parser
                 case XmlTokenType.StartTag:
                 {
                     var tagToken = (XmlTagToken)token;
-                    var element = CreateElement(tagToken.Name);
+                    var element = CreateElement(tagToken.Name, tagToken.IsSelfClosing);
                     CurrentNode.AppendChild(element);
 
                     for (var i = 0; i < tagToken.Attributes.Count; i++)
@@ -402,10 +402,11 @@ namespace AngleSharp.Xml.Parser
 
         #region Helpers
 
-        private Element CreateElement(String name)
+        private Element CreateElement(String name, Boolean selfClosing)
         {
             var prefix = default(String);
             var colon = name.IndexOf(Symbols.Colon);
+            var flags = selfClosing ? NodeFlags.SelfClosing : NodeFlags.None;
 
             if (colon > 0 && colon < name.Length - 1)
             {
@@ -413,7 +414,7 @@ namespace AngleSharp.Xml.Parser
                 name = name.Substring(colon + 1);
             }
 
-            return _document.CreateElementFrom(name, prefix);
+            return _document.CreateElementFrom(name, prefix, flags);
         }
 
         private Attr CreateAttribute(String name, String value)

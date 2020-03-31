@@ -37,7 +37,7 @@ namespace AngleSharp.Xml.Dom
 
         #region Methods
 
-        public override Element CreateElementFrom(String name, String prefix) => new XmlElement(this, name, prefix);
+        public override Element CreateElementFrom(String name, String prefix, NodeFlags flags = NodeFlags.None) => new XmlElement(this, name, prefix, flags: flags);
 
         public override Node Clone(Document owner, Boolean deep)
         {
