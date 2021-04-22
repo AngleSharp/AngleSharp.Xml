@@ -1,3 +1,10 @@
+# 0.15.0
+
+Released on Thursday, April 22 2021.
+
+- Dropped support for .NET Standard 1.3 target
+- Fixed breaking parsing upon invalid syntax when suppressing errors (#14)
+
 # 0.14.0
 
 Released on Tuesday, March 31 2020.
