@@ -2,6 +2,7 @@ namespace AngleSharp.Xml.Tests.Parser
 {
     using AngleSharp.Xml.Parser;
     using NUnit.Framework;
+    using System;
 
     [TestFixture]
     public class XmlParsing
@@ -70,6 +71,80 @@ namespace AngleSharp.Xml.Tests.Parser
             });
             var document = parser.ParseDocument(source);
             Assert.AreEqual("&nbsp;", document.DocumentElement.TextContent);
+        }
+
+        [Test]
+        public void ParseInvalidXmlShouldThrowWhenNotSuppressingErrors_Issue14()
+        {
+            Assert.Throws<XmlParseException>(() =>
+            {
+                var source = @"<P>
+    <P>
+        <FONT FACE=""calibri"" SIZE=""14.666666666666666"" COLOR=""#000000""></FONT>
+    </P>
+    <P>
+        <FONT FACE=""calibri"" SIZE=""14.666666666666666"" COLOR=""#000000""></FONT>
+    </P>
+    <P>
+        <FONT FACE=""calibri"" SIZE=""14.666666666666666"" COLOR=""#0000ff"">
+            <U>
+                <https://some.url.example.com></U>
+            </FONT>
+            <FONT FACE=""calibri"" SIZE=""14.666666666666666"" COLOR=""#000000"">
+                <B></B>
+            </FONT>
+            <FONT FACE=""calibri"" SIZE=""14.666666666666666"" COLOR=""#000000""></FONT>
+        </P>
+        <P>
+            <FONT FACE=""calibri"" SIZE=""14.666666666666666"" COLOR=""#000000""></FONT>
+        </P>
+        <P>
+            <FONT FACE=""calibri"" SIZE=""14.666666666666666"" COLOR=""#000000""></FONT>
+        </P>
+    </P>";
+                var parser = new XmlParser(new XmlParserOptions
+                {
+                    IsSuppressingErrors = false
+                });
+                parser.ParseDocument(source);
+            });
+        }
+
+        [Test]
+        public void ParseInvalidXmlShouldNotThrowWhenSuppressingErrors_Issue14()
+        {
+            Assert.DoesNotThrow(() =>
+            {
+                var source = @"<P>
+    <P>
+        <FONT FACE=""calibri"" SIZE=""14.666666666666666"" COLOR=""#000000""></FONT>
+    </P>
+    <P>
+        <FONT FACE=""calibri"" SIZE=""14.666666666666666"" COLOR=""#000000""></FONT>
+    </P>
+    <P>
+        <FONT FACE=""calibri"" SIZE=""14.666666666666666"" COLOR=""#0000ff"">
+            <U>
+                <https://some.url.example.com></U>
+            </FONT>
+            <FONT FACE=""calibri"" SIZE=""14.666666666666666"" COLOR=""#000000"">
+                <B></B>
+            </FONT>
+            <FONT FACE=""calibri"" SIZE=""14.666666666666666"" COLOR=""#000000""></FONT>
+        </P>
+        <P>
+            <FONT FACE=""calibri"" SIZE=""14.666666666666666"" COLOR=""#000000""></FONT>
+        </P>
+        <P>
+            <FONT FACE=""calibri"" SIZE=""14.666666666666666"" COLOR=""#000000""></FONT>
+        </P>
+    </P>";
+                var parser = new XmlParser(new XmlParserOptions
+                {
+                    IsSuppressingErrors = true
+                });
+                parser.ParseDocument(source);
+            });
         }
     }
 }

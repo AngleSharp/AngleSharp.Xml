@@ -35,29 +35,17 @@ namespace AngleSharp.Svg.Dom
 
         #region Properties
 
-        public override IElement DocumentElement
-        {
-            get { return RootElement; }
-        }
+        public override IElement DocumentElement => RootElement;
 
-        public ISvgSvgElement RootElement
-        {
-            get { return this.FindChild<ISvgSvgElement>(); }
-        }
+        public ISvgSvgElement RootElement => this.FindChild<ISvgSvgElement>();
 
-        public override IEntityProvider Entities
-        {
-            get { return Context.GetProvider<IEntityProvider>() ?? XmlEntityProvider.Resolver; }
-        }
+        public override IEntityProvider Entities => Context.GetProvider<IEntityProvider>() ?? XmlEntityProvider.Resolver;
 
         #endregion
 
         #region Methods
 
-        public override Element CreateElementFrom(String name, String prefix)
-        {
-            return _factory.Create(this, name, prefix) as Element;
-        }
+        public override Element CreateElementFrom(String name, String prefix, NodeFlags flags = NodeFlags.None) => _factory.Create(this, name, prefix, flags);
 
         public override Node Clone(Document owner, Boolean deep)
         {

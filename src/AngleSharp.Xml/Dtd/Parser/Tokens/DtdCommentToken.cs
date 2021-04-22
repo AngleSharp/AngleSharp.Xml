@@ -27,8 +27,8 @@ namespace AngleSharp.Xml.Dtd.Parser
         /// </summary>
         public String Data
         {
-            get { return _data; }
-            set { _data = value; }
+            get => _data;
+            set => _data = value;
         }
 
         #endregion

@@ -132,8 +132,10 @@ namespace AngleSharp.Xml.Parser
 
             if (c == Symbols.SquareBracketClose)
             {
-                if (GetNext() == Symbols.GreaterThan)
+                if (GetNext() == Symbols.GreaterThan && !IsSuppressingErrors)
+                {
                     throw XmlParseError.XmlInvalidCharData.At(GetCurrentPosition());
+                }
 
                 Back();
             }
@@ -151,7 +153,16 @@ namespace AngleSharp.Xml.Parser
             while (true)
             {
                 if (c == Symbols.EndOfFile)
-                    throw XmlParseError.EOF.At(GetCurrentPosition());
+                {
+                    if (IsSuppressingErrors)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        throw XmlParseError.EOF.At(GetCurrentPosition());
+                    }
+                }
 
                 if (c == Symbols.SquareBracketClose && ContinuesWithSensitive("]]>"))
                 {
@@ -241,13 +252,33 @@ namespace AngleSharp.Xml.Parser
                 }
 
                 if (!IsSuppressingErrors)
+                {
                     throw XmlParseError.CharacterReferenceInvalidCode.At(_position);
+                }
             }
 
             if (!IsSuppressingErrors)
+            {
                 throw XmlParseError.CharacterReferenceNotTerminated.At(GetCurrentPosition());
+            }
 
-            StringBuffer.Insert(start, Symbols.Ampersand);
+            if (c == Symbols.DoubleQuote)
+            {
+                Back();
+            }
+
+            StringBuffer.Insert(start++, Symbols.Ampersand);
+
+            if (numeric)
+            {
+                StringBuffer.Insert(start++, Symbols.Num);
+            }
+
+            if (hex)
+            {
+                StringBuffer.Insert(start++, 'x');
+            }
+
             return String.Empty;
         }
 
@@ -287,8 +318,15 @@ namespace AngleSharp.Xml.Parser
                 StringBuffer.Append(c);
                 return TagName(NewOpenTag());
             }
-
-            throw XmlParseError.XmlInvalidStartTag.At(GetCurrentPosition());
+            else if (IsSuppressingErrors)
+            {
+                StringBuffer.Append(Symbols.LessThan);
+                return DataText(c);
+            }
+            else
+            {
+                throw XmlParseError.XmlInvalidStartTag.At(GetCurrentPosition());
+            }
         }
 
         /// <summary>
@@ -320,10 +358,20 @@ namespace AngleSharp.Xml.Parser
                 }
             }
 
-            if (c == Symbols.EndOfFile)
+            if (IsSuppressingErrors)
+            {
+                var tag = NewCloseTag();
+                tag.Name = FlushBuffer();
+                return tag;
+            }
+            else if (c == Symbols.EndOfFile)
+            {
                 throw XmlParseError.EOF.At(GetCurrentPosition());
-
-            throw XmlParseError.XmlInvalidEndTag.At(GetCurrentPosition());
+            }
+            else
+            {
+                throw XmlParseError.XmlInvalidEndTag.At(GetCurrentPosition());
+            }
         }
 
         /// <summary>
@@ -343,9 +391,6 @@ namespace AngleSharp.Xml.Parser
 
             tag.Name = FlushBuffer();
 
-            if (c == Symbols.EndOfFile)
-                throw XmlParseError.EOF.At(GetCurrentPosition());
-
             if (c == Symbols.GreaterThan)
             {
                 return tag;
@@ -358,8 +403,18 @@ namespace AngleSharp.Xml.Parser
             {
                 return TagSelfClosing(tag);
             }
-
-            throw XmlParseError.XmlInvalidName.At(GetCurrentPosition());
+            else if (IsSuppressingErrors)
+            {
+                return tag;
+            }
+            else if (c == Symbols.EndOfFile)
+            {
+                throw XmlParseError.EOF.At(GetCurrentPosition());
+            }
+            else
+            {
+                throw XmlParseError.XmlInvalidName.At(GetCurrentPosition());
+            }
         }
 
         /// <summary>
@@ -375,11 +430,18 @@ namespace AngleSharp.Xml.Parser
             {
                 return tag;
             }
-
-            if (c == Symbols.EndOfFile)
+            else if (IsSuppressingErrors)
+            {
+                return tag;
+            }
+            else if (c == Symbols.EndOfFile)
+            {
                 throw XmlParseError.EOF.At(GetCurrentPosition());
-
-            throw XmlParseError.XmlInvalidName.At(GetCurrentPosition());
+            }
+            else
+            {
+                throw XmlParseError.XmlInvalidName.At(GetCurrentPosition());
+            }
         }
 
         /// <summary>
@@ -405,8 +467,14 @@ namespace AngleSharp.Xml.Parser
                 Advance(6);
                 return CData();
             }
-
-            throw XmlParseError.UndefinedMarkupDeclaration.At(pos);
+            else if (IsSuppressingErrors)
+            {
+                return CommentStart();
+            }
+            else
+            {
+                throw XmlParseError.UndefinedMarkupDeclaration.At(pos);
+            }
         }
 
         #endregion
@@ -434,8 +502,15 @@ namespace AngleSharp.Xml.Parser
                 Advance(6);
                 return DeclarationVersionAfterName(NewDeclaration());
             }
-
-            throw XmlParseError.XmlDeclarationInvalid.At(GetCurrentPosition());
+            else if (IsSuppressingErrors)
+            {
+                StringBuffer.Append(TagNames.Xml);
+                return ProcessingTarget(c, NewProcessing());
+            }
+            else
+            {
+                throw XmlParseError.XmlDeclarationInvalid.At(GetCurrentPosition());
+            }
         }
 
         /// <summary>
@@ -446,8 +521,10 @@ namespace AngleSharp.Xml.Parser
         {
             var c = SkipSpaces();
 
-            if (c != Symbols.Equality)
+            if (c != Symbols.Equality && !IsSuppressingErrors)
+            {
                 throw XmlParseError.XmlDeclarationInvalid.At(GetCurrentPosition());
+            }
 
             return DeclarationVersionBeforeValue(decl);
         }
@@ -460,8 +537,10 @@ namespace AngleSharp.Xml.Parser
         {
             var c = SkipSpaces();
 
-            if (c != Symbols.DoubleQuote && c != Symbols.SingleQuote)
+            if (c != Symbols.DoubleQuote && c != Symbols.SingleQuote && !IsSuppressingErrors)
+            {
                 throw XmlParseError.XmlDeclarationInvalid.At(GetCurrentPosition());
+            }
 
             return DeclarationVersionValue(decl, c);
         }
@@ -478,7 +557,16 @@ namespace AngleSharp.Xml.Parser
             while (c != quote)
             {
                 if (c == Symbols.EndOfFile)
-                    throw XmlParseError.EOF.At(GetCurrentPosition());
+                {
+                    if (IsSuppressingErrors)
+                    {
+                        return DeclarationEnd(c, decl);
+                    }
+                    else
+                    {
+                        throw XmlParseError.EOF.At(GetCurrentPosition());
+                    }
+                }
 
                 StringBuffer.Append(c);
                 c = GetNext();
@@ -525,8 +613,10 @@ namespace AngleSharp.Xml.Parser
         {
             var c = SkipSpaces();
 
-            if (c != Symbols.Equality)
+            if (c != Symbols.Equality && !IsSuppressingErrors)
+            {
                 throw XmlParseError.XmlDeclarationInvalid.At(GetCurrentPosition());
+            }
 
             return DeclarationEncodingBeforeValue(decl);
         }
@@ -551,7 +641,14 @@ namespace AngleSharp.Xml.Parser
                 }
             }
 
-            throw XmlParseError.XmlDeclarationInvalid.At(GetCurrentPosition());
+            if (IsSuppressingErrors)
+            {
+                return DataText(c);
+            }
+            else
+            {
+                throw XmlParseError.XmlDeclarationInvalid.At(GetCurrentPosition());
+            }
         }
 
         /// <summary>
@@ -566,7 +663,16 @@ namespace AngleSharp.Xml.Parser
             while (c != quote)
             {
                 if (!c.IsAlphanumericAscii() && c != Symbols.Dot && c != Symbols.Underscore && c != Symbols.Minus)
-                    throw XmlParseError.XmlDeclarationInvalid.At(GetCurrentPosition());
+                {
+                    if (IsSuppressingErrors)
+                    {
+                        return DeclarationAfterEncoding(decl);
+                    }
+                    else
+                    {
+                        throw XmlParseError.XmlDeclarationInvalid.At(GetCurrentPosition());
+                    }
+                }
 
                 StringBuffer.Append(c);
                 c = GetNext();
@@ -608,10 +714,19 @@ namespace AngleSharp.Xml.Parser
         {
             var c = SkipSpaces();
 
-            if (c != Symbols.Equality)
+            if (c == Symbols.Equality)
+            {
+                return DeclarationStandaloneBeforeValue(decl);
+            }
+            else if (IsSuppressingErrors)
+            {
+                return DeclarationStandaloneBeforeValue(decl);
+            }
+            else
+            {
                 throw XmlParseError.XmlDeclarationInvalid.At(GetCurrentPosition());
+            }
 
-            return DeclarationStandaloneBeforeValue(decl);
         }
 
         /// <summary>
@@ -622,10 +737,18 @@ namespace AngleSharp.Xml.Parser
         {
             var c = SkipSpaces();
 
-            if (c != Symbols.DoubleQuote && c != Symbols.SingleQuote)
+            if (c == Symbols.DoubleQuote || c == Symbols.SingleQuote)
+            {
+                return DeclarationStandaloneValue(decl, c);
+            }
+            else if (IsSuppressingErrors)
+            {
+                return decl;
+            }
+            else
+            {
                 throw XmlParseError.XmlDeclarationInvalid.At(GetCurrentPosition());
-
-            return DeclarationStandaloneValue(decl, c);
+            }
         }
 
         /// <summary>
@@ -640,7 +763,16 @@ namespace AngleSharp.Xml.Parser
             while (c != quote)
             {
                 if (c == Symbols.EndOfFile)
-                    throw XmlParseError.EOF.At(GetCurrentPosition());
+                {
+                    if (IsSuppressingErrors)
+                    {
+                        return decl;
+                    }
+                    else
+                    {
+                        throw XmlParseError.EOF.At(GetCurrentPosition());
+                    }
+                }
 
                 StringBuffer.Append(c);
                 c = GetNext();
@@ -655,6 +787,10 @@ namespace AngleSharp.Xml.Parser
             else if (s.Is(Keywords.No))
             {
                 decl.Standalone = false;
+            }
+            else if (IsSuppressingErrors)
+            {
+                return decl;
             }
             else
             {
@@ -676,10 +812,18 @@ namespace AngleSharp.Xml.Parser
                 c = GetNext();
             }
 
-            if (c != Symbols.QuestionMark || GetNext() != Symbols.GreaterThan)
+            if (c == Symbols.QuestionMark && GetNext() == Symbols.GreaterThan)
+            {
+                return decl;
+            }
+            else if (IsSuppressingErrors)
+            {
+                return decl;
+            }
+            else
+            {
                 throw XmlParseError.XmlDeclarationInvalid.At(GetCurrentPosition());
-
-            return decl;
+            }
         }
 
         #endregion
@@ -697,8 +841,14 @@ namespace AngleSharp.Xml.Parser
             {
                 return DoctypeNameBefore();
             }
-
-            throw XmlParseError.DoctypeInvalid.At(GetCurrentPosition());
+            else if (IsSuppressingErrors)
+            {
+                return DataText(c);
+            }
+            else
+            {
+                throw XmlParseError.DoctypeInvalid.At(GetCurrentPosition());
+            }
         }
 
         /// <summary>
@@ -713,8 +863,14 @@ namespace AngleSharp.Xml.Parser
                 StringBuffer.Append(c);
                 return DoctypeName(NewDoctype());
             }
-
-            throw XmlParseError.DoctypeInvalid.At(GetCurrentPosition());
+            else if (IsSuppressingErrors)
+            {
+                return NewDoctype();
+            }
+            else
+            {
+                throw XmlParseError.DoctypeInvalid.At(GetCurrentPosition());
+            }
         }
 
         /// <summary>
@@ -742,8 +898,14 @@ namespace AngleSharp.Xml.Parser
             {
                 return DoctypeNameAfter(doctype);
             }
-
-            throw XmlParseError.DoctypeInvalid.At(GetCurrentPosition());
+            else if (IsSuppressingErrors)
+            {
+                return doctype;
+            }
+            else
+            {
+                throw XmlParseError.DoctypeInvalid.At(GetCurrentPosition());
+            }
         }
 
         /// <summary>
@@ -774,8 +936,14 @@ namespace AngleSharp.Xml.Parser
                 Advance();
                 return DoctypeAfter(GetNext(), doctype);
             }
-
-            throw XmlParseError.DoctypeInvalid.At(GetCurrentPosition());
+            else if (IsSuppressingErrors)
+            {
+                return doctype;
+            }
+            else
+            {
+                throw XmlParseError.DoctypeInvalid.At(GetCurrentPosition());
+            }
         }
 
         /// <summary>
@@ -798,7 +966,14 @@ namespace AngleSharp.Xml.Parser
                 }
             }
 
-            throw XmlParseError.DoctypeInvalid.At(GetCurrentPosition());
+            if (IsSuppressingErrors)
+            {
+                return doctype;
+            }
+            else
+            {
+                throw XmlParseError.DoctypeInvalid.At(GetCurrentPosition());
+            }
         }
 
         /// <summary>
@@ -813,11 +988,19 @@ namespace AngleSharp.Xml.Parser
 
             while (c != quote)
             {
-                if (!c.IsPubidChar())
+                if (c.IsPubidChar())
+                {
+                    StringBuffer.Append(c);
+                    c = GetNext();
+                }
+                else if (IsSuppressingErrors)
+                {
+                    break;
+                }
+                else
+                {
                     throw XmlParseError.XmlInvalidPubId.At(GetCurrentPosition());
-
-                StringBuffer.Append(c);
-                c = GetNext();
+                }
             }
 
             doctype.PublicIdentifier = FlushBuffer();
@@ -841,8 +1024,14 @@ namespace AngleSharp.Xml.Parser
             {
                 return DoctypeBetween(doctype);
             }
-
-            throw XmlParseError.DoctypeInvalid.At(GetCurrentPosition());
+            else if (IsSuppressingErrors)
+            {
+                return doctype;
+            }
+            else
+            {
+                throw XmlParseError.DoctypeInvalid.At(GetCurrentPosition());
+            }
         }
 
         /// <summary>
@@ -863,8 +1052,14 @@ namespace AngleSharp.Xml.Parser
                 doctype.SystemIdentifier = String.Empty;
                 return DoctypeSystemIdentifierValue(doctype, c);
             }
-
-            throw XmlParseError.DoctypeInvalid.At(GetCurrentPosition());
+            else if (IsSuppressingErrors)
+            {
+                return doctype;
+            }
+            else
+            {
+                throw XmlParseError.DoctypeInvalid.At(GetCurrentPosition());
+            }
         }
 
         /// <summary>
@@ -887,7 +1082,14 @@ namespace AngleSharp.Xml.Parser
                 }
             }
 
-            throw XmlParseError.DoctypeInvalid.At(GetCurrentPosition());
+            if (IsSuppressingErrors)
+            {
+                return doctype;
+            }
+            else
+            {
+                throw XmlParseError.DoctypeInvalid.At(GetCurrentPosition());
+            }
         }
 
         /// <summary>
@@ -902,11 +1104,19 @@ namespace AngleSharp.Xml.Parser
 
             while (c != quote)
             {
-                if (c == Symbols.EndOfFile)
+                if (c != Symbols.EndOfFile)
+                {
+                    StringBuffer.Append(c);
+                    c = GetNext();
+                }
+                else if (IsSuppressingErrors)
+                {
+                    break;
+                }
+                else
+                {
                     throw XmlParseError.EOF.At(GetCurrentPosition());
-
-                StringBuffer.Append(c);
-                c = GetNext();
+                }
             }
 
             doctype.SystemIdentifier = FlushBuffer();
@@ -948,8 +1158,14 @@ namespace AngleSharp.Xml.Parser
             {
                 return doctype;
             }
-
-            throw XmlParseError.DoctypeInvalid.At(GetCurrentPosition());
+            else if (IsSuppressingErrors)
+            {
+                return doctype;
+            }
+            else
+            {
+                throw XmlParseError.DoctypeInvalid.At(GetCurrentPosition());
+            }
         }
 
         #endregion
@@ -974,15 +1190,30 @@ namespace AngleSharp.Xml.Parser
             }
 
             if (c == Symbols.EndOfFile)
-                throw XmlParseError.EOF.At(GetCurrentPosition());
+            {
+                if (IsSuppressingErrors)
+                {
+                    return tag;
+                }
+                else
+                {
+                    throw XmlParseError.EOF.At(GetCurrentPosition());
+                }
+            }
 
             if (c.IsXmlNameStart())
             {
                 StringBuffer.Append(c);
                 return AttributeName(tag);
             }
-
-            throw XmlParseError.XmlInvalidAttribute.At(GetCurrentPosition());
+            else if (IsSuppressingErrors)
+            {
+                return tag;
+            }
+            else
+            {
+                throw XmlParseError.XmlInvalidAttribute.At(GetCurrentPosition());
+            }
         }
 
         /// <summary>
@@ -1002,7 +1233,16 @@ namespace AngleSharp.Xml.Parser
             var name = FlushBuffer();
 
             if (!String.IsNullOrEmpty(tag.GetAttribute(name)))
-                throw XmlParseError.XmlUniqueAttribute.At(GetCurrentPosition());
+            {
+                if (IsSuppressingErrors)
+                {
+                    return tag;
+                }
+                else
+                {
+                    throw XmlParseError.XmlUniqueAttribute.At(GetCurrentPosition());
+                }
+            }
 
             tag.AddAttribute(name);
 
@@ -1012,10 +1252,18 @@ namespace AngleSharp.Xml.Parser
                 while (c.IsSpaceCharacter());
             }
 
-            if (c != Symbols.Equality)
+            if (c == Symbols.Equality)
+            {
+                return AttributeBeforeValue(tag);
+            }
+            else if (IsSuppressingErrors)
+            {
+                return tag;
+            }
+            else
+            {
                 throw XmlParseError.XmlInvalidAttribute.At(GetCurrentPosition());
-
-            return AttributeBeforeValue(tag);
+            }
         }
 
         /// <summary>
@@ -1026,10 +1274,18 @@ namespace AngleSharp.Xml.Parser
         {
             var c = SkipSpaces();
 
-            if (c != Symbols.DoubleQuote && c != Symbols.SingleQuote)
+            if (c == Symbols.DoubleQuote || c == Symbols.SingleQuote)
+            {
+                return AttributeValue(tag, c);
+            }
+            else if (IsSuppressingErrors)
+            {
+                return tag;
+            }
+            else
+            {
                 throw XmlParseError.XmlInvalidAttribute.At(GetCurrentPosition());
-
-            return AttributeValue(tag, c);
+            }
         }
 
         /// <summary>
@@ -1044,10 +1300,21 @@ namespace AngleSharp.Xml.Parser
             while (c != quote)
             {
                 if (c == Symbols.EndOfFile)
-                    throw XmlParseError.EOF.At(GetCurrentPosition());
+                {
+                    if (IsSuppressingErrors)
+                    {
+                        return tag;
+                    }
+                    else
+                    {
+                        throw XmlParseError.EOF.At(GetCurrentPosition());
+                    }
+                }
 
-                if (c == Symbols.LessThan)
+                if (c == Symbols.LessThan && !IsSuppressingErrors)
+                {
                     throw XmlParseError.XmlLtInAttributeValue.At(GetCurrentPosition());
+                }
 
                 if (c == Symbols.Ampersand)
                 {
@@ -1085,8 +1352,14 @@ namespace AngleSharp.Xml.Parser
             {
                 return tag;
             }
-
-            throw XmlParseError.XmlInvalidAttribute.At(GetCurrentPosition());
+            else if (IsSuppressingErrors)
+            {
+                return tag;
+            }
+            else
+            {
+                throw XmlParseError.XmlInvalidAttribute.At(GetCurrentPosition());
+            }
         }
 
         #endregion
@@ -1104,8 +1377,14 @@ namespace AngleSharp.Xml.Parser
                 StringBuffer.Append(c);
                 return ProcessingTarget(GetNext(), NewProcessing());
             }
-
-            throw XmlParseError.XmlInvalidPI.At(GetCurrentPosition());
+            else if (IsSuppressingErrors)
+            {
+                return DataText(c);
+            }
+            else
+            {
+                throw XmlParseError.XmlInvalidPI.At(GetCurrentPosition());
+            }
         }
 
         /// <summary>
@@ -1124,7 +1403,16 @@ namespace AngleSharp.Xml.Parser
             pi.Target = FlushBuffer();
 
             if (pi.Target.Isi(TagNames.Xml))
-                throw XmlParseError.XmlInvalidPI.At(GetCurrentPosition());
+            {
+                if (IsSuppressingErrors)
+                {
+                    return pi;
+                }
+                else
+                {
+                    throw XmlParseError.XmlInvalidPI.At(GetCurrentPosition());
+                }
+            }
 
             if (c == Symbols.QuestionMark)
             {
@@ -1140,7 +1428,14 @@ namespace AngleSharp.Xml.Parser
                 return ProcessingContent(pi);
             }
 
-            throw XmlParseError.XmlInvalidPI.At(GetCurrentPosition());
+            if (IsSuppressingErrors)
+            {
+                return pi;
+            }
+            else
+            {
+                throw XmlParseError.XmlInvalidPI.At(GetCurrentPosition());
+            }
         }
 
         /// <summary>
@@ -1172,7 +1467,14 @@ namespace AngleSharp.Xml.Parser
                 }
             }
 
-            throw XmlParseError.EOF.At(GetCurrentPosition());
+            if (IsSuppressingErrors)
+            {
+                return pi;
+            }
+            else
+            {
+                throw XmlParseError.EOF.At(GetCurrentPosition());
+            }
         }
 
         #endregion
@@ -1204,7 +1506,14 @@ namespace AngleSharp.Xml.Parser
                 c = GetNext();
             }
 
-            throw XmlParseError.XmlInvalidComment.At(GetCurrentPosition());
+            if (IsSuppressingErrors)
+            {
+                return CommentEnd();
+            }
+            else
+            {
+                throw XmlParseError.XmlInvalidComment.At(GetCurrentPosition());
+            }
         }
 
         /// <summary>
@@ -1233,8 +1542,14 @@ namespace AngleSharp.Xml.Parser
             {
                 return NewComment();
             }
-
-            throw XmlParseError.XmlInvalidComment.At(GetCurrentPosition());
+            else if (IsSuppressingErrors)
+            {
+                return NewComment();
+            }
+            else
+            {
+                throw XmlParseError.XmlInvalidComment.At(GetCurrentPosition());
+            }
         }
 
         #endregion

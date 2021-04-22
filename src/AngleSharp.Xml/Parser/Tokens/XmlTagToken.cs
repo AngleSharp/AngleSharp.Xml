@@ -38,8 +38,8 @@ namespace AngleSharp.Xml.Parser.Tokens
         /// </summary>
         public Boolean IsSelfClosing
         {
-            get { return _selfClosing; }
-            set { _selfClosing = value; }
+            get => _selfClosing;
+            set => _selfClosing = value;
         }
 
         /// <summary>
@@ -47,8 +47,8 @@ namespace AngleSharp.Xml.Parser.Tokens
         /// </summary>
         public String Name
         {
-            get { return _name; }
-            set { _name = value; }
+            get => _name;
+            set => _name = value;
         }
 
         /// <summary>

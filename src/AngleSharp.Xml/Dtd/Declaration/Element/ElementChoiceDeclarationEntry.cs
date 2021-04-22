@@ -7,10 +7,7 @@ namespace AngleSharp.Xml.Dtd.Declaration
     {
         #region Properties
 
-        public List<ElementQuantifiedDeclarationEntry> Choice
-        {
-            get { return _children; }
-        }
+        public List<ElementQuantifiedDeclarationEntry> Choice => _children;
 
         #endregion
 

@@ -29,10 +29,7 @@ namespace AngleSharp.Xml.Dtd.Declaration
             get { return _attrs[index]; }
         }
 
-        public Int32 Count
-        {
-            get { return _attrs.Count; }
-        }
+        public Int32 Count => _attrs.Count;
 
         public IEnumerable<AttributeDeclarationEntry> Declarations
         {

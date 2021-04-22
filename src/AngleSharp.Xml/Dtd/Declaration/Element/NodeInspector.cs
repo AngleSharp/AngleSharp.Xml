@@ -21,20 +21,11 @@ namespace AngleSharp.Xml.Dtd.Declaration
             }
         }
 
-        public List<INode> Children
-        {
-            get { return nodes; }
-        }
+        public List<INode> Children => nodes;
 
-        public INode Current
-        {
-            get { return Children[Index]; }
-        }
+        public INode Current => Children[Index];
 
-        public Int32 Length
-        {
-            get { return Children.Count; }
-        }
+        public Int32 Length => Children.Count;
 
         public Int32 Index
         {
@@ -42,9 +33,6 @@ namespace AngleSharp.Xml.Dtd.Declaration
             set;
         }
 
-        public Boolean IsCompleted 
-        {
-            get { return Children.Count == Index; }
-        }
+        public Boolean IsCompleted => Children.Count == Index;
     }
 }

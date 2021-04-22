@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Xml
+namespace AngleSharp.Xml
 {
     using AngleSharp.Dom;
     using AngleSharp.Text;
@@ -7,7 +7,7 @@
     /// <summary>
     /// Represents the standard XML markup formatter.
     /// </summary>
-    public sealed class XmlMarkupFormatter : IMarkupFormatter
+    public class XmlMarkupFormatter : IMarkupFormatter
     {
         #region Instance
 
@@ -18,22 +18,33 @@
 
         #endregion
 
+        #region Properties
+
+        /// <summary>
+        /// Gets or sets if empty elements should always be considered self-closing.
+        /// Otherwise, requires the element to have a self-closing flag.
+        /// </summary>
+        public Boolean IsAlwaysSelfClosing { get; set; }
+
+        #endregion
+
         #region Methods
 
-        String IMarkupFormatter.CloseTag(IElement element, Boolean selfClosing)
+        /// <inheritdoc />
+        public virtual String CloseTag(IElement element, Boolean selfClosing)
         {
             var prefix = element.Prefix;
             var name = element.LocalName;
-            var tag = !String.IsNullOrEmpty(prefix) ? prefix + ":" + name : name;
-            return selfClosing ? String.Empty : String.Concat("</", tag, ">");
+            var tag = !String.IsNullOrEmpty(prefix) ? String.Concat(prefix, ":", name) : name;
+            var closed = selfClosing || IsAlwaysSelfClosing && !element.HasChildNodes;
+            return closed ? String.Empty : String.Concat("</", tag, ">");
         }
 
-        String IMarkupFormatter.Comment(IComment comment)
-        {
-            return String.Concat("<!--", comment.Data, "-->");
-        }
+        /// <inheritdoc />
+        public virtual String Comment(IComment comment) => String.Concat("<!--", comment.Data, "-->");
 
-        String IMarkupFormatter.Doctype(IDocumentType doctype)
+        /// <inheritdoc />
+        public virtual String Doctype(IDocumentType doctype)
         {
             var publicId = doctype.PublicIdentifier;
             var systemId = doctype.SystemIdentifier;
@@ -44,7 +55,8 @@
             return String.Concat("<!DOCTYPE ", doctype.Name, externalId, ">");
         }
 
-        String IMarkupFormatter.OpenTag(IElement element, Boolean selfClosing)
+        /// <inheritdoc />
+        public virtual String OpenTag(IElement element, Boolean selfClosing)
         {
             var prefix = element.Prefix;
             var temp = StringBuilderPool.Obtain();
@@ -59,10 +71,10 @@
 
             foreach (var attribute in element.Attributes)
             {
-                temp.Append(" ").Append(Instance.Attribute(attribute));
+                temp.Append(" ").Append(Attribute(attribute));
             }
 
-            if (selfClosing)
+            if (selfClosing || (IsAlwaysSelfClosing && !element.HasChildNodes))
             {
                 temp.Append(" /");
             }
@@ -71,19 +83,24 @@
             return temp.ToPool();
         }
 
-        String IMarkupFormatter.Processing(IProcessingInstruction processing)
+        /// <inheritdoc />
+        public virtual String Processing(IProcessingInstruction processing)
         {
             var value = String.Concat(processing.Target, " ", processing.Data);
             return String.Concat("<?", value, "?>");
         }
 
-        String IMarkupFormatter.Text(ICharacterData text)
+        /// <inheritdoc />
+        public virtual String LiteralText(ICharacterData text) => text.Data;
+
+        /// <inheritdoc />
+        public virtual String Text(ICharacterData text)
         {
             var content = text.Data;
             return EscapeText(content);
         }
 
-        String IMarkupFormatter.Attribute(IAttr attribute)
+        private String Attribute(IAttr attribute)
         {
             var value = attribute.Value;
             var temp = StringBuilderPool.Obtain();

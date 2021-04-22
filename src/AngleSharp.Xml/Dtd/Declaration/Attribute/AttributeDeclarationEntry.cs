@@ -22,7 +22,7 @@ namespace AngleSharp.Xml.Dtd.Declaration
 
         public AttributeTypeDeclaration Type
         {
-            get { return _type; }
+            get => _type;
             set
             {
                 _type = value;
@@ -32,7 +32,7 @@ namespace AngleSharp.Xml.Dtd.Declaration
 
         public AttributeValueDeclaration Default
         {
-            get { return _value; }
+            get => _value;
             set
             {
                 _value = value;

@@ -6,6 +6,7 @@
 [![GitHub Tag](https://img.shields.io/github/tag/AngleSharp/AngleSharp.Xml.svg?style=flat-square)](https://github.com/AngleSharp/AngleSharp.Xml/releases)
 [![NuGet Count](https://img.shields.io/nuget/dt/AngleSharp.Xml.svg?style=flat-square)](https://www.nuget.org/packages/AngleSharp.Xml/)
 [![Issues Open](https://img.shields.io/github/issues/AngleSharp/AngleSharp.Xml.svg?style=flat-square)](https://github.com/AngleSharp/AngleSharp.Xml/issues)
+[![Gitter Chat](http://img.shields.io/badge/gitter-AngleSharp/AngleSharp-blue.svg?style=flat-square)](https://gitter.im/AngleSharp/AngleSharp)
 [![StackOverflow Questions](https://img.shields.io/stackexchange/stackoverflow/t/anglesharp.svg?style=flat-square)](https://stackoverflow.com/tags/anglesharp)
 [![CLA Assistant](https://cla-assistant.io/readme/badge/AngleSharp/AngleSharp.Xml?style=flat-square)](https://cla-assistant.io/AngleSharp/AngleSharp.Xml)
 
@@ -21,6 +22,24 @@ var config = Configuration.Default
 ```
 
 This will register a parser for XML related content.
+
+## XML Parser
+
+Alternatively, you can also the `XmlParser` directly:
+
+```cs
+var parser = new XmlParser();
+parser.ParseDocument(@"<?xml version=""1.0"" encoding=""ISO-8859-1""?>
+    <note>
+        <to>Tove</to>
+        <from>Jani</from>
+        <heading>Reminder</heading>
+        <body>Don't forget me this weekend!</body>
+    </note>"
+);
+```
+
+The `XmlParser` supports a variety of options, most notably it can suppress (i.e., not throw on) errors.
 
 ## Advantages of AngleSharp.Xml over System.Xml
 
@@ -41,11 +60,21 @@ Participation in the project is highly welcome. For this project the same rules 
 
 If you have any question, concern, or spot an issue then please report it before opening a pull request. An initial discussion is appreciated regardless of the nature of the problem.
 
+Live discussions can take place in our [Gitter chat](https://gitter.im/AngleSharp/AngleSharp), which supports using GitHub accounts.
+
+This project has adopted the code of conduct defined by the Contributor Covenant to clarify expected behavior in our community.
+
+For more information see the [.NET Foundation Code of Conduct](https://dotnetfoundation.org/code-of-conduct).
+
+## .NET Foundation
+
+This project is supported by the [.NET Foundation](https://dotnetfoundation.org).
+
 ## License
 
 The MIT License (MIT)
 
-Copyright (c) 2019 AngleSharp
+Copyright (c) 2020 AngleSharp
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

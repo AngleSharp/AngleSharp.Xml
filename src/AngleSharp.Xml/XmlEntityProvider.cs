@@ -17,7 +17,7 @@ namespace AngleSharp.Xml
             { "lt;", "<" },
             { "gt;", ">" },
             { "apos;", "'" },
-            { "quot;", "\"" }
+            { "quot;", "\"" },
         };
 
         #endregion
