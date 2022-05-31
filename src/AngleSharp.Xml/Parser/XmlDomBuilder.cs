@@ -63,7 +63,7 @@ namespace AngleSharp.Xml.Parser
                 {
                     return _openElements[_openElements.Count - 1];
                 }
-                
+
                 return _document;
             }
         }
@@ -290,6 +290,11 @@ namespace AngleSharp.Xml.Parser
                         _currentMode = XmlTreeMode.After;
                     }
 
+                    if (_options.IsKeepingSourceReferences)
+                    {
+                        element.SourceReference = tagToken;
+                    }
+
                     if (_options.OnCreated != null)
                     {
                         _options.OnCreated.Invoke(element, tagToken.Position);
@@ -430,7 +435,7 @@ namespace AngleSharp.Xml.Parser
                 {
                     ns = CurrentNode.LookupNamespaceUri(prefix);
                 }
-                
+
                 return new Attr(prefix, name.Substring(colon + 1), value, ns);
             }
 
