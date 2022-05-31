@@ -1,5 +1,6 @@
 namespace AngleSharp.Xml.Parser.Tokens
 {
+    using AngleSharp.Dom;
     using AngleSharp.Text;
     using System;
     using System.Collections.Generic;
@@ -7,10 +8,10 @@ namespace AngleSharp.Xml.Parser.Tokens
     /// <summary>
     /// Class for StartTagToken and EndTagToken.
     /// </summary>
-    sealed class XmlTagToken : XmlToken
+    sealed class XmlTagToken : XmlToken, ISourceReference
     {
         #region Fields
-        
+
         private readonly List<KeyValuePair<String, String>> _attributes;
         private String _name;
         private Boolean _selfClosing;

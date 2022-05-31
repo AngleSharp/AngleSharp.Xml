@@ -10,11 +10,11 @@
     <icon>logo.png</icon>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Adds a powerful XML and DTD parser to AngleSharp.</description>
-    <releaseNotes>https://github.com/AngleSharp/AngleSharp.Xml/blob/master/CHANGELOG.md</releaseNotes>
-    <copyright>Copyright 2016-2021, AngleSharp</copyright>
+    <releaseNotes>https://github.com/AngleSharp/AngleSharp.Xml/blob/main/CHANGELOG.md</releaseNotes>
+    <copyright>Copyright 2016-2022, AngleSharp</copyright>
     <tags>html html5 css css3 dom requester http https xml dtd</tags>
     <dependencies>
-      <dependency id="AngleSharp" version="0.16.0" />
+      <dependency id="AngleSharp" version="0.17.0" />
     </dependencies>
   </metadata>
 </package>
