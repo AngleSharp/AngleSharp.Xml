@@ -48,7 +48,7 @@ namespace AngleSharp.Xml.Dom
         /// <inheritdoc />
         public override Node Clone(Document owner, Boolean deep)
         {
-            var node = new XmlElement(owner, LocalName, Prefix);
+            var node = new XmlElement(owner, LocalName, Prefix, NamespaceUri, Flags);
             CloneElement(node, owner, deep);
             node.IdAttribute = IdAttribute;
             return node;
