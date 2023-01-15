@@ -8,6 +8,7 @@
     <license type="expression">MIT</license>
     <projectUrl>https://anglesharp.github.io</projectUrl>
     <icon>logo.png</icon>
+    <readme>README.md</readme>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Adds a powerful XML and DTD parser to AngleSharp.</description>
     <releaseNotes>https://github.com/AngleSharp/AngleSharp.Xml/blob/main/CHANGELOG.md</releaseNotes>
@@ -17,7 +18,4 @@
       <dependency id="AngleSharp" version="[1.0,2.0)" />
     </dependencies>
   </metadata>
-  <files>
-    <file src="..\README.md" target="docs\" />
-  </files>
 </package>
