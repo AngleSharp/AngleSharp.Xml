@@ -17,4 +17,7 @@
       <dependency id="AngleSharp" version="[1.0,2.0)" />
     </dependencies>
   </metadata>
+  <files>
+    <file src="..\README.md" target="docs\" />
+  </files>
 </package>
