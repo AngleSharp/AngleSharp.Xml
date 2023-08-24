@@ -146,5 +146,13 @@ namespace AngleSharp.Xml.Tests.Parser
                 parser.ParseDocument(source);
             });
         }
+
+        [Test]
+        public async Task XmlPrefixedAttributesShouldLocateXmlNamespaceWithoutDeclaration()
+        {
+            var document = @"<xml xml:lang=""en""></xml>".ToXmlDocument();
+            var root = document.DocumentElement;
+            Assert.AreEqual(NamespaceNames.XmlUri, root.Attributes.Single().NamespaceUri);
+        }
     }
 }

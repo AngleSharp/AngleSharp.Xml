@@ -431,7 +431,11 @@ namespace AngleSharp.Xml.Parser
                 var prefix = name.Substring(0, colon);
                 var ns = NamespaceNames.XmlNsUri;
 
-                if (!prefix.Is(NamespaceNames.XmlNsPrefix))
+                if (prefix.Is(NamespaceNames.XmlPrefix))
+                {
+                    ns = NamespaceNames.XmlUri;
+                }
+                else if (!prefix.Is(NamespaceNames.XmlNsPrefix))
                 {
                     ns = CurrentNode.LookupNamespaceUri(prefix);
                 }
