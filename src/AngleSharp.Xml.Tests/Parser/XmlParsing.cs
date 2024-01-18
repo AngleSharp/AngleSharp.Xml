@@ -150,7 +150,6 @@ namespace AngleSharp.Xml.Tests.Parser
                 parser.ParseDocument(source);
             });
         }
-        }
 
         [Test]
         public async Task NamespaceDeclarationsInAttributesShouldNotCareAboutOrdering()
@@ -160,5 +159,13 @@ namespace AngleSharp.Xml.Tests.Parser
             var root = document.DocumentElement;
             Assert.AreEqual("http://www.idpf.org/2007/ops",
                 root.Attributes.First(att => att.LocalName == "type").NamespaceUri);
+
+        [Test]
+        public async Task XmlPrefixedAttributesShouldLocateXmlNamespaceWithoutDeclaration()
+        {
+            var document = @"<xml xml:lang=""en""></xml>".ToXmlDocument();
+            var root = document.DocumentElement;
+            Assert.AreEqual(NamespaceNames.XmlUri, root.Attributes.Single().NamespaceUri);
+        }
     }
 }
