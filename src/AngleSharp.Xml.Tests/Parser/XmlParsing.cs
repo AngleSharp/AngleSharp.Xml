@@ -1,8 +1,9 @@
 namespace AngleSharp.Xml.Tests.Parser
 {
+    using AngleSharp.Dom;
     using AngleSharp.Xml.Parser;
     using NUnit.Framework;
-    using System;
+    using System.Linq;
 
     [TestFixture]
     public class XmlParsing
@@ -148,7 +149,7 @@ namespace AngleSharp.Xml.Tests.Parser
         }
 
         [Test]
-        public async Task XmlPrefixedAttributesShouldLocateXmlNamespaceWithoutDeclaration()
+        public void XmlPrefixedAttributesShouldLocateXmlNamespaceWithoutDeclaration()
         {
             var document = @"<xml xml:lang=""en""></xml>".ToXmlDocument();
             var root = document.DocumentElement;
