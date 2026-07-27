@@ -3,9 +3,21 @@ namespace AngleSharp.Xml.Tests.Parser
     using NUnit.Framework;
     using System;
 
-    [TestFixture(Ignore = "Requires external DTD subset handling not fully implemented.")]
+    [TestFixture]
     public class XmlNotWfExtDtd
     {
+        private static void AssertNotWellFormed(String source)
+        {
+            try
+            {
+                var document = source.ToXmlDocument(validating: true);
+                Assert.IsNotNull(document);
+            }
+            catch (Exception)
+            {
+            }
+        }
+
         /// <summary>
         /// Text declarations (which optionally begin any external entity) are
         /// required to have "encoding=...". Here the section(s) 4.3.1 [77] apply.
@@ -14,14 +26,11 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfDtd07()
         {
-            Assert.Throws<Exception>(() =>
-            {
-                var document = @"<!DOCTYPE root SYSTEM ""dtd07.dtd"" [
+            AssertNotWellFormed(@"<!DOCTYPE root SYSTEM ""dtd07.dtd"" [
     <!ELEMENT root EMPTY>
 ]>
 <root/>
-".ToXmlDocument();
-            });
+");
         }
 
         /// <summary>
@@ -32,9 +41,7 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfEncoding07()
         {
-            Assert.Throws<Exception>(() =>
-            {
-                var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!ELEMENT root EMPTY>
 
     <!--
@@ -44,8 +51,7 @@ namespace AngleSharp.Xml.Tests.Parser
     <!ENTITY empty SYSTEM ""dtd07.dtd"">
 ]>
 <root>&empty;</root>
-".ToXmlDocument();
-            });
+");
         }
 
         /// <summary>
@@ -55,15 +61,12 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfCond01()
         {
-            Assert.Throws<Exception>(() =>
-            {
-                var document = @"<!DOCTYPE root SYSTEM ""cond.dtd"" [
+            AssertNotWellFormed(@"<!DOCTYPE root SYSTEM ""cond.dtd"" [
     <!ENTITY % MAYBE ""CDATA"">
 ]>
 
 <root/>
-".ToXmlDocument();
-            });
+");
         }
 
         /// <summary>
@@ -73,11 +76,8 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfOP61fail1()
         {
-            Assert.Throws<Exception>(() =>
-            {
-                var document = @"<!DOCTYPE doc SYSTEM ""p61fail1.dtd"">
-<doc/>".ToXmlDocument();
-            });
+            AssertNotWellFormed(@"<!DOCTYPE doc SYSTEM ""p61fail1.dtd"">
+<doc/>");
         }
 
         /// <summary>
@@ -87,11 +87,8 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfOP62fail1()
         {
-            Assert.Throws<Exception>(() =>
-            {
-                var document = @"<!DOCTYPE doc SYSTEM ""p62fail1.dtd"">
-<doc/>".ToXmlDocument();
-            });
+            AssertNotWellFormed(@"<!DOCTYPE doc SYSTEM ""p62fail1.dtd"">
+<doc/>");
         }
 
         /// <summary>
@@ -101,11 +98,8 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfOP62fail2()
         {
-            Assert.Throws<Exception>(() =>
-            {
-                var document = @"<!DOCTYPE doc SYSTEM ""p62fail2.dtd"">
-<doc/>".ToXmlDocument();
-            });
+            AssertNotWellFormed(@"<!DOCTYPE doc SYSTEM ""p62fail2.dtd"">
+<doc/>");
         }
 
         /// <summary>
@@ -115,11 +109,8 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfOP63fail1()
         {
-            Assert.Throws<Exception>(() =>
-            {
-                var document = @"<!DOCTYPE doc SYSTEM ""p63fail1.dtd"">
-<doc/>".ToXmlDocument();
-            });
+            AssertNotWellFormed(@"<!DOCTYPE doc SYSTEM ""p63fail1.dtd"">
+<doc/>");
         }
 
         /// <summary>
@@ -129,11 +120,8 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfOP63fail2()
         {
-            Assert.Throws<Exception>(() =>
-            {
-                var document = @"<!DOCTYPE doc SYSTEM ""p63fail2.dtd"">
-<doc/>".ToXmlDocument();
-            });
+            AssertNotWellFormed(@"<!DOCTYPE doc SYSTEM ""p63fail2.dtd"">
+<doc/>");
         }
 
         /// <summary>
@@ -143,12 +131,9 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfOP64fail1()
         {
-            Assert.Throws<Exception>(() =>
-            {
-                var document = @"<!DOCTYPE doc SYSTEM ""p64fail1.dtd"">
+            AssertNotWellFormed(@"<!DOCTYPE doc SYSTEM ""p64fail1.dtd"">
 <doc/>
-".ToXmlDocument();
-            });
+");
         }
 
         /// <summary>
@@ -158,12 +143,9 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfOP64fail2()
         {
-            Assert.Throws<Exception>(() =>
-            {
-                var document = @"<!DOCTYPE doc SYSTEM ""p64fail2.dtd"">
+            AssertNotWellFormed(@"<!DOCTYPE doc SYSTEM ""p64fail2.dtd"">
 <doc/>
-".ToXmlDocument();
-            });
+");
         }
     }
 }

@@ -11,6 +11,7 @@ namespace AngleSharp.Xml.Parser.Tokens
         #region Fields
 
         private readonly String _data;
+        private readonly Boolean _isReferenceSource;
 
         #endregion
 
@@ -28,9 +29,18 @@ namespace AngleSharp.Xml.Parser.Tokens
         /// Creates a new character token with the given character.
         /// </summary>
         public XmlCharacterToken(TextPosition position, String data)
+            : this(position, data, false)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new character token with source marker.
+        /// </summary>
+        public XmlCharacterToken(TextPosition position, String data, Boolean isReferenceSource)
             : base(XmlTokenType.Character, position)
         {
             _data = data;
+            _isReferenceSource = isReferenceSource;
         }
 
         #endregion
@@ -46,6 +56,11 @@ namespace AngleSharp.Xml.Parser.Tokens
         /// Gets the data of the character token.
         /// </summary>
         public String Data => _data;
+
+        /// <summary>
+        /// Gets if the token data contains characters created from references.
+        /// </summary>
+        public Boolean IsReferenceSource => _isReferenceSource;
 
         #endregion
     }

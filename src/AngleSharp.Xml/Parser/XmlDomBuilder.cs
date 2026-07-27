@@ -1,5 +1,7 @@
 namespace AngleSharp.Xml.Parser
 {
+    using AngleSharp.Xml.Dtd.Declaration;
+    using AngleSharp.Xml.Dtd.Parser;
     using AngleSharp.Dom;
     using AngleSharp.Text;
     using AngleSharp.Xml.Dom;
@@ -7,6 +9,7 @@ namespace AngleSharp.Xml.Parser
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -22,6 +25,10 @@ namespace AngleSharp.Xml.Parser
         private readonly XmlTokenizer _tokenizer;
         private readonly Document _document;
         private readonly List<Element> _openElements;
+        private readonly Dictionary<String, String> _internalElementModels;
+        private readonly Dictionary<String, HashSet<String>> _internalAttributeDeclarations;
+        private DtdContainer _dtd;
+        private String _doctypeName;
 
         private XmlParserOptions _options;
         private XmlTreeMode _currentMode;
@@ -41,6 +48,8 @@ namespace AngleSharp.Xml.Parser
             _document = document;
             _standalone = false;
             _openElements = new List<Element>();
+            _internalElementModels = new Dictionary<String, String>(StringComparer.Ordinal);
+            _internalAttributeDeclarations = new Dictionary<String, HashSet<String>>(StringComparer.Ordinal);
             _currentMode = XmlTreeMode.Initial;
         }
 
@@ -97,6 +106,8 @@ namespace AngleSharp.Xml.Parser
             }
             while (token.Type != XmlTokenType.EndOfFile);
 
+            ApplyValidation();
+
             return _document;
         }
 
@@ -116,6 +127,8 @@ namespace AngleSharp.Xml.Parser
                 Consume(token);
             }
             while (token.Type != XmlTokenType.EndOfFile);
+
+            ApplyValidation();
 
             return _document;
         }
@@ -209,6 +222,13 @@ namespace AngleSharp.Xml.Parser
                     var doctypeToken = (XmlDoctypeToken)token;
                     var doctypeNode = _document.Implementation.CreateDocumentType(doctypeToken.Name, doctypeToken.PublicIdentifier, doctypeToken.SystemIdentifier);
                     _document.AppendChild(doctypeNode);
+                    _doctypeName = doctypeToken.Name;
+
+                    if (!String.IsNullOrEmpty(doctypeToken.InternalSubset))
+                    {
+                        ParseInternalSubset(doctypeToken);
+                    }
+
                     _currentMode = XmlTreeMode.Misc;
 
                     break;
@@ -247,6 +267,22 @@ namespace AngleSharp.Xml.Parser
                 {
                     _currentMode = XmlTreeMode.Body;
                     InBody(token);
+                    break;
+                }
+                case XmlTokenType.Character:
+                {
+                    var charToken = (XmlCharacterToken)token;
+
+                    if (charToken.IsReferenceSource && !_options.IsSuppressingErrors)
+                    {
+                        throw XmlParseError.XmlMissingRoot.At(token.Position);
+                    }
+
+                    if (!charToken.IsIgnorable && !_options.IsSuppressingErrors)
+                    {
+                        throw XmlParseError.XmlMissingRoot.At(token.Position);
+                    }
+
                     break;
                 }
                 default:
@@ -465,6 +501,234 @@ namespace AngleSharp.Xml.Parser
         {
             var t = ver.ToDouble(0.0);
             return t >= 1.0 && t < 2.0;
+        }
+
+        private void ParseInternalSubset(XmlDoctypeToken doctypeToken)
+        {
+            var subset = doctypeToken.InternalSubset;
+
+            _dtd = null;
+
+            try
+            {
+                var container = new DtdContainer
+                {
+                    Parent = _document as XmlDocument,
+                };
+
+                var parser = new DtdParser(container, new TextSource(subset))
+                {
+                    IsInternal = true,
+                };
+
+                parser.Parse();
+                _dtd = container;
+            }
+            catch
+            {
+                _dtd = null;
+            }
+
+            foreach (Match match in Regex.Matches(subset, "<!ELEMENT\\s+([A-Za-z_][A-Za-z0-9_:\\.-]*)\\s+([^>]+)>", RegexOptions.Singleline))
+            {
+                var name = match.Groups[1].Value;
+                var model = match.Groups[2].Value.Trim();
+                _internalElementModels[name] = model;
+            }
+
+            foreach (Match match in Regex.Matches(subset, "<!ATTLIST\\s+([A-Za-z_][A-Za-z0-9_:\\.-]*)\\s+(.+?)>", RegexOptions.Singleline))
+            {
+                var elementName = match.Groups[1].Value;
+                var declarationBody = match.Groups[2].Value;
+
+                if (!_internalAttributeDeclarations.TryGetValue(elementName, out var declared))
+                {
+                    declared = new HashSet<String>(StringComparer.Ordinal);
+                    _internalAttributeDeclarations[elementName] = declared;
+                }
+
+                foreach (Match attr in Regex.Matches(
+                    declarationBody,
+                    "([A-Za-z_][A-Za-z0-9_:\\.-]*)\\s+(?:CDATA|IDREFS?|ID|NMTOKENS?|NMTOKEN|ENTITY|ENTITIES|NOTATION\\s*\\([^\\)]*\\)|\\([^\\)]*\\))\\s+(?:#REQUIRED|#IMPLIED|#FIXED\\s+(?:\"[^\"]*\"|'[^']*')|(?:\"[^\"]*\"|'[^']*'))",
+                    RegexOptions.Singleline))
+                {
+                    declared.Add(attr.Groups[1].Value);
+                }
+            }
+        }
+
+        private void ApplyValidation()
+        {
+            var xml = _document as XmlDocument;
+
+            if (xml == null)
+            {
+                return;
+            }
+
+            var valid = true;
+            var root = _document.DocumentElement as Element;
+
+            if (valid && root != null && !String.IsNullOrEmpty(_doctypeName))
+            {
+                valid = String.Equals(root.NodeName, _doctypeName, StringComparison.Ordinal);
+            }
+
+            var hasDtdElementDeclarations = _dtd != null && _dtd.Elements.Any();
+
+            if (valid && root != null && hasDtdElementDeclarations)
+            {
+                valid = !_dtd.IsInvalid && ValidateElementAgainstDtd(root);
+            }
+            else if (valid && root != null && _internalElementModels.Count > 0)
+            {
+                valid = ValidateElementAgainstInternalSubset(root);
+            }
+
+            xml.SetValidity(valid);
+        }
+
+        private Boolean ValidateElementAgainstDtd(Element element)
+        {
+            var declaration = _dtd.Elements.FirstOrDefault(m => String.Equals(m.Name, element.NodeName, StringComparison.Ordinal));
+
+            if (declaration == null || !declaration.Check(element))
+            {
+                return false;
+            }
+
+            var attributeDeclarations = _dtd.Attributes
+                .Where(m => String.Equals(m.Name, element.NodeName, StringComparison.Ordinal))
+                .ToList();
+
+            for (var i = 0; i < attributeDeclarations.Count; i++)
+            {
+                if (!attributeDeclarations[i].Check(element))
+                {
+                    return false;
+                }
+            }
+
+            if (attributeDeclarations.Count > 0)
+            {
+                var declared = new HashSet<String>(StringComparer.Ordinal);
+                var elementNode = (IElement)element;
+
+                for (var i = 0; i < attributeDeclarations.Count; i++)
+                {
+                    foreach (var entry in attributeDeclarations[i].Declarations)
+                    {
+                        declared.Add(entry.Name);
+                    }
+                }
+
+                foreach (var attr in elementNode.Attributes)
+                {
+                    var name = attr.Name;
+
+                    if (name.StartsWith("xmlns", StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    if (!declared.Contains(name))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            foreach (var child in ((INode)element).ChildNodes)
+            {
+                if (child is Element nested && !ValidateElementAgainstDtd(nested))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private Boolean ValidateElementAgainstInternalSubset(Element element)
+        {
+            if (!_internalElementModels.TryGetValue(element.NodeName, out var model))
+            {
+                return false;
+            }
+
+            var hasDeclarations = _internalAttributeDeclarations.TryGetValue(element.NodeName, out var declaredAttributes) && declaredAttributes.Count > 0;
+
+            foreach (var attr in ((IElement)element).Attributes)
+            {
+                var name = attr.Name;
+
+                if (name.StartsWith("xmlns", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (hasDeclarations && !declaredAttributes.Contains(name))
+                {
+                    return false;
+                }
+
+                if (!hasDeclarations && name.StartsWith("xml:", StringComparison.Ordinal))
+                {
+                    return false;
+                }
+            }
+
+            if (!ValidateContentModel(element, model))
+            {
+                return false;
+            }
+
+            foreach (var child in ((INode)element).ChildNodes)
+            {
+                if (child is Element nested && !ValidateElementAgainstInternalSubset(nested))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static Boolean ValidateContentModel(Element element, String model)
+        {
+            if (String.Equals(model, "ANY", StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            var significant = ((INode)element).ChildNodes.Where(m =>
+                m is IElement || (m is IText text && !String.IsNullOrWhiteSpace(text.Data))).ToList();
+
+            if (String.Equals(model, "EMPTY", StringComparison.Ordinal))
+            {
+                return significant.Count == 0;
+            }
+
+            if (Regex.IsMatch(model, "^\\(#PCDATA(\\|[A-Za-z_][A-Za-z0-9_:\\.-]*)*\\)\\*$"))
+            {
+                var names = new HashSet<String>(
+                    model.Substring(1, model.Length - 3)
+                        .Split('|')
+                        .Where(m => !String.Equals(m, "#PCDATA", StringComparison.Ordinal)),
+                    StringComparer.Ordinal);
+
+                foreach (var node in significant)
+                {
+                    if (node is IElement child && !names.Contains(child.NodeName))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            return true;
         }
 
         private void SetEncoding(String charSet)

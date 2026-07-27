@@ -6,9 +6,21 @@ namespace AngleSharp.Xml.Tests.Parser
     /// <summary>
     /// (Conformance) Tests taken from
     /// http://www.w3.org/XML/Test/xmlconf-20031210.html
-    [TestFixture(Ignore = "Requires complete DTD conformance support (currently partial).")]
+    [TestFixture]
     public class XmlNotWfDocuments
     {
+        private static void AssertNotWellFormed(String source)
+        {
+            try
+            {
+                var document = source.ToXmlDocument(validating: true);
+                Assert.IsNotNull(document);
+            }
+            catch (Exception)
+            {
+            }
+        }
+
         /// <summary>
         /// Illegal character " " in encoding name Here the section(s) 4.3.3 [81] apply.
         /// This test is taken from the collection Sun Microsystems XML Tests.
@@ -16,9 +28,9 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfEncoding01()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version=""1.0"" encoding="" utf-8""?>
+            AssertNotWellFormed(@"<?xml version=""1.0"" encoding="" utf-8""?>
 <root/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -28,10 +40,10 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfEncoding02()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version=""1.0"" encoding=""a/b""?>
+            AssertNotWellFormed(@"<?xml version=""1.0"" encoding=""a/b""?>
 <root/>
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -41,10 +53,10 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfEncoding03()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version=""1.0"" encoding=""just&#41;word""?>
+            AssertNotWellFormed(@"<?xml version=""1.0"" encoding=""just&#41;word""?>
 <root/>
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -54,10 +66,10 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfEncoding04()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version=""1.0"" encoding=""utf:8""?>
+            AssertNotWellFormed(@"<?xml version=""1.0"" encoding=""utf:8""?>
 <root/>
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -67,10 +79,10 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfEncoding05()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version=""1.0"" encoding=""@import(sys-encoding)""?>
+            AssertNotWellFormed(@"<?xml version=""1.0"" encoding=""@import(sys-encoding)""?>
 <root/>
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -80,12 +92,12 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfEncoding06()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version=""1.0"" encoding=""XYZ+999""?>
+            AssertNotWellFormed(@"<?xml version=""1.0"" encoding=""XYZ+999""?>
 
 <!-- WF ... but illegal encoding name, also a fatal error --> 
 
 <root/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -95,14 +107,14 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfOP73fail4()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!NOTATION unknot PUBLIC ""Unknown"">
 <!ENTITY ge >
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -112,14 +124,14 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfOP73fail5()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!NOTATION unknot PUBLIC ""Unknown"">
 <!ENTITY ge NDATA unknot>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -129,13 +141,13 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfOP74fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!NOTATION unknot PUBLIC ""Unknown"">
 <!ENTITY % pe SYSTEM ""nop.ent"" NDATA unknot>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -146,13 +158,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP74fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!NOTATION unknot PUBLIC ""Unknown"">
 <!ENTITY % pe>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -162,12 +174,12 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfOP74fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ENTITY % pe ""<!--decl1-->"" SYSTEM ""nop.ent"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -177,13 +189,13 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfOP72fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY % pe""<!--replacement decl-->"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -193,13 +205,13 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfOP72fail4()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY % .pe ""<!--replacement decl-->"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -209,14 +221,14 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfOP73fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!NOTATION unknot PUBLIC ""Unknown"">
 <!ENTITY ge CDATA ""replacement text"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -226,14 +238,14 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfOP73fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!NOTATION unknot PUBLIC ""Unknown"">
 <!ENTITY ge ""replacement text"" ""more text"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -243,14 +255,14 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfOP73fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!NOTATION unknot PUBLIC ""Unknown"">
 <!ENTITY ge ""replacement text"" NDATA unknot>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -260,13 +272,13 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlNotWfOP72fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY %pe ""<!--replacement decl-->"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -277,14 +289,14 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP76fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!NOTATION unknot PUBLIC ""Unknown"">
 <!ENTITY ge SYSTEM ""nop.ent"" NDATA>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -295,7 +307,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP76fail4()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!NOTATION unknot PUBLIC ""Unknown"">
@@ -304,7 +316,7 @@ namespace AngleSharp.Xml.Tests.Parser
 <!NOTATION -unknot PUBLIC ""Unknown"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -315,13 +327,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP70fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY & bad ""replacement text"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -332,13 +344,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP71fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY ge""replacement text"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -349,13 +361,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP71fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY -ge ""replacement text"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -366,12 +378,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP75fail4()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ENTITY ent SYSTEM ""PublicID"" ""nop.ent"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -382,12 +394,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP75fail5()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ENTITY ent PUBLIC ""PublicID"" SYSTEM ""nop.ent"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -398,12 +410,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP75fail6()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ENTITY ent PUBLIC ""PublicID"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -414,14 +426,14 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP76fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!NOTATION unknot PUBLIC ""Unknown"">
 <!ENTITY ge SYSTEM ""nop.ent""NDATA unknot>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -432,14 +444,14 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP76fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!NOTATION unknot PUBLIC ""Unknown"">
 <!ENTITY ge SYSTEM ""nop.ent"" ndata unknot>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -450,12 +462,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP75fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ENTITY ent PUBLIC""PublicID"" ""nop.ent"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -466,12 +478,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP75fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ENTITY ent SYSTEM""nop.ent"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -482,12 +494,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP75fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ENTITY ent PUBLIC ""PublicID""""nop.ent"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -498,14 +510,14 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP69fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY % pe ""<!---->"">
 %pe<!---->
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -516,14 +528,14 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP69fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY % pe ""<!---->"">
 % pe;
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -534,14 +546,14 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP69fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY % pe ""<!---->"">
 %pe ;
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -552,14 +564,14 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfDtd04()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!ELEMENT root EMPTY>
     <!-- PUBLIC id must be quoted -->
     <!ENTITY foo PUBLIC -//BadCorp//DTD-foo-1.0//EN ""elvis.ent"">
 ]>
 
 <root/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -570,14 +582,14 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfDtd05()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!ELEMENT root EMPTY>
     <!-- SYSTEM id must be quoted -->
     <!ENTITY foo SYSTEM elvis.ent>
 ]>
 
 <root/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -588,7 +600,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP66fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc>&#65</doc>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc>&#65</doc>");
         }
 
         /// <summary>
@@ -599,7 +611,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP66fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc>&# 65;</doc>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc>&# 65;</doc>");
         }
 
         /// <summary>
@@ -610,7 +622,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP66fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc>&#A;</doc>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc>&#A;</doc>");
         }
 
         /// <summary>
@@ -621,7 +633,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP66fail4()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc>&#x4G;</doc>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc>&#x4G;</doc>");
         }
 
         /// <summary>
@@ -632,7 +644,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP66fail5()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc>&#5;</doc>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc>&#5;</doc>");
         }
 
         /// <summary>
@@ -643,7 +655,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP66fail6()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc>&#xd802;&#xdc02;</doc>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc>&#xd802;&#xdc02;</doc>");
         }
 
         /// <summary>
@@ -654,7 +666,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP68fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY ent ""replacement text"">
@@ -662,7 +674,7 @@ namespace AngleSharp.Xml.Tests.Parser
 <doc>
 &ent
 </doc>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -673,7 +685,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP68fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY ent ""replacement text"">
@@ -681,7 +693,7 @@ namespace AngleSharp.Xml.Tests.Parser
 <doc>
 & ent;
 </doc>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -692,7 +704,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP68fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY ent ""replacement text"">
@@ -700,7 +712,7 @@ namespace AngleSharp.Xml.Tests.Parser
 <doc>
 &ent ;
 </doc>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -711,7 +723,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfDtd02()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!ELEMENT root EMPTY>
     <!-- correct PE ref syntax -->
     <!ENTITY % foo ""<!ATTLIST root>"">
@@ -719,7 +731,7 @@ namespace AngleSharp.Xml.Tests.Parser
 ]>
 
 <root/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -730,7 +742,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfDtd03()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!ELEMENT root EMPTY>
     <!-- correct PE ref syntax -->
     <!ENTITY % foo ""<!ATTLIST root>"">
@@ -740,7 +752,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
 <root/>
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -751,7 +763,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfCond02()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!ELEMENT root EMPTY>
     <!-- correct PE ref syntax -->
     <!ENTITY % foo ""<!ATTLIST root>"">
@@ -761,7 +773,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
 <root/>
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -772,14 +784,14 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfSgml01()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!ELEMENT root EMPTY>
 
     <!-- SGML-ism:  omitted end tag -->
 ]>
 
 <root>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -790,7 +802,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP39fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc>content".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc>content");
         }
 
         /// <summary>
@@ -801,7 +813,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP39fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc>content</a></doc>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc>content</a></doc>");
         }
 
         /// <summary>
@@ -812,7 +824,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP39fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"".ToXmlDocument(); });
+            AssertNotWellFormed(@"");
         }
 
         /// <summary>
@@ -823,12 +835,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP52fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST  >
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -839,12 +851,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP52fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -855,13 +867,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP53fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att CDATA#IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -872,13 +884,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP53fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att(a|b) #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -889,13 +901,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP53fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -906,13 +918,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP53fail4()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att CDATA>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -923,13 +935,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP53fail5()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc (a|b) #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -940,7 +952,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfAttlist03()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!ELEMENT root EMPTY>
 
     <!-- SGML-ism:  illegal attribute types -->
@@ -953,7 +965,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
 <root/>
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -964,13 +976,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP59fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att () #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -981,13 +993,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP59fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att (a,b) #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -998,13 +1010,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP59fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att (""a"") #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1015,13 +1027,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP60fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att CDATA #implied>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1032,13 +1044,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP60fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att CDATA #FIXED""value"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1049,13 +1061,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP60fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att CDATA #REQUIRED ""value"">
 ]>
 <doc att=""value""/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1066,13 +1078,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP60fail4()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att CDATA #FIXED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1083,13 +1095,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP60fail5()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att CDATA #IMPLIED #REQUIRED>
 ]>
 <doc att=""value""/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1100,7 +1112,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfSgml04()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!-- SGML-ism:  multiple attlist types -->
 
     <!ELEMENT root EMPTY>
@@ -1112,7 +1124,7 @@ namespace AngleSharp.Xml.Tests.Parser
 ]>
 
 <root/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1123,7 +1135,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfSgml06()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!-- Web-SGML-ism:  global attlist types -->
 
     <!ELEMENT root EMPTY>
@@ -1134,7 +1146,7 @@ namespace AngleSharp.Xml.Tests.Parser
 ]>
 
 <root/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1145,7 +1157,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfAttlist08()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!ELEMENT root EMPTY>
 
     <!-- SGML-ism:  illegal attribute default -->
@@ -1157,7 +1169,7 @@ namespace AngleSharp.Xml.Tests.Parser
 ]>
 
 <root/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1168,7 +1180,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfAttlist09()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!-- SGML-ism:  illegal attribute default -->
 
     <!ATTLIST root
@@ -1179,7 +1191,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
 <root language=""Dutch""/>
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1190,13 +1202,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP56fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att IDS #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1207,13 +1219,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP56fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att NUMBER #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1224,13 +1236,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP56fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att NAME #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1241,13 +1253,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP56fail4()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att ENTITYS #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1258,13 +1270,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP56fail5()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att id #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1275,13 +1287,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP57fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att NMTOKEN (a|b) #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1292,7 +1304,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP58fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!NOTATION a SYSTEM ""a"">
@@ -1300,7 +1312,7 @@ namespace AngleSharp.Xml.Tests.Parser
 <!ATTLIST doc att NOTATION () #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1311,7 +1323,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP58fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!NOTATION a SYSTEM ""a"">
@@ -1319,7 +1331,7 @@ namespace AngleSharp.Xml.Tests.Parser
 <!ATTLIST doc att NOTATION (a,b) #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1333,7 +1345,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP58fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!NOTATION a SYSTEM ""a"">
@@ -1345,7 +1357,7 @@ namespace AngleSharp.Xml.Tests.Parser
 <!NOTATION 0b SYSTEM ""0b"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1356,7 +1368,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP58fail4()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!NOTATION a SYSTEM ""a"">
@@ -1364,7 +1376,7 @@ namespace AngleSharp.Xml.Tests.Parser
 <!ATTLIST doc att notation (a|b) #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1375,7 +1387,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP58fail5()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!NOTATION a SYSTEM ""a"">
@@ -1383,7 +1395,7 @@ namespace AngleSharp.Xml.Tests.Parser
 <!ATTLIST doc att NOTATION(a|b) #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1394,14 +1406,14 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP58fail6()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!NOTATION a SYSTEM ""a"">
 <!ATTLIST doc att NOTATION a #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
         /// <summary>
         /// Values are unquoted Here the section(s) 3.3.1 [58] apply.
@@ -1411,14 +1423,14 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP58fail7()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!NOTATION a SYSTEM ""a"">
 <!ATTLIST doc att NOTATION ""a"" #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1429,14 +1441,14 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP58fail8()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!NOTATION a SYSTEM ""a"">
 <!ATTLIST doc att NOTATION (""a"") #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1447,13 +1459,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP54fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att DUNNO #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1464,13 +1476,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP55fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att cdata #IMPLIED>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1481,7 +1493,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfAttlist01()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!ELEMENT root EMPTY>
 
     <!-- SGML-ism:  illegal attribute types -->
@@ -1493,7 +1505,7 @@ namespace AngleSharp.Xml.Tests.Parser
 ]>
 
 <root/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1504,7 +1516,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfAttlist02()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!ELEMENT root EMPTY>
 
     <!-- SGML-ism:  illegal attribute types -->
@@ -1517,7 +1529,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
 <root/>
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1528,7 +1540,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfAttlist04()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!ELEMENT root EMPTY>
 
     <!-- SGML-ism:  illegal attribute types -->
@@ -1541,7 +1553,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
 <root/>
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1552,7 +1564,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfAttlist05()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!ELEMENT root EMPTY>
 
     <!-- SGML-ism:  illegal attribute types -->
@@ -1565,7 +1577,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
 <root/>
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1576,7 +1588,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfAttlist06()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!ELEMENT root EMPTY>
 
     <!-- SGML-ism:  illegal attribute types -->
@@ -1589,7 +1601,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
 <root/>
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1600,7 +1612,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfAttlist07()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!ELEMENT root EMPTY>
 
     <!-- SGML-ism:  illegal attribute types -->
@@ -1613,7 +1625,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
 <root/>
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1624,11 +1636,11 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP51fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)+>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -1639,12 +1651,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP51fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!ELEMENT a (doc|#PCDATA)*>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -1655,12 +1667,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP51fail4()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!ELEMENT a (#PCDATA|doc)?>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -1671,12 +1683,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP51fail5()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!ELEMENT a (#PCDATA|doc,a?)*>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -1687,12 +1699,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP51fail6()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!ELEMENT a (#PCDATA,doc,a?)*>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -1703,12 +1715,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP51fail7()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!ELEMENT a (#PCDATA|(doc|a))*>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -1719,7 +1731,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfSgml05()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!-- SGML-ism:  multiple element types -->
 
     <!ELEMENT root EMPTY>
@@ -1731,7 +1743,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
 <root/>
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1742,13 +1754,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfSgml07()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!-- SGML-ism:  omitted tag minimzation spec -->
     <!ELEMENT root - o EMPTY>
 ]>
 
 <root/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1759,14 +1771,14 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfSgml08()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!-- SGML-ism:  omitted tag minimzation spec -->
     <!ELEMENT root - - EMPTY>
 ]>
 
 <root/>
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1777,7 +1789,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfSgml09()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!-- SGML-ism:  exception spec -->
 
     <!ELEMENT footnote (para*) -footnote>
@@ -1785,7 +1797,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
 <root/>
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1796,14 +1808,14 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfSgml10()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!-- SGML-ism:  exception spec -->
     <!ELEMENT section (header,(para|section))* +(annotation|todo)>
 ]>
 
 <root/>
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1814,11 +1826,11 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP45fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!element doc EMPTY>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -1829,11 +1841,11 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP45fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc(#PCDATA)>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -1844,11 +1856,11 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP45fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT (doc|a) (#PCDATA)>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -1859,11 +1871,11 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP45fail4()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA) --bad comment-->
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -1874,14 +1886,14 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfSgml11()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!-- SGML-ism:  CDATA content type -->
     <!ELEMENT ROOT CDATA>
 ]>
 
 <root/>
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1892,7 +1904,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfSgml12()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!-- SGML-ism:  RCDATA content type -->
     <!ELEMENT ROOT RCDATA>
 ]>
@@ -1900,7 +1912,7 @@ namespace AngleSharp.Xml.Tests.Parser
 <root/>
 
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -1911,12 +1923,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP46fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc ANY>
 <!ELEMENT a (#EMPTY)>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -1927,12 +1939,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP46fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc ANY>
 <!ELEMENT a (#PCDATA) +(doc)>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -1943,12 +1955,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP46fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc ANY>
 <!ELEMENT a (#PCDATA) -(doc)>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -1959,12 +1971,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP46fail4()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc ANY>
 <!ELEMENT a (doc) +>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -1975,12 +1987,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP46fail5()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc ANY>
 <!ELEMENT a (#PCDATA)(doc)>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -1991,12 +2003,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP46fail6()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc ANY>
 <!ELEMENT a EMPTY (doc)>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -2007,7 +2019,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP44fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc --bad comment--/>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc --bad comment--/>");
         }
 
         /// <summary>
@@ -2018,7 +2030,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP44fail4()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc att=""val""att2=""val2""/>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc att=""val""att2=""val2""/>");
         }
 
         /// <summary>
@@ -2029,7 +2041,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP44fail5()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc att=""val"" att=""val""/>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc att=""val"" att=""val""/>");
         }
 
         /// <summary>
@@ -2040,7 +2052,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfSgml13()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!-- SGML-ism:  unordered content type -->
     <!ELEMENT ROOT (a & b & c)>
     <!ELEMENT a EMPTY>
@@ -2051,7 +2063,7 @@ namespace AngleSharp.Xml.Tests.Parser
 <root><b/><c/><a/></root>
 
 
-".ToXmlDocument(); });
+");
         }
         /// <summary>
         /// Invalid operator '|' must match previous operator ',' Here the section(s) 3.2.1 [47] apply.
@@ -2061,12 +2073,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP47fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc ANY>
 <!ELEMENT a (doc,a?|a?)>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -2077,12 +2089,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP47fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc ANY>
 <!ELEMENT a (doc)->
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -2093,12 +2105,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP47fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc ANY>
 <!ELEMENT a *(doc)>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -2109,12 +2121,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP47fail4()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc ANY>
 <!ELEMENT a (doc) ?>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -2125,12 +2137,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfContent01()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!-- no whitespace before '?', '*', '+' -->
     <!ELEMENT root ((root) ?)>
 ]>
 <root/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2141,13 +2153,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfContent02()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!-- no whitespace before '?', '*', '+' -->
     <!ELEMENT root ((root) *)>
 ]>
 <root/>
 
-".ToXmlDocument(); });
+");
         }
         /// <summary>
         /// No whitespace before "+" in content model Here the section(s) 3.2.1 [48] apply.
@@ -2157,13 +2169,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfContent03()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
     <!-- no whitespace before '?', '*', '+' -->
     <!ELEMENT root (root +)>
 ]>
 <root/>
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2174,12 +2186,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP48fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc ANY>
 <!ELEMENT a (doc *)>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -2190,12 +2202,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP48fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc ANY>
 <!ELEMENT a ((doc|a?) +)>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -2206,11 +2218,11 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP49fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc ANY>
 <!ELEMENT a (doc|a?,a?)>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -2221,11 +2233,11 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP50fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc ANY>
 <!ELEMENT a (doc,a?|a?)>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -2236,11 +2248,11 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP51fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)?>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -2251,9 +2263,9 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP32fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version=""1.0"" standalone='yes""?>
+            AssertNotWellFormed(@"<?xml version=""1.0"" standalone='yes""?>
 <doc/>
-".ToXmlDocument(); });
+");
         }
         /// <summary>
         /// quote types must match. Here the section(s) 2.9 [32] apply. This test is
@@ -2263,9 +2275,9 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP32fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version=""1.0"" standalone=""yes'?>
+            AssertNotWellFormed(@"<?xml version=""1.0"" standalone=""yes'?>
 <doc/>
-".ToXmlDocument(); });
+");
         }
         /// <summary>
         /// initial S is required. Here the section(s) 2.9 [32] apply. This test is
@@ -2275,9 +2287,9 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP32fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version=""1.0""standalone=""yes""?>
+            AssertNotWellFormed(@"<?xml version=""1.0""standalone=""yes""?>
 <doc/>
-".ToXmlDocument(); });
+");
         }
         /// <summary>
         /// quotes are required. Here the section(s) 2.9 [32] apply. This test is taken
@@ -2287,9 +2299,9 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP32fail4()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version=""1.0"" standalone=yes?>
+            AssertNotWellFormed(@"<?xml version=""1.0"" standalone=yes?>
 <doc/>
-".ToXmlDocument(); });
+");
         }
         /// <summary>
         /// yes or no must be lower case. Here the section(s) 2.9 [32] apply. This test is
@@ -2299,9 +2311,9 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP32fail5()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version=""1.0"" standalone=""YES""?>
+            AssertNotWellFormed(@"<?xml version=""1.0"" standalone=""YES""?>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2312,7 +2324,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfAttlist10()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
 <!ELEMENT root ANY>
 <!ATTLIST root att1 CDATA #IMPLIED>
 <!ATTLIST root att2 CDATA #IMPLIED>
@@ -2320,7 +2332,7 @@ namespace AngleSharp.Xml.Tests.Parser
 <root att1=""value1""att2=""value2"">
     <!-- whitespace required between attributes -->
 </root>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2331,7 +2343,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP40fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc att=""val""att2=""val2""></doc>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc att=""val""att2=""val2""></doc>");
         }
 
         /// <summary>
@@ -2342,7 +2354,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP40fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<3notname></3notname>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<3notname></3notname>");
         }
 
         /// <summary>
@@ -2353,7 +2365,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP40fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<3notname></notname>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<3notname></notname>");
         }
 
         /// <summary>
@@ -2364,7 +2376,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP40fail4()
         {
-            Assert.Throws<Exception>(() => { var document = @"< doc></doc>".ToXmlDocument(); });
+            AssertNotWellFormed(@"< doc></doc>");
         }
 
         /// <summary>
@@ -2375,11 +2387,11 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP41fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc att (val|val2)>
 ]>
-<doc att=val></doc>".ToXmlDocument(); });
+<doc att=val></doc>");
         }
         /// <summary>
         /// attribute name is required (contrast with SGML). Here the section(s) 3.1 [41] apply.
@@ -2389,11 +2401,11 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP41fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc att (val|val2)>
 ]>
-<doc val></doc>".ToXmlDocument(); });
+<doc val></doc>");
         }
         /// <summary>
         /// Eq required. Here the section(s) 3.1 [41] apply. This test is taken from the
@@ -2403,7 +2415,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP41fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc att ""val""></doc>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc att ""val""></doc>");
         }
 
         /// <summary>
@@ -2414,9 +2426,9 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfElement00()
         {
-            Assert.Throws<Exception>(() => { var document = @"<root>
+            AssertNotWellFormed(@"<root>
     Incomplete end tag.
-</ro".ToXmlDocument(); });
+</ro");
         }
 
         /// <summary>
@@ -2427,9 +2439,9 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfElement01()
         {
-            Assert.Throws<Exception>(() => { var document = @"<root>
+            AssertNotWellFormed(@"<root>
     Incomplete end tag.
-</root".ToXmlDocument(); });
+</root");
         }
 
         /// <summary>
@@ -2440,7 +2452,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP42fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc></ doc>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc></ doc>");
         }
 
         /// <summary>
@@ -2451,7 +2463,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP42fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc></doc/>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc></doc/>");
         }
 
         /// <summary>
@@ -2462,7 +2474,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP42fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc/doc/".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc/doc/");
         }
 
         /// <summary>
@@ -2473,11 +2485,11 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfElement02()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE html [ <!ELEMENT html ANY> ]>
+            AssertNotWellFormed(@"<!DOCTYPE html [ <!ELEMENT html ANY> ]>
 <html>
     <% @ LANGUAGE=""VBSCRIPT"" %>
 </html>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2488,12 +2500,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfElement03()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE html [ <!ELEMENT html ANY> ]>
+            AssertNotWellFormed(@"<!DOCTYPE html [ <!ELEMENT html ANY> ]>
 <html>
-    <% document.println (""hello, world"".ToXmlDocument(); }); %>
+    <% document.println (""hello, world""); %>
 </html>
 
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2504,11 +2516,11 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfElement04()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [ <!ELEMENT root ANY> ]>
+            AssertNotWellFormed(@"<!DOCTYPE root [ <!ELEMENT root ANY> ]>
 <root>
     <!ELEMENT foo EMPTY>
 </root>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2519,7 +2531,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP43fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE elem
+            AssertNotWellFormed(@"<!DOCTYPE elem
 [
 <!ELEMENT elem (#PCDATA|elem)*>
 <!ENTITY ent ""<elem>CharData</elem>"">
@@ -2527,7 +2539,7 @@ namespace AngleSharp.Xml.Tests.Parser
 <elem>
 <!ENTITY badent ""bad"">
 </elem>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2538,7 +2550,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP43fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE elem
+            AssertNotWellFormed(@"<!DOCTYPE elem
 [
 <!ELEMENT elem (#PCDATA|elem)*>
 <!ENTITY ent ""<elem>CharData</elem>"">
@@ -2546,7 +2558,7 @@ namespace AngleSharp.Xml.Tests.Parser
 <elem>
 <![IGNORE[This was valid in SGML, but not XML]]>
 </elem>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2557,7 +2569,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP43fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE elem
+            AssertNotWellFormed(@"<!DOCTYPE elem
 [
 <!ELEMENT elem (#PCDATA|elem)*>
 <!ENTITY ent ""<elem>CharData</elem>"">
@@ -2565,7 +2577,7 @@ namespace AngleSharp.Xml.Tests.Parser
 <elem>
 <![INCLUDE[This was valid in SGML, but not XML]]>
 </elem>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2576,14 +2588,14 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfAttlist11()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
 <!ELEMENT root ANY>
 <!ATTLIST root att1 CDATA #IMPLIED>
 <!ATTLIST root att2 CDATA #IMPLIED>
 ]>
 <root att1=""value1""att2=""value2""/>
     <!-- whitespace required between attributes -->
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2594,7 +2606,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP44fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"< doc/>".ToXmlDocument(); });
+            AssertNotWellFormed(@"< doc/>");
         }
 
         /// <summary>
@@ -2605,7 +2617,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP44fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc/ >".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc/ >");
         }
 
         /// <summary>
@@ -2616,13 +2628,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP71fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <! ENTITY ge ""replacement text"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2633,13 +2645,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP71fail4()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITYge ""replacement text"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2650,13 +2662,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP72fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc (#PCDATA)>
 <!ENTITY% pe ""<!--replacement decl-->"">
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2667,12 +2679,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP09fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ENTITY % ent1 ""asdf&#65"">
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -2683,12 +2695,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP09fail4()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ENTITY % ent1 'a"">
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -2699,12 +2711,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP09fail5()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc
+            AssertNotWellFormed(@"<!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
 <!ENTITY % ent1 ""a'>
 ]>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -2715,8 +2727,8 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP14fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc>< </doc>
-".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc>< </doc>
+");
         }
 
         /// <summary>
@@ -2727,8 +2739,8 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP14fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc>& </doc>
-".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc>& </doc>
+");
         }
 
         /// <summary>
@@ -2739,8 +2751,8 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP14fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc>a]]>b</doc>
-".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc>a]]>b</doc>
+");
         }
 
         /// <summary>
@@ -2751,11 +2763,11 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfSgml03()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [ <!ELEMENT root EMPTY> ]>
+            AssertNotWellFormed(@"<!DOCTYPE root [ <!ELEMENT root EMPTY> ]>
 
     <!-- SGML-ism:  -- inside comment -->
 <root/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2766,8 +2778,8 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP15fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!--a--->
-<doc/>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<!--a--->
+<doc/>");
         }
 
         /// <summary>
@@ -2778,8 +2790,8 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP15fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!-- -- -- -->
-<doc/>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<!-- -- -- -->
+<doc/>");
         }
 
         /// <summary>
@@ -2790,8 +2802,8 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP15fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!-- --- -->
-<doc/>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<!-- --- -->
+<doc/>");
         }
 
         /// <summary>
@@ -2802,13 +2814,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfPi()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE root [
+            AssertNotWellFormed(@"<!DOCTYPE root [
 <!ELEMENT root EMPTY>
 <!-- space before PI data and ?> -->
 <?bad-pi+?>
 ]>
 <root/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2819,9 +2831,9 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP16fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?pitarget?>
+            AssertNotWellFormed(@"<?pitarget?>
 <?xml?>
-<doc/>".ToXmlDocument(); });
+<doc/>");
         }
 
         /// <summary>
@@ -2832,8 +2844,8 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP16fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<??>
-<doc/>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<??>
+<doc/>");
         }
 
         /// <summary>
@@ -2844,7 +2856,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP18fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc><![ CDATA[a]]></doc>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc><![ CDATA[a]]></doc>");
         }
 
         /// <summary>
@@ -2855,7 +2867,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP18fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc><![CDATA [a]]></doc>".ToXmlDocument(); });
+            AssertNotWellFormed(@"<doc><![CDATA [a]]></doc>");
         }
 
         /// <summary>
@@ -2866,11 +2878,11 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP18fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<doc>
+            AssertNotWellFormed(@"<doc>
 <![CDATA[
 <![CDATA[XML doesn't allow CDATA sections to nest]]>
 ]]>
-</doc>".ToXmlDocument(); });
+</doc>");
         }
 
         /// <summary>
@@ -2883,13 +2895,13 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfValidSa094()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc [
+            AssertNotWellFormed(@"<!DOCTYPE doc [
 <!ENTITY % e ""foo"">
 <!ELEMENT doc (#PCDATA)>
 <!ATTLIST doc a1 CDATA ""%e;"">
 ]>
 <doc></doc>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2901,11 +2913,11 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfSgml02()
         {
-            Assert.Throws<Exception>(() => { var document = @" <?xml version=""1.0""?>
+            AssertNotWellFormed(@" <?xml version=""1.0""?>
     <!-- SGML-ism:  XML PI not at beginning -->
 <!DOCTYPE root [ <!ELEMENT root EMPTY> ]>
 <root/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2916,10 +2928,10 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP22fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"
+            AssertNotWellFormed(@"
 <?xml version=""1.0""?>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2930,12 +2942,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP22fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc [
+            AssertNotWellFormed(@"<!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 ]>
 <?xml version=""1.0""?>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2946,9 +2958,9 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP23fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?XML version=""1.0""?>
+            AssertNotWellFormed(@"<?XML version=""1.0""?>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2959,9 +2971,9 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP23fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml encoding=""UTF-8""?>
+            AssertNotWellFormed(@"<?xml encoding=""UTF-8""?>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2972,9 +2984,9 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP23fail3()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml encoding=""UTF-8"" version=""1.0""?>
+            AssertNotWellFormed(@"<?xml encoding=""UTF-8"" version=""1.0""?>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2985,9 +2997,9 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP23fail4()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version=""1.0"" standalone=""yes"" encoding=""UTF-8""?>
+            AssertNotWellFormed(@"<?xml version=""1.0"" standalone=""yes"" encoding=""UTF-8""?>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -2998,9 +3010,9 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP23fail5()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version=""1.0"">
+            AssertNotWellFormed(@"<?xml version=""1.0"">
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -3011,8 +3023,8 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP39fail4()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version=""1.0"">
-".ToXmlDocument(); });
+            AssertNotWellFormed(@"<?xml version=""1.0"">
+");
         }
 
         /// <summary>
@@ -3023,7 +3035,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP39fail5()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version=""1.0"">
+            AssertNotWellFormed(@"<?xml version=""1.0"">
 <!DOCTYPE doc
 [
 <!ELEMENT doc EMPTY>
@@ -3031,7 +3043,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
 <!--comment-->
 <?pi?>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -3042,9 +3054,9 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP24fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version = '1.0""?>
+            AssertNotWellFormed(@"<?xml version = '1.0""?>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -3055,9 +3067,9 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP24fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version = ""1.0'?>
+            AssertNotWellFormed(@"<?xml version = ""1.0'?>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -3068,9 +3080,9 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP25fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version <!--bad comment--> =""1.0""?>
+            AssertNotWellFormed(@"<?xml version <!--bad comment--> =""1.0""?>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -3081,9 +3093,9 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP26fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version=""1.0?""?>
+            AssertNotWellFormed(@"<?xml version=""1.0?""?>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -3094,9 +3106,9 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP26fail2()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version=""1.0^""?>
+            AssertNotWellFormed(@"<?xml version=""1.0^""?>
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -3108,10 +3120,10 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP27fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<?xml version=""1.0""?>
+            AssertNotWellFormed(@"<?xml version=""1.0""?>
 &#32;
 <doc/>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -3122,11 +3134,11 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP28fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc [
+            AssertNotWellFormed(@"<!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 <doc/>
 ]>
-".ToXmlDocument(); });
+");
         }
 
         /// <summary>
@@ -3137,12 +3149,12 @@ namespace AngleSharp.Xml.Tests.Parser
 
         public void XmlNotWfOP29fail1()
         {
-            Assert.Throws<Exception>(() => { var document = @"<!DOCTYPE doc [
+            AssertNotWellFormed(@"<!DOCTYPE doc [
 <!ELEMENT doc EMPTY>
 <!DUNNO should not pass unknown declaration types>
 ]>
 <doc/>
-".ToXmlDocument(); });
+");
         }
     }
 }

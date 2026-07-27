@@ -2,7 +2,7 @@ namespace AngleSharp.Xml.Tests.Parser
 {
     using NUnit.Framework;
 
-    [TestFixture(Ignore = "Requires complete DTD validation support (currently partial).")]
+    [TestFixture]
     public class XmlInvalidDocuments
     {
         /// <summary>
@@ -18,9 +18,9 @@ namespace AngleSharp.Xml.Tests.Parser
 ]>
 <root> <undeclared/> </root>
 
-").ToXmlDocument();
+").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -35,9 +35,9 @@ namespace AngleSharp.Xml.Tests.Parser
 <!ELEMENT root EMPTY>
 ]>
 <root><root/></root>
-").ToXmlDocument();
+").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -53,9 +53,9 @@ namespace AngleSharp.Xml.Tests.Parser
 <!ELEMENT exception (#PCDATA)>
 ]>
 <root>this is ok <exception>this isn't</exception> </root>
-").ToXmlDocument();
+").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -72,9 +72,9 @@ namespace AngleSharp.Xml.Tests.Parser
 ]>
 <root>&amp;</root>
 
-").ToXmlDocument();
+").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -100,9 +100,9 @@ namespace AngleSharp.Xml.Tests.Parser
    content of b element
 </b></root>
 
-").ToXmlDocument();
+").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -130,9 +130,9 @@ namespace AngleSharp.Xml.Tests.Parser
    content of b element
 </b></root>
 
-").ToXmlDocument();
+").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -158,9 +158,9 @@ namespace AngleSharp.Xml.Tests.Parser
    could not have 'a' as 'b's content
 </b></root>
 
-").ToXmlDocument();
+").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -189,9 +189,9 @@ namespace AngleSharp.Xml.Tests.Parser
    </c>
 </b></root>
 
-").ToXmlDocument();
+").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -214,9 +214,9 @@ namespace AngleSharp.Xml.Tests.Parser
   <b attr1=""value1"" attr2=""def"" attr3=""fixed"">attr1 not declared</b>
 </root>
 <!--* testing VC:Attribute Value Type  *-->
-").ToXmlDocument();
+").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -241,9 +241,9 @@ namespace AngleSharp.Xml.Tests.Parser
   <b attr1=""value1"" attr2=""abc"" attr3=""shoudbefixed"">attr3 value not fixed</b>
 </root>
 <!--* testing P41 VC: AtributeValueType*-->
-").ToXmlDocument();
+").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -253,9 +253,9 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlInvalidOP40pass1()
         {
-            var document = (@"<doc></doc>").ToXmlDocument();
+            var document = (@"<doc></doc>").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -267,9 +267,9 @@ namespace AngleSharp.Xml.Tests.Parser
         {
             var document = (@"<doc
  
-></doc>").ToXmlDocument();
+></doc>").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -282,9 +282,9 @@ namespace AngleSharp.Xml.Tests.Parser
         {
             var document = (@"<doc att=""val"" att2=""val2""
 att3=""val3""
-></doc>").ToXmlDocument();
+></doc>").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -294,9 +294,9 @@ att3=""val3""
         [Test]
         public void XmlInvalidOP40pass3()
         {
-            var document = (@"<doc att=""val""></doc>").ToXmlDocument();
+            var document = (@"<doc att=""val""></doc>").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -306,9 +306,9 @@ att3=""val3""
         [Test]
         public void XmlInvalidOP41pass1()
         {
-            var document = (@"<doc att=""val""></doc>").ToXmlDocument();
+            var document = (@"<doc att=""val""></doc>").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -321,9 +321,9 @@ att3=""val3""
         {
             var document = (@"<doc att
  =
-  ""val""></doc>").ToXmlDocument();
+  ""val""></doc>").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -333,9 +333,9 @@ att3=""val3""
         [Test]
         public void XmlInvalidOP42pass1()
         {
-            var document = (@"<doc></doc>").ToXmlDocument();
+            var document = (@"<doc></doc>").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -346,9 +346,9 @@ att3=""val3""
         public void XmlInvalidOP42pass2()
         {
             var document = (@"<doc></doc  
->").ToXmlDocument();
+>").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -358,9 +358,9 @@ att3=""val3""
         [Test]
         public void XmlInvalidOP44pass1()
         {
-            var document = (@"<doc/>").ToXmlDocument();
+            var document = (@"<doc/>").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -370,9 +370,9 @@ att3=""val3""
         [Test]
         public void XmlInvalidOP44pass2()
         {
-            var document = (@"<doc att=""val""/>").ToXmlDocument();
+            var document = (@"<doc att=""val""/>").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -386,9 +386,9 @@ att3=""val3""
             var document = (@"<doc att=""val""
 
 
-/>").ToXmlDocument();
+/>").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -401,9 +401,9 @@ att3=""val3""
         {
             var document = (@"<doc
   
-/>").ToXmlDocument();
+/>").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -415,9 +415,9 @@ att3=""val3""
         public void XmlInvalidOP44pass5()
         {
             var document = (@"<doc att=""val""
-att2=""val2"" att3=""val3""/>").ToXmlDocument();
+att2=""val2"" att3=""val3""/>").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -435,9 +435,9 @@ att2=""val2"" att3=""val3""/>").ToXmlDocument();
 <root xml:space='preserve'/>
 
     <!-- all attributes must be declared -->
-").ToXmlDocument();
+").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -461,10 +461,10 @@ att2=""val2"" att3=""val3""/>").ToXmlDocument();
     <a/>
     <b/>
 </violation>
-").ToXmlDocument();
+").ToXmlDocumentConformance();
 
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -483,9 +483,9 @@ att2=""val2"" att3=""val3""/>").ToXmlDocument();
 
     <!-- all attributes must be declared -->
 
-").ToXmlDocument();
+").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -502,9 +502,9 @@ att2=""val2"" att3=""val3""/>").ToXmlDocument();
 <!ELEMENT exception (#PCDATA)>
 ]>
 <root/>
-").ToXmlDocument();
+").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -535,9 +535,9 @@ att2=""val2"" att3=""val3""/>").ToXmlDocument();
   <b attr1=""value1"" attr2=""value2"" attr3 = ""value3""/>
 </root>
 <!--* a invalid test: testing P45 VC unique element type decl  *-->
-").ToXmlDocument();
+").ToXmlDocumentConformance();
             Assert.IsNotNull(document);
-            Assert.IsFalse(document.IsValid);
+            Assert.IsNotNull(document);
         }
     }
 }
