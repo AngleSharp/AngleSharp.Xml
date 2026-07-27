@@ -126,6 +126,22 @@ var item = document.QuerySelector("item");
 item.SetAttribute("status", "active");
 ```
 
+## DTD validity signal
+
+When a document contains DOCTYPE declarations, AngleSharp.Xml evaluates DTD-related validity and exposes the result via `document.IsValid`.
+
+```cs
+var parser = new XmlParser();
+var document = parser.ParseDocument(xmlText);
+
+if (!document.IsValid)
+{
+	Console.WriteLine("DTD validity check failed.");
+}
+```
+
+For a detailed support matrix and examples, see the DTD Validation tutorial.
+
 ## Events
 
 XmlParser exposes parsing lifecycle events:

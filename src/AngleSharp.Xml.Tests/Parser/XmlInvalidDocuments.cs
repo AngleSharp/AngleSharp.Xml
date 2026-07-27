@@ -130,9 +130,9 @@ namespace AngleSharp.Xml.Tests.Parser
    content of b element
 </b></root>
 
-").ToXmlDocumentConformance();
+").ToXmlDocument();
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsFalse(document.IsValid);
         }
 
         /// <summary>
@@ -241,9 +241,9 @@ namespace AngleSharp.Xml.Tests.Parser
   <b attr1=""value1"" attr2=""abc"" attr3=""shoudbefixed"">attr3 value not fixed</b>
 </root>
 <!--* testing P41 VC: AtributeValueType*-->
-").ToXmlDocumentConformance();
+").ToXmlDocument();
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsFalse(document.IsValid);
         }
 
         /// <summary>

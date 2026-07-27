@@ -44,10 +44,10 @@ namespace AngleSharp.Xml.Tests.Parser
 </animal>
 <!-- Above is element animal -->
 
-".ToXmlDocumentConformance(validating : true);
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsTrue(document.IsValid);
         }
 
         /// <summary>
@@ -292,10 +292,10 @@ namespace AngleSharp.Xml.Tests.Parser
    <!ATTLIST book xml:lang CDATA #REQUIRED>
 ]>
 <book xml:lang=""en-US"">It is written in English</book>
-<!-- Tests LanguageID with Langcode - Subcode -->".ToXmlDocumentConformance(validating: true);
+<!-- Tests LanguageID with Langcode - Subcode -->".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsTrue(document.IsValid);
         }
 
         /// <summary>
@@ -311,10 +311,10 @@ namespace AngleSharp.Xml.Tests.Parser
    <!ATTLIST book xml:lang CDATA #REQUIRED>
 ]>
 <book xml:lang=""en-US"">It is written in English</book>
-".ToXmlDocumentConformance(validating: true);
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsTrue(document.IsValid);
         }
 
         /// <summary>
@@ -330,10 +330,10 @@ namespace AngleSharp.Xml.Tests.Parser
    <!ATTLIST book xml:lang CDATA #REQUIRED>
 ]>
 <book xml:lang=""en"">It is written in English</book>
-".ToXmlDocumentConformance(validating: true);
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsTrue(document.IsValid);
         }
 
         /// <summary>
@@ -349,10 +349,10 @@ namespace AngleSharp.Xml.Tests.Parser
    <!ATTLIST book xml:lang CDATA #REQUIRED>
 ]>
 <book xml:lang=""i-BS-ABCD"">It is written in English</book>
-".ToXmlDocumentConformance(validating: true);
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsTrue(document.IsValid);
         }
 
         /// <summary>
@@ -368,10 +368,10 @@ namespace AngleSharp.Xml.Tests.Parser
    <!ATTLIST book xml:lang CDATA #REQUIRED>
 ]>
 <book xml:lang=""x-uk-eng"">It is written in English</book>
-".ToXmlDocumentConformance(validating: true);
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsTrue(document.IsValid);
         }
 
         /// <summary>
@@ -387,10 +387,10 @@ namespace AngleSharp.Xml.Tests.Parser
    <!ATTLIST book xml:lang CDATA #REQUIRED>
 ]>
 <book xml:lang=""en-USa"">It is written in English</book>
-".ToXmlDocumentConformance(validating: true);
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsTrue(document.IsValid);
         }
 
         /// <summary>
@@ -406,10 +406,10 @@ namespace AngleSharp.Xml.Tests.Parser
 <!ATTLIST root xml:lang CDATA #IMPLIED>
 ]>
 <root xml:lang=""en""/>
-".ToXmlDocumentConformance(validating: true);
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsTrue(document.IsValid);
         }
 
         /// <summary>
@@ -426,10 +426,10 @@ namespace AngleSharp.Xml.Tests.Parser
 ]>
 <root xml:lang=""en-IN""/>
 
-".ToXmlDocumentConformance(validating: true);
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsTrue(document.IsValid);
         }
 
         /// <summary>
@@ -446,10 +446,10 @@ namespace AngleSharp.Xml.Tests.Parser
 ]>
 <root xml:lang=""DE""/>
 
-".ToXmlDocumentConformance(validating: true);
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsTrue(document.IsValid);
         }
 
         /// <summary>

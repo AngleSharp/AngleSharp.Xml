@@ -27,6 +27,7 @@ namespace AngleSharp.Xml.Parser
         private readonly List<Element> _openElements;
         private readonly Dictionary<String, String> _internalElementModels;
         private readonly Dictionary<String, HashSet<String>> _internalAttributeDeclarations;
+        private readonly Dictionary<String, Dictionary<String, InternalAttributeRule>> _internalAttributeRules;
         private readonly Dictionary<String, String> _internalGeneralEntities;
         private DtdContainer _dtd;
         private String _doctypeName;
@@ -51,6 +52,7 @@ namespace AngleSharp.Xml.Parser
             _openElements = new List<Element>();
             _internalElementModels = new Dictionary<String, String>(StringComparer.Ordinal);
             _internalAttributeDeclarations = new Dictionary<String, HashSet<String>>(StringComparer.Ordinal);
+            _internalAttributeRules = new Dictionary<String, Dictionary<String, InternalAttributeRule>>(StringComparer.Ordinal);
             _internalGeneralEntities = new Dictionary<String, String>(StringComparer.Ordinal);
             _currentMode = XmlTreeMode.Initial;
         }
@@ -510,6 +512,9 @@ namespace AngleSharp.Xml.Parser
             var subset = doctypeToken.InternalSubset;
 
             _dtd = null;
+            _internalElementModels.Clear();
+            _internalAttributeDeclarations.Clear();
+            _internalAttributeRules.Clear();
             _internalGeneralEntities.Clear();
 
             try
@@ -550,12 +555,34 @@ namespace AngleSharp.Xml.Parser
                     _internalAttributeDeclarations[elementName] = declared;
                 }
 
+                if (!_internalAttributeRules.TryGetValue(elementName, out var rules))
+                {
+                    rules = new Dictionary<String, InternalAttributeRule>(StringComparer.Ordinal);
+                    _internalAttributeRules[elementName] = rules;
+                }
+
                 foreach (Match attr in Regex.Matches(
                     declarationBody,
-                    "([A-Za-z_][A-Za-z0-9_:\\.-]*)\\s+(?:CDATA|IDREFS?|ID|NMTOKENS?|NMTOKEN|ENTITY|ENTITIES|NOTATION\\s*\\([^\\)]*\\)|\\([^\\)]*\\))\\s+(?:#REQUIRED|#IMPLIED|#FIXED\\s+(?:\"[^\"]*\"|'[^']*')|(?:\"[^\"]*\"|'[^']*'))",
+                    "([A-Za-z_][A-Za-z0-9_:\\.-]*)\\s+(CDATA|IDREFS?|ID|NMTOKENS?|NMTOKEN|ENTITY|ENTITIES|NOTATION\\s*\\([^\\)]*\\)|\\([^\\)]*\\))\\s+(#REQUIRED|#IMPLIED|#FIXED\\s+((?:\"[^\"]*\"|'[^']*'))|(?:\"[^\"]*\"|'[^']*'))",
                     RegexOptions.Singleline))
                 {
-                    declared.Add(attr.Groups[1].Value);
+                    var attributeName = attr.Groups[1].Value;
+                    var defaultDeclaration = attr.Groups[3].Value;
+
+                    declared.Add(attributeName);
+
+                    var rule = new InternalAttributeRule
+                    {
+                        IsRequired = defaultDeclaration.StartsWith("#REQUIRED", StringComparison.Ordinal),
+                    };
+
+                    if (defaultDeclaration.StartsWith("#FIXED", StringComparison.Ordinal))
+                    {
+                        var fixedValue = attr.Groups[4].Success ? attr.Groups[4].Value : String.Empty;
+                        rule.FixedValue = Unquote(fixedValue);
+                    }
+
+                    rules[attributeName] = rule;
                 }
             }
 
@@ -673,6 +700,7 @@ namespace AngleSharp.Xml.Parser
             }
 
             var hasDeclarations = _internalAttributeDeclarations.TryGetValue(element.NodeName, out var declaredAttributes) && declaredAttributes.Count > 0;
+            _internalAttributeRules.TryGetValue(element.NodeName, out var attributeRules);
 
             foreach (var attr in ((IElement)element).Attributes)
             {
@@ -688,9 +716,28 @@ namespace AngleSharp.Xml.Parser
                     return false;
                 }
 
+                if (attributeRules != null && attributeRules.TryGetValue(name, out var rule) && rule.HasFixedValue)
+                {
+                    if (!String.Equals(attr.Value, rule.FixedValue, StringComparison.Ordinal))
+                    {
+                        return false;
+                    }
+                }
+
                 if (!hasDeclarations && name.StartsWith("xml:", StringComparison.Ordinal))
                 {
                     return false;
+                }
+            }
+
+            if (attributeRules != null)
+            {
+                foreach (var pair in attributeRules)
+                {
+                    if (pair.Value.IsRequired && ((IElement)element).Attributes[pair.Key] == null)
+                    {
+                        return false;
+                    }
                 }
             }
 
@@ -744,7 +791,66 @@ namespace AngleSharp.Xml.Parser
                 return true;
             }
 
+            var elementContentModel = Regex.Match(model, "^\\(([A-Za-z_][A-Za-z0-9_:\\.-]*(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_:\\.-]*)*)\\)$");
+
+            if (elementContentModel.Success)
+            {
+                if (significant.Any(m => m is IText))
+                {
+                    return false;
+                }
+
+                var expected = elementContentModel.Groups[1].Value
+                    .Split(',')
+                    .Select(m => m.Trim())
+                    .Where(m => m.Length > 0)
+                    .ToList();
+
+                var actual = significant
+                    .OfType<IElement>()
+                    .Select(m => m.NodeName)
+                    .ToList();
+
+                if (expected.Count != actual.Count)
+                {
+                    return false;
+                }
+
+                for (var i = 0; i < expected.Count; i++)
+                {
+                    if (!String.Equals(expected[i], actual[i], StringComparison.Ordinal))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            if (!model.Contains("#PCDATA", StringComparison.Ordinal) && significant.Any(m => m is IText))
+            {
+                return false;
+            }
+
             return true;
+        }
+
+        private static String Unquote(String value)
+        {
+            if (String.IsNullOrEmpty(value) || value.Length < 2)
+            {
+                return value;
+            }
+
+            var first = value[0];
+            var last = value[value.Length - 1];
+
+            if ((first == Symbols.DoubleQuote && last == Symbols.DoubleQuote) || (first == Symbols.SingleQuote && last == Symbols.SingleQuote))
+            {
+                return value.Substring(1, value.Length - 2);
+            }
+
+            return value;
         }
 
         private String ExpandInternalEntities(String data)
@@ -802,6 +908,19 @@ namespace AngleSharp.Xml.Parser
                     }
                 }
             }
+        }
+
+        #endregion
+
+        #region Nested types
+
+        private sealed class InternalAttributeRule
+        {
+            public Boolean IsRequired { get; set; }
+
+            public String FixedValue { get; set; }
+
+            public Boolean HasFixedValue => FixedValue != null;
         }
 
         #endregion

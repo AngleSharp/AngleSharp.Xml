@@ -36,6 +36,14 @@ Yes. In XML DOM terms, self-closing syntax and explicit open+close syntax both r
 
 No built-in XSD validation pipeline is provided by this package. If you need strict schema validation, combine AngleSharp.Xml with dedicated schema validation tooling.
 
+## How do I validate XML against a DTD?
+
+Parse with XmlParser and inspect `document.IsValid`. This gives practical DTD validity results for supported declaration patterns, especially for internal subsets.
+
+## Are external DTD files automatically resolved?
+
+Not as a full conformance feature. Internal subset scenarios are the most reliable path today. If you depend on external subsets/entities for strict compliance, add an external validation layer in your pipeline.
+
 ## Is XPath included?
 
 This package is focused on the AngleSharp DOM and parser integration. Most users query nodes through AngleSharp DOM APIs (such as CSS selectors).
