@@ -29,6 +29,8 @@ namespace AngleSharp.Xml.Tests
 <!ELEMENT author (#PCDATA)>
 <!ELEMENT booktitle (#PCDATA)>";
 
+            _ = dtd;
+
             //var parser = new DtdParser(dtd);
             //parser.Parse();
 

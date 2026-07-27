@@ -65,6 +65,7 @@ namespace AngleSharp.Xml.Tests.Tokenizer
  <!ATTLIST TITLE RATING CDATA #IMPLIED>
  <!ATTLIST TITLE LANGUAGE CDATA #IMPLIED>
  ]>";
+            _ = dtd;
             //var s = new SourceManager(dtd);
 
             //var t = new XmlTokenizer(s);
@@ -147,6 +148,7 @@ namespace AngleSharp.Xml.Tests.Tokenizer
  <!ENTITY COPYRIGHT 'Copyright 1998 Vervet Logic Press'>
 
  ]>";
+            _ = src;
             //var s = new SourceManager(src);
             //var t = new XmlTokenizer(s);
             //t.DTD.Reset();
@@ -200,6 +202,7 @@ namespace AngleSharp.Xml.Tests.Tokenizer
  <!ELEMENT NOTES (#PCDATA)>
 
  ]>";
+            _ = src;
             //var s = new SourceManager(src);
             //var t = new XmlTokenizer(s);
             //t.DTD.Reset();

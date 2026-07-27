@@ -13,10 +13,10 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Adds a powerful XML and DTD parser to AngleSharp.</description>
     <releaseNotes>https://github.com/AngleSharp/AngleSharp.Xml/blob/main/CHANGELOG.md</releaseNotes>
-    <copyright>Copyright 2016-2025, AngleSharp</copyright>
+    <copyright>Copyright 2016-2026, AngleSharp</copyright>
     <tags>html html5 css css3 dom requester http https xml dtd</tags>
     <dependencies>
-      <dependency id="AngleSharp" version="[1.0,2.0)" />
+      <dependency id="AngleSharp" version="[1.5,2.0)" />
     </dependencies>
   </metadata>
 </package>
