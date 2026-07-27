@@ -4,9 +4,10 @@ using AngleSharp.Dom;
 
 namespace AngleSharp.Xml.Tests.Parser
 {
+    using AngleSharp.Dom;
     using AngleSharp.Xml.Parser;
     using NUnit.Framework;
-    using System;
+    using System.Linq;
 
     [TestFixture]
     public class XmlParsing
