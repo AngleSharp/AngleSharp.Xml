@@ -42,7 +42,7 @@ Parse with XmlParser and inspect `document.IsValid`. This gives practical DTD va
 
 ## Are external DTD files automatically resolved?
 
-Not as a full conformance feature. Internal subset scenarios are the most reliable path today. If you depend on external subsets/entities for strict compliance, add an external validation layer in your pipeline.
+Partially. Local file-based SYSTEM identifiers are supported. Network retrieval and PUBLIC identifier/catalog resolution are not implemented as a full conformance feature. If you depend on those external subset/entity workflows for strict compliance, add an external validation layer in your pipeline.
 
 ## Is XPath included?
 

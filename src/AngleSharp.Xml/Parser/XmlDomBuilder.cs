@@ -8,6 +8,7 @@ namespace AngleSharp.Xml.Parser
     using AngleSharp.Xml.Parser.Tokens;
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
@@ -228,10 +229,7 @@ namespace AngleSharp.Xml.Parser
                     _document.AppendChild(doctypeNode);
                     _doctypeName = doctypeToken.Name;
 
-                    if (!String.IsNullOrEmpty(doctypeToken.InternalSubset))
-                    {
-                        ParseInternalSubset(doctypeToken);
-                    }
+                    ParseDoctypeSubset(doctypeToken);
 
                     _currentMode = XmlTreeMode.Misc;
 
@@ -507,9 +505,9 @@ namespace AngleSharp.Xml.Parser
             return t >= 1.0 && t < 2.0;
         }
 
-        private void ParseInternalSubset(XmlDoctypeToken doctypeToken)
+        private void ParseDoctypeSubset(XmlDoctypeToken doctypeToken)
         {
-            var subset = doctypeToken.InternalSubset;
+            var subset = doctypeToken.InternalSubset ?? String.Empty;
 
             _dtd = null;
             _internalElementModels.Clear();
@@ -517,24 +515,71 @@ namespace AngleSharp.Xml.Parser
             _internalAttributeRules.Clear();
             _internalGeneralEntities.Clear();
 
-            try
+            var hasExternalSubset = TryLoadExternalSubset(doctypeToken.SystemIdentifier, out var externalSubset, out var externalSubsetPath);
+
+            if (hasExternalSubset || subset.Length > 0)
             {
                 var container = new DtdContainer
                 {
                     Parent = _document as XmlDocument,
+                    Url = externalSubsetPath,
                 };
 
-                var parser = new DtdParser(container, new TextSource(subset))
+                if (hasExternalSubset)
                 {
-                    IsInternal = true,
-                };
+                    try
+                    {
+                        var externalParser = new DtdParser(container, new TextSource(externalSubset));
+                        externalParser.IsInternal = false;
+                        externalParser.Parse();
+                    }
+                    catch
+                    {
+                    }
+                }
 
-                parser.Parse();
+                if (subset.Length > 0)
+                {
+                    try
+                    {
+                        var internalParser = new DtdParser(container, new TextSource(subset))
+                        {
+                            IsInternal = true,
+                        };
+
+                        internalParser.Parse();
+                    }
+                    catch
+                    {
+                    }
+                }
+
                 _dtd = container;
+
+                foreach (var entity in container.Entities)
+                {
+                    if (!_internalGeneralEntities.ContainsKey(entity.NodeName) && !String.IsNullOrEmpty(entity.NodeValue))
+                    {
+                        _internalGeneralEntities[entity.NodeName] = entity.NodeValue;
+                    }
+                }
             }
-            catch
+
+            if (hasExternalSubset)
             {
-                _dtd = null;
+                ParseSubsetFallbackDeclarations(externalSubset);
+            }
+
+            ParseSubsetFallbackDeclarations(subset);
+
+            RegisterTokenizerEntities();
+        }
+
+        private void ParseSubsetFallbackDeclarations(String subset)
+        {
+            if (String.IsNullOrEmpty(subset))
+            {
+                return;
             }
 
             foreach (Match match in Regex.Matches(subset, "<!ELEMENT\\s+([A-Za-z_][A-Za-z0-9_:\\.-]*)\\s+([^>]+)>", RegexOptions.Singleline))
@@ -600,6 +645,81 @@ namespace AngleSharp.Xml.Parser
             }
         }
 
+        private void RegisterTokenizerEntities()
+        {
+            foreach (var entry in _internalGeneralEntities)
+            {
+                _tokenizer.RegisterGeneralEntity(entry.Key, entry.Value);
+            }
+        }
+
+        private Boolean TryLoadExternalSubset(String systemIdentifier, out String content, out String fullPath)
+        {
+            content = String.Empty;
+            fullPath = String.Empty;
+
+            if (String.IsNullOrWhiteSpace(systemIdentifier))
+            {
+                return false;
+            }
+
+            if (!TryResolveSystemPath(systemIdentifier, out fullPath))
+            {
+                return false;
+            }
+
+            try
+            {
+                content = File.ReadAllText(fullPath);
+                return true;
+            }
+            catch
+            {
+                content = String.Empty;
+                fullPath = String.Empty;
+                return false;
+            }
+        }
+
+        private Boolean TryResolveSystemPath(String systemIdentifier, out String fullPath)
+        {
+            fullPath = String.Empty;
+
+            try
+            {
+                if (Path.IsPathRooted(systemIdentifier) && File.Exists(systemIdentifier))
+                {
+                    fullPath = Path.GetFullPath(systemIdentifier);
+                    return true;
+                }
+
+                if (Uri.TryCreate(systemIdentifier, UriKind.Absolute, out var uri) && uri.IsFile)
+                {
+                    var localPath = uri.LocalPath;
+
+                    if (File.Exists(localPath))
+                    {
+                        fullPath = Path.GetFullPath(localPath);
+                        return true;
+                    }
+                }
+
+                var baseDirectory = Environment.CurrentDirectory;
+                var combinedPath = Path.Combine(baseDirectory, systemIdentifier);
+
+                if (File.Exists(combinedPath))
+                {
+                    fullPath = Path.GetFullPath(combinedPath);
+                    return true;
+                }
+            }
+            catch
+            {
+            }
+
+            return false;
+        }
+
         private void ApplyValidation()
         {
             var xml = _document as XmlDocument;
@@ -623,7 +743,8 @@ namespace AngleSharp.Xml.Parser
             {
                 valid = !_dtd.IsInvalid && ValidateElementAgainstDtd(root);
             }
-            else if (valid && root != null && _internalElementModels.Count > 0)
+
+            if (valid && root != null && _internalElementModels.Count > 0)
             {
                 valid = ValidateElementAgainstInternalSubset(root);
             }

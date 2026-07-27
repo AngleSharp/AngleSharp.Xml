@@ -4,6 +4,7 @@ namespace AngleSharp.Xml.Dtd.Parser
     using AngleSharp.Text;
     using System;
     using System.Diagnostics;
+    using System.IO;
 
     /// <summary>
     /// The parser for the Document Type Definition.
@@ -191,6 +192,23 @@ namespace AngleSharp.Xml.Dtd.Parser
         /// <returns>The contained string.</returns>
         String GetText(String url)
         {
+            if (String.IsNullOrWhiteSpace(url))
+            {
+                return String.Empty;
+            }
+
+            if (TryResolvePath(url, out var path))
+            {
+                try
+                {
+                    return File.ReadAllText(path);
+                }
+                catch
+                {
+                    return String.Empty;
+                }
+            }
+
             //if (Configuration.HasHttpRequester)
             //{
             //    if (!Location.IsAbsolute(url))
@@ -221,6 +239,61 @@ namespace AngleSharp.Xml.Dtd.Parser
             //}
 
             return String.Empty;
+        }
+
+        Boolean TryResolvePath(String url, out String fullPath)
+        {
+            fullPath = String.Empty;
+
+            try
+            {
+                if (Path.IsPathRooted(url) && File.Exists(url))
+                {
+                    fullPath = Path.GetFullPath(url);
+                    return true;
+                }
+
+                if (Uri.TryCreate(url, UriKind.Absolute, out var absolute) && absolute.IsFile)
+                {
+                    var path = absolute.LocalPath;
+
+                    if (File.Exists(path))
+                    {
+                        fullPath = Path.GetFullPath(path);
+                        return true;
+                    }
+                }
+
+                if (!String.IsNullOrWhiteSpace(_result.Url))
+                {
+                    var basePath = _result.Url;
+                    var baseDirectory = File.Exists(basePath) ? Path.GetDirectoryName(basePath) : basePath;
+
+                    if (!String.IsNullOrEmpty(baseDirectory))
+                    {
+                        var combined = Path.Combine(baseDirectory, url);
+
+                        if (File.Exists(combined))
+                        {
+                            fullPath = Path.GetFullPath(combined);
+                            return true;
+                        }
+                    }
+                }
+
+                var fallback = Path.Combine(Environment.CurrentDirectory, url);
+
+                if (File.Exists(fallback))
+                {
+                    fullPath = Path.GetFullPath(fallback);
+                    return true;
+                }
+            }
+            catch
+            {
+            }
+
+            return false;
         }
 
         #endregion

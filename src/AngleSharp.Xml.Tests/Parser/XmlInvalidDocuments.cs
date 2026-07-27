@@ -253,7 +253,7 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void XmlInvalidOP40pass1()
         {
-            var document = (@"<doc></doc>").ToXmlDocumentConformance();
+                var document = (@"<doc></doc>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsNotNull(document);
         }
@@ -267,7 +267,7 @@ namespace AngleSharp.Xml.Tests.Parser
         {
             var document = (@"<doc
  
-></doc>").ToXmlDocumentConformance();
+        ></doc>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsNotNull(document);
         }
@@ -282,7 +282,7 @@ namespace AngleSharp.Xml.Tests.Parser
         {
             var document = (@"<doc att=""val"" att2=""val2""
 att3=""val3""
-></doc>").ToXmlDocumentConformance();
+        ></doc>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsNotNull(document);
         }
@@ -294,7 +294,7 @@ att3=""val3""
         [Test]
         public void XmlInvalidOP40pass3()
         {
-            var document = (@"<doc att=""val""></doc>").ToXmlDocumentConformance();
+                var document = (@"<doc att=""val""></doc>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsNotNull(document);
         }
@@ -306,7 +306,7 @@ att3=""val3""
         [Test]
         public void XmlInvalidOP41pass1()
         {
-            var document = (@"<doc att=""val""></doc>").ToXmlDocumentConformance();
+                var document = (@"<doc att=""val""></doc>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsNotNull(document);
         }
@@ -321,7 +321,7 @@ att3=""val3""
         {
             var document = (@"<doc att
  =
-  ""val""></doc>").ToXmlDocumentConformance();
+    ""val""></doc>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsNotNull(document);
         }
@@ -333,7 +333,7 @@ att3=""val3""
         [Test]
         public void XmlInvalidOP42pass1()
         {
-            var document = (@"<doc></doc>").ToXmlDocumentConformance();
+                var document = (@"<doc></doc>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsNotNull(document);
         }
@@ -346,7 +346,7 @@ att3=""val3""
         public void XmlInvalidOP42pass2()
         {
             var document = (@"<doc></doc  
->").ToXmlDocumentConformance();
+        >").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsNotNull(document);
         }
@@ -358,7 +358,7 @@ att3=""val3""
         [Test]
         public void XmlInvalidOP44pass1()
         {
-            var document = (@"<doc/>").ToXmlDocumentConformance();
+                var document = (@"<doc/>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsNotNull(document);
         }
@@ -370,7 +370,7 @@ att3=""val3""
         [Test]
         public void XmlInvalidOP44pass2()
         {
-            var document = (@"<doc att=""val""/>").ToXmlDocumentConformance();
+                var document = (@"<doc att=""val""/>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsNotNull(document);
         }
@@ -386,7 +386,7 @@ att3=""val3""
             var document = (@"<doc att=""val""
 
 
-/>").ToXmlDocumentConformance();
+        />").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsNotNull(document);
         }
@@ -401,7 +401,7 @@ att3=""val3""
         {
             var document = (@"<doc
   
-/>").ToXmlDocumentConformance();
+        />").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsNotNull(document);
         }
@@ -415,7 +415,7 @@ att3=""val3""
         public void XmlInvalidOP44pass5()
         {
             var document = (@"<doc att=""val""
-att2=""val2"" att3=""val3""/>").ToXmlDocumentConformance();
+        att2=""val2"" att3=""val3""/>").ToXmlDocument();
             Assert.IsNotNull(document);
             Assert.IsNotNull(document);
         }

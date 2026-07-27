@@ -5,6 +5,7 @@ namespace AngleSharp.Xml.Parser
     using AngleSharp.Text;
     using AngleSharp.Xml.Parser.Tokens;
     using System;
+    using System.Collections.Generic;
 
     /// <summary>
     /// Performs the tokenization of the source code. Most of
@@ -15,6 +16,7 @@ namespace AngleSharp.Xml.Parser
         #region Fields
 
         private readonly IEntityProvider _resolver;
+        private readonly Dictionary<String, String> _generalEntities;
         private TextPosition _position;
 
         #endregion
@@ -30,6 +32,7 @@ namespace AngleSharp.Xml.Parser
             : base(source)
         {
             _resolver = resolver;
+            _generalEntities = new Dictionary<String, String>(StringComparer.Ordinal);
         }
 
         #endregion
@@ -64,6 +67,19 @@ namespace AngleSharp.Xml.Parser
             }
 
             return NewEof();
+        }
+
+        /// <summary>
+        /// Registers a custom general entity declaration for the current parse run.
+        /// </summary>
+        /// <param name="name">The entity name without trailing semicolon.</param>
+        /// <param name="value">The replacement text.</param>
+        public void RegisterGeneralEntity(String name, String value)
+        {
+            if (!String.IsNullOrEmpty(name) && value != null)
+            {
+                _generalEntities[name + ";"] = value;
+            }
         }
 
         #endregion
@@ -246,6 +262,11 @@ namespace AngleSharp.Xml.Parser
                 {
                     var content = StringBuffer.Append(c).ToString(start, ++length);
                     var entity = _resolver.GetSymbol(content);
+
+                    if (String.IsNullOrEmpty(entity))
+                    {
+                        _generalEntities.TryGetValue(content, out entity);
+                    }
 
                     if (!String.IsNullOrEmpty(entity))
                     {

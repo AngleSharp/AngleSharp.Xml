@@ -76,13 +76,18 @@ Current DTD-related behavior includes:
   - #REQUIRED constraints are enforced
   - #FIXED constraints are enforced when attribute is present
 - Internal general entity replacement in text nodes for declared internal entities
+- External subset loading for local file-based SYSTEM identifiers
+  - Absolute file paths are supported
+  - Relative paths are resolved against the current process working directory
+- External general entity replacement when entities are declared in loaded local external subsets
 
 ## What is currently limited or not supported
 
 You should be aware of these boundaries:
 
-- External DTD/entity retrieval is not fully implemented for general runtime use
-  - SYSTEM/PUBLIC references are not automatically fetched from external resources
+- External DTD/entity retrieval is limited
+  - HTTP/network retrieval is not implemented
+  - PUBLIC identifier resolution/catalog behavior is not implemented
 - Parameter entity and external-subset behavior is not a full XML 1.0 conformance implementation
 - Full content-model grammar support is incomplete in internal fallback paths
   - Complex nested groups and advanced quantifier combinations may not be fully validated
@@ -94,8 +99,9 @@ You should be aware of these boundaries:
 For production XML workflows:
 
 1. Use internal subset validation where feasible if you rely on built-in IsValid.
-2. Treat IsValid as practical DTD validation, not full standards-compliance validation.
-3. If you need strict external DTD processing or full conformance, add a dedicated XML validation layer.
+2. Use local file-based SYSTEM identifiers if you need external subset declarations without adding extra tooling.
+3. Treat IsValid as practical DTD validation, not full standards-compliance validation.
+4. If you need strict external DTD processing (for example, network retrieval or XML catalog workflows) or full conformance, add a dedicated XML validation layer.
 
 ## Troubleshooting tips
 
