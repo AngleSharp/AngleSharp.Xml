@@ -6,6 +6,7 @@ AngleSharp.Xml contains code written by (in order of first pull request / commit
 
 * [Florian Rappl](https://github.com/FlorianRappl)
 * [Konstantin Safonov](https://github.com/kasthack)
+* [jbrayfaithlife](https://github.com/jbrayfaithlife)
 
 Without these awesome people AngleSharp.Xml could not exist. Thanks to everyone for your contributions! :beers:
 

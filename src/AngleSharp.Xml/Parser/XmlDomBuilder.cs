@@ -6,6 +6,7 @@ namespace AngleSharp.Xml.Parser
     using AngleSharp.Xml.Parser.Tokens;
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -274,9 +275,23 @@ namespace AngleSharp.Xml.Parser
                     var element = CreateElement(tagToken.Name, tagToken.IsSelfClosing);
                     CurrentNode.AppendChild(element);
 
-                    for (var i = 0; i < tagToken.Attributes.Count; i++)
+                    var namespaceDeclarations = tagToken.Attributes
+                        .Where(attr => attr.Key.StartsWith("xmlns"))
+                        .ToList();
+                    var otherAttributes = tagToken.Attributes
+                        .Where(attr => !attr.Key.StartsWith("xmlns"))
+                        .ToList();
+
+                    for (var i = 0; i < namespaceDeclarations.Count; i++)
                     {
-                        var attr = tagToken.Attributes[i];
+                        var attr = namespaceDeclarations[i];
+                        var item = CreateAttribute(attr.Key, attr.Value.Trim());
+                        element.AddAttribute(item);
+                    }
+
+                    for (var i = 0; i < otherAttributes.Count; i++)
+                    {
+                        var attr = otherAttributes[i];
                         var item = CreateAttribute(attr.Key, attr.Value.Trim());
                         element.AddAttribute(item);
                     }

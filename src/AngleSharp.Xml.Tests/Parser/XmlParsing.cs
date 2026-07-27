@@ -4,6 +4,7 @@ namespace AngleSharp.Xml.Tests.Parser
     using AngleSharp.Xml.Parser;
     using NUnit.Framework;
     using System.Linq;
+    using System.Threading.Tasks;
 
     [TestFixture]
     public class XmlParsing
@@ -146,6 +147,17 @@ namespace AngleSharp.Xml.Tests.Parser
                 });
                 parser.ParseDocument(source);
             });
+        }
+
+
+        [Test]
+        public async Task NamespaceDeclarationsInAttributesShouldNotCareAboutOrdering()
+        {
+            var document = @"<xml p6:type=""noteref"" xmlns:p6=""http://www.idpf.org/2007/ops"" >1</xml>"
+                .ToXmlDocument();
+            var root = document.DocumentElement;
+            Assert.AreEqual("http://www.idpf.org/2007/ops",
+                root.Attributes.First(att => att.LocalName == "type").NamespaceUri);
         }
 
         [Test]
