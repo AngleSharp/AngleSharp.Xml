@@ -1,8 +1,10 @@
 namespace AngleSharp.Xml.Tests.Parser
 {
     using AngleSharp.Dom;
+    using AngleSharp.Xhtml;
     using AngleSharp.Xml.Parser;
     using NUnit.Framework;
+    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -166,6 +168,17 @@ namespace AngleSharp.Xml.Tests.Parser
             var document = @"<xml xml:lang=""en""></xml>".ToXmlDocument();
             var root = document.DocumentElement;
             Assert.AreEqual(NamespaceNames.XmlUri, root.Attributes.Single().NamespaceUri);
+        }
+
+        [Test]
+        public void XmlPrefixedAttributesShouldRoundtripWithXhtmlFormatter_Issue20()
+        {
+            var document = @"<xml xml:lang=""en"">Test</xml>".ToXmlDocument();
+            var writer = new StringWriter();
+            document.ToHtml(writer, XhtmlMarkupFormatter.Instance);
+            var markup = writer.ToString();
+
+            Assert.AreEqual(@"<xml xml:lang=""en"">Test</xml>", markup);
         }
     }
 }
