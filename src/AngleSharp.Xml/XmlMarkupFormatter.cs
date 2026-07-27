@@ -36,7 +36,7 @@ namespace AngleSharp.Xml
             var prefix = element.Prefix;
             var name = element.LocalName;
             var tag = !String.IsNullOrEmpty(prefix) ? String.Concat(prefix, ":", name) : name;
-            var closed = selfClosing || IsAlwaysSelfClosing && !element.HasChildNodes;
+            var closed = element.HasChildNodes ? false : selfClosing || IsAlwaysSelfClosing;
             return closed ? String.Empty : String.Concat("</", tag, ">");
         }
 
@@ -60,6 +60,7 @@ namespace AngleSharp.Xml
         {
             var prefix = element.Prefix;
             var temp = StringBuilderPool.Obtain();
+            var closed = element.HasChildNodes ? false : selfClosing || IsAlwaysSelfClosing;
             temp.Append(Symbols.LessThan);
 
             if (!String.IsNullOrEmpty(prefix))
@@ -74,7 +75,7 @@ namespace AngleSharp.Xml
                 temp.Append(" ").Append(Attribute(attribute));
             }
 
-            if (selfClosing || (IsAlwaysSelfClosing && !element.HasChildNodes))
+            if (closed)
             {
                 temp.Append(" /");
             }
