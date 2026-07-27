@@ -27,6 +27,7 @@ namespace AngleSharp.Xml.Parser
         private readonly List<Element> _openElements;
         private readonly Dictionary<String, String> _internalElementModels;
         private readonly Dictionary<String, HashSet<String>> _internalAttributeDeclarations;
+        private readonly Dictionary<String, String> _internalGeneralEntities;
         private DtdContainer _dtd;
         private String _doctypeName;
 
@@ -50,6 +51,7 @@ namespace AngleSharp.Xml.Parser
             _openElements = new List<Element>();
             _internalElementModels = new Dictionary<String, String>(StringComparer.Ordinal);
             _internalAttributeDeclarations = new Dictionary<String, HashSet<String>>(StringComparer.Ordinal);
+            _internalGeneralEntities = new Dictionary<String, String>(StringComparer.Ordinal);
             _currentMode = XmlTreeMode.Initial;
         }
 
@@ -391,7 +393,7 @@ namespace AngleSharp.Xml.Parser
                 case XmlTokenType.Character:
                 {
                     var charToken = (XmlCharacterToken)token;
-                    CurrentNode.AppendText(charToken.Data);
+                    CurrentNode.AppendText(ExpandInternalEntities(charToken.Data));
                     break;
                 }
                 case XmlTokenType.EndOfFile:
@@ -508,6 +510,7 @@ namespace AngleSharp.Xml.Parser
             var subset = doctypeToken.InternalSubset;
 
             _dtd = null;
+            _internalGeneralEntities.Clear();
 
             try
             {
@@ -554,6 +557,19 @@ namespace AngleSharp.Xml.Parser
                 {
                     declared.Add(attr.Groups[1].Value);
                 }
+            }
+
+            foreach (Match match in Regex.Matches(subset, "<!ENTITY\\s+([A-Za-z_][A-Za-z0-9_:\\.-]*)\\s+(\"[^\"]*\"|'[^']*')\\s*>", RegexOptions.Singleline))
+            {
+                var entityName = match.Groups[1].Value;
+
+                if (_internalGeneralEntities.ContainsKey(entityName))
+                {
+                    continue;
+                }
+
+                var quoted = match.Groups[2].Value;
+                _internalGeneralEntities[entityName] = quoted.Substring(1, quoted.Length - 2);
             }
         }
 
@@ -729,6 +745,41 @@ namespace AngleSharp.Xml.Parser
             }
 
             return true;
+        }
+
+        private String ExpandInternalEntities(String data)
+        {
+            if (String.IsNullOrEmpty(data) || _internalGeneralEntities.Count == 0)
+            {
+                return data;
+            }
+
+            var value = data;
+
+            for (var i = 0; i < 5; i++)
+            {
+                var changed = false;
+
+                value = Regex.Replace(value, "&([A-Za-z_][A-Za-z0-9_:\\.-]*);", match =>
+                {
+                    var name = match.Groups[1].Value;
+
+                    if (_internalGeneralEntities.TryGetValue(name, out var replacement))
+                    {
+                        changed = true;
+                        return replacement;
+                    }
+
+                    return match.Value;
+                });
+
+                if (!changed)
+                {
+                    break;
+                }
+            }
+
+            return Regex.Replace(value, "<!\\[CDATA\\[(.*?)\\]\\]>", "$1", RegexOptions.Singleline);
         }
 
         private void SetEncoding(String charSet)

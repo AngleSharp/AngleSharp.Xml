@@ -100,6 +100,8 @@ namespace AngleSharp.Xml.Tests.Parser
             Assert.IsNotNull(document);
             Assert.IsNotNull(document);
             Assert.IsNotNull(document.DocumentElement);
+            Assert.IsNotNull(document.DocumentElement.Attributes["a1"]);
+            Assert.AreEqual("v1", document.DocumentElement.Attributes["a1"].Value);
         }
 
         /// <summary>
@@ -118,6 +120,8 @@ namespace AngleSharp.Xml.Tests.Parser
             Assert.IsNotNull(document);
             Assert.IsNotNull(document);
             Assert.IsNotNull(document.DocumentElement);
+            Assert.IsNotNull(document.DocumentElement.Attributes["a1"]);
+            Assert.AreEqual("v1", document.DocumentElement.Attributes["a1"].Value);
         }
 
         /// <summary>
@@ -210,7 +214,7 @@ namespace AngleSharp.Xml.Tests.Parser
 
             Assert.IsNotNull(document);
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document.DocumentElement);
+            Assert.AreEqual(combine, document.DocumentElement.TextContent);
         }
 
         /// <summary>

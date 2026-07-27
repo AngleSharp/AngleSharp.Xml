@@ -60,10 +60,10 @@ namespace AngleSharp.Xml.Tests.Parser
         public void XmlValidSa084()
         {
             var document = @"<!DOCTYPE doc [<!ELEMENT doc (#PCDATA)>]><doc></doc>
-".ToXmlDocumentConformance(validating: true);
+        ".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsTrue(document.IsValid);
         }
 
         /// <summary>
@@ -82,10 +82,10 @@ namespace AngleSharp.Xml.Tests.Parser
 
 
 </doc>
-".ToXmlDocumentConformance(validating: true);
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+    Assert.IsTrue(document.IsValid);
         }
 
         /// <summary>
@@ -102,10 +102,10 @@ namespace AngleSharp.Xml.Tests.Parser
 ]>
 <doc><![CDATA[
 ]]></doc>
-".ToXmlDocumentConformance(validating: true);
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+    Assert.IsTrue(document.IsValid);
         }
 
         /// <summary>
@@ -2029,7 +2029,7 @@ y?></doc>
 
             Assert.IsNotNull(document);
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document.DocumentElement);
+            Assert.AreEqual("&foo;", document.DocumentElement.TextContent);
         }
 
         /// <summary>
@@ -2889,7 +2889,11 @@ y?></doc>
 
             Assert.IsNotNull(document);
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document.DocumentElement);
+            Assert.AreEqual(1, document.DocumentElement.ChildNodes.Length);
+
+            var text = document.DocumentElement.ChildNodes[0];
+            Assert.AreEqual(NodeType.Text, text.NodeType);
+            Assert.AreEqual(String.Empty, text.TextContent);
         }
 
         /// <summary>
@@ -3083,10 +3087,10 @@ y?></doc>
    </c>
 </b></root>
 <!--* test P39's syntax and Element Valid VC *-->
-".ToXmlDocumentConformance(validating: true);
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+    Assert.IsTrue(document.IsValid);
         }
 
         /// <summary>

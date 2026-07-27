@@ -18,9 +18,9 @@ namespace AngleSharp.Xml.Tests.Parser
 ]>
 <root> <undeclared/> </root>
 
-").ToXmlDocumentConformance();
+").ToXmlDocument();
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsFalse(document.IsValid);
         }
 
         /// <summary>
@@ -35,9 +35,9 @@ namespace AngleSharp.Xml.Tests.Parser
 <!ELEMENT root EMPTY>
 ]>
 <root><root/></root>
-").ToXmlDocumentConformance();
+").ToXmlDocument();
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsFalse(document.IsValid);
         }
 
         /// <summary>
@@ -53,9 +53,9 @@ namespace AngleSharp.Xml.Tests.Parser
 <!ELEMENT exception (#PCDATA)>
 ]>
 <root>this is ok <exception>this isn't</exception> </root>
-").ToXmlDocumentConformance();
+").ToXmlDocument();
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsFalse(document.IsValid);
         }
 
         /// <summary>
@@ -72,9 +72,9 @@ namespace AngleSharp.Xml.Tests.Parser
 ]>
 <root>&amp;</root>
 
-").ToXmlDocumentConformance();
+").ToXmlDocument();
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsFalse(document.IsValid);
         }
 
         /// <summary>
@@ -100,9 +100,9 @@ namespace AngleSharp.Xml.Tests.Parser
    content of b element
 </b></root>
 
-").ToXmlDocumentConformance();
+").ToXmlDocument();
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsFalse(document.IsValid);
         }
 
         /// <summary>
@@ -158,9 +158,9 @@ namespace AngleSharp.Xml.Tests.Parser
    could not have 'a' as 'b's content
 </b></root>
 
-").ToXmlDocumentConformance();
+").ToXmlDocument();
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsFalse(document.IsValid);
         }
 
         /// <summary>
@@ -189,9 +189,9 @@ namespace AngleSharp.Xml.Tests.Parser
    </c>
 </b></root>
 
-").ToXmlDocumentConformance();
+").ToXmlDocument();
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsFalse(document.IsValid);
         }
 
         /// <summary>
@@ -214,9 +214,9 @@ namespace AngleSharp.Xml.Tests.Parser
   <b attr1=""value1"" attr2=""def"" attr3=""fixed"">attr1 not declared</b>
 </root>
 <!--* testing VC:Attribute Value Type  *-->
-").ToXmlDocumentConformance();
+").ToXmlDocument();
             Assert.IsNotNull(document);
-            Assert.IsNotNull(document);
+            Assert.IsFalse(document.IsValid);
         }
 
         /// <summary>
