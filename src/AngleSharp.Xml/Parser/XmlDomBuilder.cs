@@ -1,11 +1,16 @@
 namespace AngleSharp.Xml.Parser
 {
+    using AngleSharp.Xml.Dtd.Declaration;
+    using AngleSharp.Xml.Dtd.Parser;
     using AngleSharp.Dom;
     using AngleSharp.Text;
     using AngleSharp.Xml.Dom;
     using AngleSharp.Xml.Parser.Tokens;
     using System;
     using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -21,6 +26,12 @@ namespace AngleSharp.Xml.Parser
         private readonly XmlTokenizer _tokenizer;
         private readonly Document _document;
         private readonly List<Element> _openElements;
+        private readonly Dictionary<String, String> _internalElementModels;
+        private readonly Dictionary<String, HashSet<String>> _internalAttributeDeclarations;
+        private readonly Dictionary<String, Dictionary<String, InternalAttributeRule>> _internalAttributeRules;
+        private readonly Dictionary<String, String> _internalGeneralEntities;
+        private DtdContainer _dtd;
+        private String _doctypeName;
 
         private XmlParserOptions _options;
         private XmlTreeMode _currentMode;
@@ -40,6 +51,10 @@ namespace AngleSharp.Xml.Parser
             _document = document;
             _standalone = false;
             _openElements = new List<Element>();
+            _internalElementModels = new Dictionary<String, String>(StringComparer.Ordinal);
+            _internalAttributeDeclarations = new Dictionary<String, HashSet<String>>(StringComparer.Ordinal);
+            _internalAttributeRules = new Dictionary<String, Dictionary<String, InternalAttributeRule>>(StringComparer.Ordinal);
+            _internalGeneralEntities = new Dictionary<String, String>(StringComparer.Ordinal);
             _currentMode = XmlTreeMode.Initial;
         }
 
@@ -96,6 +111,8 @@ namespace AngleSharp.Xml.Parser
             }
             while (token.Type != XmlTokenType.EndOfFile);
 
+            ApplyValidation();
+
             return _document;
         }
 
@@ -115,6 +132,8 @@ namespace AngleSharp.Xml.Parser
                 Consume(token);
             }
             while (token.Type != XmlTokenType.EndOfFile);
+
+            ApplyValidation();
 
             return _document;
         }
@@ -208,6 +227,10 @@ namespace AngleSharp.Xml.Parser
                     var doctypeToken = (XmlDoctypeToken)token;
                     var doctypeNode = _document.Implementation.CreateDocumentType(doctypeToken.Name, doctypeToken.PublicIdentifier, doctypeToken.SystemIdentifier);
                     _document.AppendChild(doctypeNode);
+                    _doctypeName = doctypeToken.Name;
+
+                    ParseDoctypeSubset(doctypeToken);
+
                     _currentMode = XmlTreeMode.Misc;
 
                     break;
@@ -248,6 +271,22 @@ namespace AngleSharp.Xml.Parser
                     InBody(token);
                     break;
                 }
+                case XmlTokenType.Character:
+                {
+                    var charToken = (XmlCharacterToken)token;
+
+                    if (charToken.IsReferenceSource && !_options.IsSuppressingErrors)
+                    {
+                        throw XmlParseError.XmlMissingRoot.At(token.Position);
+                    }
+
+                    if (!charToken.IsIgnorable && !_options.IsSuppressingErrors)
+                    {
+                        throw XmlParseError.XmlMissingRoot.At(token.Position);
+                    }
+
+                    break;
+                }
                 default:
                 {
                     if (!token.IsIgnorable && !_options.IsSuppressingErrors)
@@ -274,9 +313,23 @@ namespace AngleSharp.Xml.Parser
                     var element = CreateElement(tagToken.Name, tagToken.IsSelfClosing);
                     CurrentNode.AppendChild(element);
 
-                    for (var i = 0; i < tagToken.Attributes.Count; i++)
+                    var namespaceDeclarations = tagToken.Attributes
+                        .Where(attr => attr.Key.StartsWith("xmlns"))
+                        .ToList();
+                    var otherAttributes = tagToken.Attributes
+                        .Where(attr => !attr.Key.StartsWith("xmlns"))
+                        .ToList();
+
+                    for (var i = 0; i < namespaceDeclarations.Count; i++)
                     {
-                        var attr = tagToken.Attributes[i];
+                        var attr = namespaceDeclarations[i];
+                        var item = CreateAttribute(attr.Key, attr.Value.Trim());
+                        element.AddAttribute(item);
+                    }
+
+                    for (var i = 0; i < otherAttributes.Count; i++)
+                    {
+                        var attr = otherAttributes[i];
                         var item = CreateAttribute(attr.Key, attr.Value.Trim());
                         element.AddAttribute(item);
                     }
@@ -340,7 +393,7 @@ namespace AngleSharp.Xml.Parser
                 case XmlTokenType.Character:
                 {
                     var charToken = (XmlCharacterToken)token;
-                    CurrentNode.AppendText(charToken.Data);
+                    CurrentNode.AppendText(ExpandInternalEntities(charToken.Data));
                     break;
                 }
                 case XmlTokenType.EndOfFile:
@@ -431,7 +484,11 @@ namespace AngleSharp.Xml.Parser
                 var prefix = name.Substring(0, colon);
                 var ns = NamespaceNames.XmlNsUri;
 
-                if (!prefix.Is(NamespaceNames.XmlNsPrefix))
+                if (prefix.Is(NamespaceNames.XmlPrefix))
+                {
+                    ns = NamespaceNames.XmlUri;
+                }
+                else if (!prefix.Is(NamespaceNames.XmlNsPrefix))
                 {
                     ns = CurrentNode.LookupNamespaceUri(prefix);
                 }
@@ -446,6 +503,510 @@ namespace AngleSharp.Xml.Parser
         {
             var t = ver.ToDouble(0.0);
             return t >= 1.0 && t < 2.0;
+        }
+
+        private void ParseDoctypeSubset(XmlDoctypeToken doctypeToken)
+        {
+            var subset = doctypeToken.InternalSubset ?? String.Empty;
+
+            _dtd = null;
+            _internalElementModels.Clear();
+            _internalAttributeDeclarations.Clear();
+            _internalAttributeRules.Clear();
+            _internalGeneralEntities.Clear();
+
+            var hasExternalSubset = TryLoadExternalSubset(doctypeToken.SystemIdentifier, out var externalSubset, out var externalSubsetPath);
+
+            if (hasExternalSubset || subset.Length > 0)
+            {
+                var container = new DtdContainer
+                {
+                    Parent = _document as XmlDocument,
+                    Url = externalSubsetPath,
+                };
+
+                if (hasExternalSubset)
+                {
+                    try
+                    {
+                        var externalParser = new DtdParser(container, new TextSource(externalSubset));
+                        externalParser.IsInternal = false;
+                        externalParser.Parse();
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                if (subset.Length > 0)
+                {
+                    try
+                    {
+                        var internalParser = new DtdParser(container, new TextSource(subset))
+                        {
+                            IsInternal = true,
+                        };
+
+                        internalParser.Parse();
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                _dtd = container;
+
+                foreach (var entity in container.Entities)
+                {
+                    if (!_internalGeneralEntities.ContainsKey(entity.NodeName) && !String.IsNullOrEmpty(entity.NodeValue))
+                    {
+                        _internalGeneralEntities[entity.NodeName] = entity.NodeValue;
+                    }
+                }
+            }
+
+            if (hasExternalSubset)
+            {
+                ParseSubsetFallbackDeclarations(externalSubset);
+            }
+
+            ParseSubsetFallbackDeclarations(subset);
+
+            RegisterTokenizerEntities();
+        }
+
+        private void ParseSubsetFallbackDeclarations(String subset)
+        {
+            if (String.IsNullOrEmpty(subset))
+            {
+                return;
+            }
+
+            foreach (Match match in Regex.Matches(subset, "<!ELEMENT\\s+([A-Za-z_][A-Za-z0-9_:\\.-]*)\\s+([^>]+)>", RegexOptions.Singleline))
+            {
+                var name = match.Groups[1].Value;
+                var model = match.Groups[2].Value.Trim();
+                _internalElementModels[name] = model;
+            }
+
+            foreach (Match match in Regex.Matches(subset, "<!ATTLIST\\s+([A-Za-z_][A-Za-z0-9_:\\.-]*)\\s+(.+?)>", RegexOptions.Singleline))
+            {
+                var elementName = match.Groups[1].Value;
+                var declarationBody = match.Groups[2].Value;
+
+                if (!_internalAttributeDeclarations.TryGetValue(elementName, out var declared))
+                {
+                    declared = new HashSet<String>(StringComparer.Ordinal);
+                    _internalAttributeDeclarations[elementName] = declared;
+                }
+
+                if (!_internalAttributeRules.TryGetValue(elementName, out var rules))
+                {
+                    rules = new Dictionary<String, InternalAttributeRule>(StringComparer.Ordinal);
+                    _internalAttributeRules[elementName] = rules;
+                }
+
+                foreach (Match attr in Regex.Matches(
+                    declarationBody,
+                    "([A-Za-z_][A-Za-z0-9_:\\.-]*)\\s+(CDATA|IDREFS?|ID|NMTOKENS?|NMTOKEN|ENTITY|ENTITIES|NOTATION\\s*\\([^\\)]*\\)|\\([^\\)]*\\))\\s+(#REQUIRED|#IMPLIED|#FIXED\\s+((?:\"[^\"]*\"|'[^']*'))|(?:\"[^\"]*\"|'[^']*'))",
+                    RegexOptions.Singleline))
+                {
+                    var attributeName = attr.Groups[1].Value;
+                    var defaultDeclaration = attr.Groups[3].Value;
+
+                    declared.Add(attributeName);
+
+                    var rule = new InternalAttributeRule
+                    {
+                        IsRequired = defaultDeclaration.StartsWith("#REQUIRED", StringComparison.Ordinal),
+                    };
+
+                    if (defaultDeclaration.StartsWith("#FIXED", StringComparison.Ordinal))
+                    {
+                        var fixedValue = attr.Groups[4].Success ? attr.Groups[4].Value : String.Empty;
+                        rule.FixedValue = Unquote(fixedValue);
+                    }
+
+                    rules[attributeName] = rule;
+                }
+            }
+
+            foreach (Match match in Regex.Matches(subset, "<!ENTITY\\s+([A-Za-z_][A-Za-z0-9_:\\.-]*)\\s+(\"[^\"]*\"|'[^']*')\\s*>", RegexOptions.Singleline))
+            {
+                var entityName = match.Groups[1].Value;
+
+                if (_internalGeneralEntities.ContainsKey(entityName))
+                {
+                    continue;
+                }
+
+                var quoted = match.Groups[2].Value;
+                _internalGeneralEntities[entityName] = quoted.Substring(1, quoted.Length - 2);
+            }
+        }
+
+        private void RegisterTokenizerEntities()
+        {
+            foreach (var entry in _internalGeneralEntities)
+            {
+                _tokenizer.RegisterGeneralEntity(entry.Key, entry.Value);
+            }
+        }
+
+        private Boolean TryLoadExternalSubset(String systemIdentifier, out String content, out String fullPath)
+        {
+            content = String.Empty;
+            fullPath = String.Empty;
+
+            if (String.IsNullOrWhiteSpace(systemIdentifier))
+            {
+                return false;
+            }
+
+            if (!TryResolveSystemPath(systemIdentifier, out fullPath))
+            {
+                return false;
+            }
+
+            try
+            {
+                content = File.ReadAllText(fullPath);
+                return true;
+            }
+            catch
+            {
+                content = String.Empty;
+                fullPath = String.Empty;
+                return false;
+            }
+        }
+
+        private Boolean TryResolveSystemPath(String systemIdentifier, out String fullPath)
+        {
+            fullPath = String.Empty;
+
+            try
+            {
+                if (Path.IsPathRooted(systemIdentifier) && File.Exists(systemIdentifier))
+                {
+                    fullPath = Path.GetFullPath(systemIdentifier);
+                    return true;
+                }
+
+                if (Uri.TryCreate(systemIdentifier, UriKind.Absolute, out var uri) && uri.IsFile)
+                {
+                    var localPath = uri.LocalPath;
+
+                    if (File.Exists(localPath))
+                    {
+                        fullPath = Path.GetFullPath(localPath);
+                        return true;
+                    }
+                }
+
+                var baseDirectory = Environment.CurrentDirectory;
+                var combinedPath = Path.Combine(baseDirectory, systemIdentifier);
+
+                if (File.Exists(combinedPath))
+                {
+                    fullPath = Path.GetFullPath(combinedPath);
+                    return true;
+                }
+            }
+            catch
+            {
+            }
+
+            return false;
+        }
+
+        private void ApplyValidation()
+        {
+            var xml = _document as XmlDocument;
+
+            if (xml == null)
+            {
+                return;
+            }
+
+            var valid = true;
+            var root = _document.DocumentElement as Element;
+
+            if (valid && root != null && !String.IsNullOrEmpty(_doctypeName))
+            {
+                valid = String.Equals(root.NodeName, _doctypeName, StringComparison.Ordinal);
+            }
+
+            var hasDtdElementDeclarations = _dtd != null && _dtd.Elements.Any();
+
+            if (valid && root != null && hasDtdElementDeclarations)
+            {
+                valid = !_dtd.IsInvalid && ValidateElementAgainstDtd(root);
+            }
+
+            if (valid && root != null && _internalElementModels.Count > 0)
+            {
+                valid = ValidateElementAgainstInternalSubset(root);
+            }
+
+            xml.SetValidity(valid);
+        }
+
+        private Boolean ValidateElementAgainstDtd(Element element)
+        {
+            var declaration = _dtd.Elements.FirstOrDefault(m => String.Equals(m.Name, element.NodeName, StringComparison.Ordinal));
+
+            if (declaration == null || !declaration.Check(element))
+            {
+                return false;
+            }
+
+            var attributeDeclarations = _dtd.Attributes
+                .Where(m => String.Equals(m.Name, element.NodeName, StringComparison.Ordinal))
+                .ToList();
+
+            for (var i = 0; i < attributeDeclarations.Count; i++)
+            {
+                if (!attributeDeclarations[i].Check(element))
+                {
+                    return false;
+                }
+            }
+
+            if (attributeDeclarations.Count > 0)
+            {
+                var declared = new HashSet<String>(StringComparer.Ordinal);
+                var elementNode = (IElement)element;
+
+                for (var i = 0; i < attributeDeclarations.Count; i++)
+                {
+                    foreach (var entry in attributeDeclarations[i].Declarations)
+                    {
+                        declared.Add(entry.Name);
+                    }
+                }
+
+                foreach (var attr in elementNode.Attributes)
+                {
+                    var name = attr.Name;
+
+                    if (name.StartsWith("xmlns", StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    if (!declared.Contains(name))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            foreach (var child in ((INode)element).ChildNodes)
+            {
+                if (child is Element nested && !ValidateElementAgainstDtd(nested))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private Boolean ValidateElementAgainstInternalSubset(Element element)
+        {
+            if (!_internalElementModels.TryGetValue(element.NodeName, out var model))
+            {
+                return false;
+            }
+
+            var hasDeclarations = _internalAttributeDeclarations.TryGetValue(element.NodeName, out var declaredAttributes) && declaredAttributes.Count > 0;
+            _internalAttributeRules.TryGetValue(element.NodeName, out var attributeRules);
+
+            foreach (var attr in ((IElement)element).Attributes)
+            {
+                var name = attr.Name;
+
+                if (name.StartsWith("xmlns", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (hasDeclarations && !declaredAttributes.Contains(name))
+                {
+                    return false;
+                }
+
+                if (attributeRules != null && attributeRules.TryGetValue(name, out var rule) && rule.HasFixedValue)
+                {
+                    if (!String.Equals(attr.Value, rule.FixedValue, StringComparison.Ordinal))
+                    {
+                        return false;
+                    }
+                }
+
+                if (!hasDeclarations && name.StartsWith("xml:", StringComparison.Ordinal))
+                {
+                    return false;
+                }
+            }
+
+            if (attributeRules != null)
+            {
+                foreach (var pair in attributeRules)
+                {
+                    if (pair.Value.IsRequired && ((IElement)element).Attributes[pair.Key] == null)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            if (!ValidateContentModel(element, model))
+            {
+                return false;
+            }
+
+            foreach (var child in ((INode)element).ChildNodes)
+            {
+                if (child is Element nested && !ValidateElementAgainstInternalSubset(nested))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static Boolean ValidateContentModel(Element element, String model)
+        {
+            if (String.Equals(model, "ANY", StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            var significant = ((INode)element).ChildNodes.Where(m =>
+                m is IElement || (m is IText text && !String.IsNullOrWhiteSpace(text.Data))).ToList();
+
+            if (String.Equals(model, "EMPTY", StringComparison.Ordinal))
+            {
+                return significant.Count == 0;
+            }
+
+            if (Regex.IsMatch(model, "^\\(#PCDATA(\\|[A-Za-z_][A-Za-z0-9_:\\.-]*)*\\)\\*$"))
+            {
+                var names = new HashSet<String>(
+                    model.Substring(1, model.Length - 3)
+                        .Split('|')
+                        .Where(m => !String.Equals(m, "#PCDATA", StringComparison.Ordinal)),
+                    StringComparer.Ordinal);
+
+                foreach (var node in significant)
+                {
+                    if (node is IElement child && !names.Contains(child.NodeName))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            var elementContentModel = Regex.Match(model, "^\\(([A-Za-z_][A-Za-z0-9_:\\.-]*(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_:\\.-]*)*)\\)$");
+
+            if (elementContentModel.Success)
+            {
+                if (significant.Any(m => m is IText))
+                {
+                    return false;
+                }
+
+                var expected = elementContentModel.Groups[1].Value
+                    .Split(',')
+                    .Select(m => m.Trim())
+                    .Where(m => m.Length > 0)
+                    .ToList();
+
+                var actual = significant
+                    .OfType<IElement>()
+                    .Select(m => m.NodeName)
+                    .ToList();
+
+                if (expected.Count != actual.Count)
+                {
+                    return false;
+                }
+
+                for (var i = 0; i < expected.Count; i++)
+                {
+                    if (!String.Equals(expected[i], actual[i], StringComparison.Ordinal))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            if (!model.Contains("#PCDATA", StringComparison.Ordinal) && significant.Any(m => m is IText))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static String Unquote(String value)
+        {
+            if (String.IsNullOrEmpty(value) || value.Length < 2)
+            {
+                return value;
+            }
+
+            var first = value[0];
+            var last = value[value.Length - 1];
+
+            if ((first == Symbols.DoubleQuote && last == Symbols.DoubleQuote) || (first == Symbols.SingleQuote && last == Symbols.SingleQuote))
+            {
+                return value.Substring(1, value.Length - 2);
+            }
+
+            return value;
+        }
+
+        private String ExpandInternalEntities(String data)
+        {
+            if (String.IsNullOrEmpty(data) || _internalGeneralEntities.Count == 0)
+            {
+                return data;
+            }
+
+            var value = data;
+
+            for (var i = 0; i < 5; i++)
+            {
+                var changed = false;
+
+                value = Regex.Replace(value, "&([A-Za-z_][A-Za-z0-9_:\\.-]*);", match =>
+                {
+                    var name = match.Groups[1].Value;
+
+                    if (_internalGeneralEntities.TryGetValue(name, out var replacement))
+                    {
+                        changed = true;
+                        return replacement;
+                    }
+
+                    return match.Value;
+                });
+
+                if (!changed)
+                {
+                    break;
+                }
+            }
+
+            return Regex.Replace(value, "<!\\[CDATA\\[(.*?)\\]\\]>", "$1", RegexOptions.Singleline);
         }
 
         private void SetEncoding(String charSet)
@@ -468,6 +1029,19 @@ namespace AngleSharp.Xml.Parser
                     }
                 }
             }
+        }
+
+        #endregion
+
+        #region Nested types
+
+        private sealed class InternalAttributeRule
+        {
+            public Boolean IsRequired { get; set; }
+
+            public String FixedValue { get; set; }
+
+            public Boolean HasFixedValue => FixedValue != null;
         }
 
         #endregion

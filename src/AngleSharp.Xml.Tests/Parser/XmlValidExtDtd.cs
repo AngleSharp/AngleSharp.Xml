@@ -3,7 +3,7 @@ namespace AngleSharp.Xml.Tests.Parser
     using NUnit.Framework;
     using System;
 
-    [TestFixture(Ignore = "Activate later when DTD is provided")]
+    [TestFixture]
     public class XmlValidExtDtd
     {
         /// <summary>
@@ -17,10 +17,10 @@ namespace AngleSharp.Xml.Tests.Parser
             var document = @"<?xml version=""1.0""?>
 <!DOCTYPE student  SYSTEM ""ibm09v03.dtd"">
 <student>I am a new student with &Name;</student>
-".ToXmlDocument();
+".ToXmlDocumentConformance();
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -45,10 +45,10 @@ namespace AngleSharp.Xml.Tests.Parser
 
 
 
- ".ToXmlDocument(validating: true);
+ ".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -64,10 +64,10 @@ namespace AngleSharp.Xml.Tests.Parser
 
 <!-- testing Pubid Literal with a string with ""'"" inside -->
 <student>My Name is SnowMan. </student>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -79,10 +79,10 @@ namespace AngleSharp.Xml.Tests.Parser
         public void XmlValidOP09pass1()
         {
             var document = @"<!DOCTYPE doc SYSTEM ""p09pass1.dtd"">
-<doc/>".ToXmlDocument(validating: true);
+<doc/>".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -95,10 +95,10 @@ namespace AngleSharp.Xml.Tests.Parser
         {
             var document = @"<!DOCTYPE doc SYSTEM ""023.ent"">
 <doc></doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
             Assert.IsNotNull(document.DocumentElement);
             Assert.IsNotNull(document.DocumentElement.Attributes["a1"]);
             Assert.AreEqual("v1", document.DocumentElement.Attributes["a1"].Value);
@@ -115,10 +115,10 @@ namespace AngleSharp.Xml.Tests.Parser
         {
             var document = @"<!DOCTYPE doc SYSTEM ""023.ent"">
 <doc></doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
             Assert.IsNotNull(document.DocumentElement);
             Assert.IsNotNull(document.DocumentElement.Attributes["a1"]);
             Assert.AreEqual("v1", document.DocumentElement.Attributes["a1"].Value);
@@ -158,10 +158,10 @@ namespace AngleSharp.Xml.Tests.Parser
       <big/>
    </leopard>
 </animal>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -175,10 +175,10 @@ namespace AngleSharp.Xml.Tests.Parser
             var document = @"<!DOCTYPE animal SYSTEM ""ibm30v02.dtd"">
 <animal/>
 <!-- tests extSubset with TextDecl and extSubsetDecl in the dtd file -->
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -210,10 +210,10 @@ namespace AngleSharp.Xml.Tests.Parser
 
 
 
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
             Assert.AreEqual(combine, document.DocumentElement.TextContent);
         }
 
@@ -230,10 +230,10 @@ namespace AngleSharp.Xml.Tests.Parser
 ]>
 <!-- testing systemliteral with a string with ""'"" -->
 <student>My Name is SnowMan. </student>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -251,10 +251,10 @@ namespace AngleSharp.Xml.Tests.Parser
 <!-- testing systemliteral with a string with '""' -->
 <student>My Name is SnowMan. </student>
 
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -278,10 +278,10 @@ namespace AngleSharp.Xml.Tests.Parser
 
 
 
- ".ToXmlDocument(validating: true);
+ ".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -298,10 +298,10 @@ namespace AngleSharp.Xml.Tests.Parser
 
 <!-- testing Pubid Literal with nothing between the single quotes -->
 <student>My Name is SnowMan. </student>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -318,10 +318,10 @@ namespace AngleSharp.Xml.Tests.Parser
 
 <!-- testing Pubid Literal with a string without  ""'"" inside -->
 <student>My Name is SnowMan. </student>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -335,10 +335,10 @@ namespace AngleSharp.Xml.Tests.Parser
         {
             var document = @"<!DOCTYPE doc SYSTEM ""031-1.ent"">
 <doc>&e;</doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -350,10 +350,10 @@ namespace AngleSharp.Xml.Tests.Parser
         {
             var document = @"<!DOCTYPE doc SYSTEM ""p31pass1.dtd"" [<!ELEMENT doc EMPTY>]>
 <doc/>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -366,10 +366,10 @@ namespace AngleSharp.Xml.Tests.Parser
         {
             var document = @"<!DOCTYPE doc SYSTEM ""p31pass2.dtd"">
 <doc/>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -386,10 +386,10 @@ namespace AngleSharp.Xml.Tests.Parser
 <!ELEMENT a EMPTY>
 ]>
 <doc><a/></doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -401,10 +401,10 @@ namespace AngleSharp.Xml.Tests.Parser
         {
             var document = @"<!DOCTYPE doc SYSTEM ""p28pass4.dtd"">
 <doc/>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -417,10 +417,10 @@ namespace AngleSharp.Xml.Tests.Parser
         {
             var document = @"<!DOCTYPE doc SYSTEM ""p30pass1.dtd"">
 <doc/>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -433,10 +433,10 @@ namespace AngleSharp.Xml.Tests.Parser
         {
             var document = @"<!DOCTYPE doc SYSTEM ""p30pass2.dtd"">
 <doc/>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
     }
 }

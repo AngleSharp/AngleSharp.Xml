@@ -97,6 +97,21 @@ namespace AngleSharp.Xml.Tests
             Assert.AreEqual("<Project Sdk=\"Microsoft.NET.Sdk\">\n            <ItemGroup>\n                <PackageReference Include=\"AngleSharp\" Version=\"0.12.1\" />\n                <PackageReference />\n            </ItemGroup>\n        </Project>", xml);
         }
 
+        [Test]
+        public void SelfClosingElementCanContainChildrenAfterDomMutation_Issue27()
+        {
+            var parser = new XmlParser();
+            var xmlDoc = parser.ParseDocument("<ac:structured-macro ac:name=\"children\" />");
+            var parent = xmlDoc.DocumentElement;
+            var child = xmlDoc.CreateElement("ac:parameter");
+            child.SetAttribute("ac:name", "dummy");
+
+            parent.AppendChild(child);
+
+            Assert.AreSame(parent, child.ParentElement);
+            Assert.AreEqual("<ac:structured-macro ac:name=\"children\"><ac:parameter ac:name=\"dummy\"></ac:parameter></ac:structured-macro>", parent.ToXml());
+        }
+
         private static Task<IDocument> GenerateDocument(String content, String contentType)
         {
             var config = Configuration.Default.WithDefaultLoader().WithXml();

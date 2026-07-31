@@ -1,3 +1,12 @@
+# 1.1.0
+
+Released on Friday, July 31 2026.
+
+- Updated to use a minimum of AngleSharp 1.5
+- Fixed serialization of self-closing in case of children (#27)
+- Fixed namespace declaration processing (#22) @jbrayfaithlife
+- Added optional DTD validation
+
 # 1.0.0
 
 Released on Sunday, January 15 2023.

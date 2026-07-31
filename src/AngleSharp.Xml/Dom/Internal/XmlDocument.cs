@@ -10,12 +10,15 @@ namespace AngleSharp.Xml.Dom
     /// </summary>
     sealed class XmlDocument : Document, IXmlDocument
     {
+        private Boolean _isValid;
+
         #region ctor
 
         internal XmlDocument(IBrowsingContext context, TextSource source)
             : base(context ?? BrowsingContext.New(), source)
         {
             ContentType = MimeTypeNames.Xml;
+            _isValid = true;
         }
 
         internal XmlDocument(IBrowsingContext context = null)
@@ -31,7 +34,7 @@ namespace AngleSharp.Xml.Dom
 
         public override IEntityProvider Entities => Context.GetProvider<IEntityProvider>() ?? XmlEntityProvider.Resolver;
 
-        public Boolean IsValid => true;
+        public Boolean IsValid => _isValid;
 
         #endregion
 
@@ -52,6 +55,11 @@ namespace AngleSharp.Xml.Dom
 
         protected override void SetTitle(String value)
         {
+        }
+
+        internal void SetValidity(Boolean isValid)
+        {
+            _isValid = isValid;
         }
 
         #endregion

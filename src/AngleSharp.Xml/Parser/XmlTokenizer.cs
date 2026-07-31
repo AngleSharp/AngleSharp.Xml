@@ -5,6 +5,7 @@ namespace AngleSharp.Xml.Parser
     using AngleSharp.Text;
     using AngleSharp.Xml.Parser.Tokens;
     using System;
+    using System.Collections.Generic;
 
     /// <summary>
     /// Performs the tokenization of the source code. Most of
@@ -15,6 +16,7 @@ namespace AngleSharp.Xml.Parser
         #region Fields
 
         private readonly IEntityProvider _resolver;
+        private readonly Dictionary<String, String> _generalEntities;
         private TextPosition _position;
 
         #endregion
@@ -30,6 +32,7 @@ namespace AngleSharp.Xml.Parser
             : base(source)
         {
             _resolver = resolver;
+            _generalEntities = new Dictionary<String, String>(StringComparer.Ordinal);
         }
 
         #endregion
@@ -66,6 +69,19 @@ namespace AngleSharp.Xml.Parser
             return NewEof();
         }
 
+        /// <summary>
+        /// Registers a custom general entity declaration for the current parse run.
+        /// </summary>
+        /// <param name="name">The entity name without trailing semicolon.</param>
+        /// <param name="value">The replacement text.</param>
+        public void RegisterGeneralEntity(String name, String value)
+        {
+            if (!String.IsNullOrEmpty(name) && value != null)
+            {
+                _generalEntities[name + ";"] = value;
+            }
+        }
+
         #endregion
 
         #region General
@@ -91,6 +107,8 @@ namespace AngleSharp.Xml.Parser
 
         private XmlToken DataText(Char c)
         {
+            var hasCharacterReference = false;
+
             while (true)
             {
                 switch (c)
@@ -98,9 +116,10 @@ namespace AngleSharp.Xml.Parser
                     case Symbols.LessThan:
                     case Symbols.EndOfFile:
                         Back();
-                        return NewCharacters();
+                        return NewCharacters(hasCharacterReference);
 
                     case Symbols.Ampersand:
+                        hasCharacterReference = true;
                         StringBuffer.Append(CharacterReference());
                         c = GetNext();
                         break;
@@ -243,6 +262,11 @@ namespace AngleSharp.Xml.Parser
                 {
                     var content = StringBuffer.Append(c).ToString(start, ++length);
                     var entity = _resolver.GetSymbol(content);
+
+                    if (String.IsNullOrEmpty(entity))
+                    {
+                        _generalEntities.TryGetValue(content, out entity);
+                    }
 
                     if (!String.IsNullOrEmpty(entity))
                     {
@@ -933,8 +957,7 @@ namespace AngleSharp.Xml.Parser
             }
             else if (c == Symbols.SquareBracketOpen)
             {
-                Advance();
-                return DoctypeAfter(GetNext(), doctype);
+                return DoctypeInternalSubset(doctype);
             }
             else if (IsSuppressingErrors)
             {
@@ -1134,11 +1157,69 @@ namespace AngleSharp.Xml.Parser
 
             if (c == Symbols.SquareBracketOpen)
             {
-                Advance();
-                c = GetNext();
+                return DoctypeInternalSubset(doctype);
             }
 
             return DoctypeAfter(c, doctype);
+        }
+
+        /// <summary>
+        /// Consumes a DOCTYPE internal subset, i.e. the content enclosed in
+        /// square brackets and terminated by a closing <c>]&gt;</c> sequence.
+        /// </summary>
+        /// <param name="doctype">The current doctype token.</param>
+        /// <returns>The emitted token.</returns>
+        private XmlToken DoctypeInternalSubset(XmlDoctypeToken doctype)
+        {
+            var quote = Symbols.Null;
+            var c = GetNext();
+
+            while (c != Symbols.EndOfFile)
+            {
+                if (quote != Symbols.Null)
+                {
+                    StringBuffer.Append(c);
+
+                    if (c == quote)
+                    {
+                        quote = Symbols.Null;
+                    }
+
+                    c = GetNext();
+                }
+                else if (c == Symbols.DoubleQuote || c == Symbols.SingleQuote)
+                {
+                    quote = c;
+                    StringBuffer.Append(c);
+                    c = GetNext();
+                }
+                else if (c == Symbols.SquareBracketClose)
+                {
+                    var next = GetNext();
+
+                    if (next == Symbols.GreaterThan)
+                    {
+                        doctype.InternalSubset = FlushBuffer();
+                        return doctype;
+                    }
+
+                    StringBuffer.Append(c);
+                    c = next;
+                }
+                else
+                {
+                    StringBuffer.Append(c);
+                    c = GetNext();
+                }
+            }
+
+            if (IsSuppressingErrors)
+            {
+                doctype.InternalSubset = FlushBuffer();
+                return doctype;
+            }
+
+            throw XmlParseError.EOF.At(GetCurrentPosition());
         }
 
         /// <summary>
@@ -1561,10 +1642,10 @@ namespace AngleSharp.Xml.Parser
             return new XmlEndOfFileToken(GetCurrentPosition());
         }
 
-        private XmlCharacterToken NewCharacters()
+        private XmlCharacterToken NewCharacters(Boolean hasCharacterReference = false)
         {
             var content = FlushBuffer();
-            return new XmlCharacterToken(_position, content);
+            return new XmlCharacterToken(_position, content, hasCharacterReference);
         }
 
         private XmlCommentToken NewComment()

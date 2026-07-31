@@ -353,7 +353,8 @@ namespace AngleSharp.Xml.Dtd.Parser
                 }
                 else
                 {
-                    Advance();
+                    _end = _base.Index;
+                    _base.ReadCharacter();
                 }
             }
 
@@ -395,7 +396,23 @@ namespace AngleSharp.Xml.Dtd.Parser
                     return true;
                 }
 
-                return ContinuesWith(word);
+                var pos2 = _base.Index;
+                var text2 = _base.Text;
+
+                if (text2.Length - pos2 < word.Length)
+                {
+                    return false;
+                }
+
+                for (var i = 0; i < word.Length; i++)
+                {
+                    if (text2[i + pos2] != word[i])
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
             }
 
             #endregion

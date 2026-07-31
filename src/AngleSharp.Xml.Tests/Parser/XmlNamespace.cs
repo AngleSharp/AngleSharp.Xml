@@ -1,15 +1,16 @@
 namespace AngleSharp.Xml.Tests.Parser
 {
+    using AngleSharp;
     using NUnit.Framework;
     using System.Threading.Tasks;
 
-    [TestFixture(Ignore = "Activate later when DTD is provided")]
+    [TestFixture]
     public class XmlNamespaceTests
     {
         [Test]
         public async Task XmlWithoutNamespaceUriShouldBeStandardNamespaceUri()
         {
-            var document = await BrowsingContext.New().OpenAsync(req =>
+            var document = await BrowsingContext.New(Configuration.Default.WithXml()).OpenAsync(req =>
                 req.Content(@"<a t='42'><b/><c>TEXT</c></a>")
                    .Header("Content-Type", "text/xml"));
             var root = document.DocumentElement;
@@ -19,7 +20,7 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public async Task XmlWithNewNamespaceShouldContainRightNamespaceUri()
         {
-            var document = await BrowsingContext.New().OpenAsync(req =>
+                        var document = await BrowsingContext.New(Configuration.Default.WithXml()).OpenAsync(req =>
               req.Content(@"<a xmlns=""http://www.w3.org/1999/xhtml"" t=""42""><b/><c>TEXT</c></a>")
                  .Header("Content-Type", "text/xml"));
             var root = document.DocumentElement;
@@ -29,7 +30,7 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public async Task XmlWithCustomNamespaceShouldExposeThatNamespaceUri()
         {
-            var document = await BrowsingContext.New().OpenAsync(req =>
+            var document = await BrowsingContext.New(Configuration.Default.WithXml()).OpenAsync(req =>
                 req.Content(@"<x:a xmlns:x=""http://initd.org/ns/tesseract-1.0"" t=""42""><b/><c>TEXT</c></x:a>")
                    .Header("Content-Type", "text/xml"));
             var root = document.DocumentElement;
@@ -39,7 +40,7 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public async Task XmlSubElementsGetTheRightDefaultNamespace()
         {
-            var document = await BrowsingContext.New().OpenAsync(req =>
+            var document = await BrowsingContext.New(Configuration.Default.WithXml()).OpenAsync(req =>
                 req.Content(@"<xml xmlns=""http://test.com""><child attr=""1""/></xml>")
                    .Header("Content-Type", "text/xml"));
             var root = document.DocumentElement;
@@ -53,7 +54,7 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public async Task XmlPrefixRefersToDefinedNamespace()
         {
-            var document = await BrowsingContext.New().OpenAsync(req =>
+            var document = await BrowsingContext.New(Configuration.Default.WithXml()).OpenAsync(req =>
                 req.Content(@"<xml xmlns:p1=""http://p1.com"" xmlns:p2=""http://p2.com""><p1:child a=""1"" p1:attr=""1"" b=""2""/><p2:child/></xml>")
                    .Header("Content-Type", "text/xml"));
             var root = document.DocumentElement;
@@ -68,7 +69,7 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public async Task XmlRedefinitionOfPrefixedNamespace()
         {
-            var document = await BrowsingContext.New().OpenAsync(req =>
+            var document = await BrowsingContext.New(Configuration.Default.WithXml()).OpenAsync(req =>
                 req.Content(@"<xml xmlns:p=""http://test.com""><p:child xmlns:p=""http://p.com""/><p:child/></xml>")
                    .Header("Content-Type", "text/xml"));
             var root = document.DocumentElement;

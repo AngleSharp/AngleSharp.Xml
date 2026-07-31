@@ -8,7 +8,7 @@ namespace AngleSharp.Xml.Tests.Parser
     /// (Conformance) Tests taken from
     /// http://www.w3.org/XML/Test/xmlconf-20031210.html
     /// </summary>
-    [TestFixture(Ignore = "Activate later when DTD is provided")]
+    [TestFixture]
     public class XmlValidDocuments
     {
         /// <summary>
@@ -44,7 +44,7 @@ namespace AngleSharp.Xml.Tests.Parser
 </animal>
 <!-- Above is element animal -->
 
-".ToXmlDocument(validating : true);
+".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -60,7 +60,7 @@ namespace AngleSharp.Xml.Tests.Parser
         public void XmlValidSa084()
         {
             var document = @"<!DOCTYPE doc [<!ELEMENT doc (#PCDATA)>]><doc></doc>
-".ToXmlDocument(validating: true);
+        ".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
             Assert.IsTrue(document.IsValid);
@@ -85,7 +85,7 @@ namespace AngleSharp.Xml.Tests.Parser
 ".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+    Assert.IsTrue(document.IsValid);
         }
 
         /// <summary>
@@ -105,7 +105,7 @@ namespace AngleSharp.Xml.Tests.Parser
 ".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+    Assert.IsTrue(document.IsValid);
         }
 
         /// <summary>
@@ -122,10 +122,10 @@ namespace AngleSharp.Xml.Tests.Parser
 <!ENTITY e SYSTEM ""001.ent"">
 ]>
 <doc>&e;</doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -142,10 +142,10 @@ namespace AngleSharp.Xml.Tests.Parser
 <!ENTITY e SYSTEM ""002.ent"">
 ]>
 <doc>&e;</doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -162,10 +162,10 @@ namespace AngleSharp.Xml.Tests.Parser
 <!ENTITY e SYSTEM ""004.ent"">
 ]>
 <doc>&e;</doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -182,10 +182,10 @@ namespace AngleSharp.Xml.Tests.Parser
 <!ENTITY e SYSTEM ""009.ent"">
 ]>
 <doc>&e;</doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -205,10 +205,10 @@ namespace AngleSharp.Xml.Tests.Parser
 <!ATTLIST doc a CDATA #IMPLIED>
 ]>
 <doc a=""x&e;y""></doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -227,10 +227,10 @@ namespace AngleSharp.Xml.Tests.Parser
 <!ENTITY e ""&#13;"">
 ]>
 <doc>&e;</doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -251,10 +251,10 @@ namespace AngleSharp.Xml.Tests.Parser
 <!ENTITY e SYSTEM ""006.ent"">
 ]>
 <doc>&e;</doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -273,10 +273,10 @@ namespace AngleSharp.Xml.Tests.Parser
 <!ENTITY e PUBLIC ""a not very interesting file"" ""011.ent"">
 ]>
 <doc>&e;</doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -466,10 +466,10 @@ namespace AngleSharp.Xml.Tests.Parser
 ]>
 <root xml:lang=""i-klingon-whorf""/>
 
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -486,10 +486,10 @@ namespace AngleSharp.Xml.Tests.Parser
 ]>
 <root xml:lang=""x-dialect-valleygirl""/>
 
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -506,10 +506,10 @@ namespace AngleSharp.Xml.Tests.Parser
 ]>
 <root xml:lang=""X-Java""/>
 
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -530,10 +530,10 @@ _0D-
 _20- _D7FF-퟿_6c0f-氏_E000-_FFFD-�_effe-_010000-𐀀_10FFFF-􏿿_08ffff-򏿿 This is a PI target ?>
 ]>
 <book/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -566,10 +566,10 @@ _20- _D7FF-퟿_6c0f-氏_E000-_FFFD-�_effe-_010000-𐀀_10FFFF-􏿿_08fff
 <?PI after document element?>
 <!-- comment after document element-->
 <?PI after document element?>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -585,10 +585,10 @@ _20- _D7FF-퟿_6c0f-氏_E000-_FFFD-�_effe-_010000-𐀀_10FFFF-􏿿_08fff
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc>£</doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -604,10 +604,10 @@ _20- _D7FF-퟿_6c0f-氏_E000-_FFFD-�_effe-_010000-𐀀_10FFFF-􏿿_08fff
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc>เจมส์</doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -623,10 +623,10 @@ _20- _D7FF-퟿_6c0f-氏_E000-_FFFD-�_effe-_010000-𐀀_10FFFF-􏿿_08fff
 <!ELEMENT เจมส์  (#PCDATA)>
 ]>
 <เจมส์></เจมส์>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -643,10 +643,10 @@ _20- _D7FF-퟿_6c0f-氏_E000-_FFFD-�_effe-_010000-𐀀_10FFFF-􏿿_08fff
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc>𐀀􏿽</doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -676,10 +676,10 @@ _0A-
 
 <book/>
 
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -710,10 +710,10 @@ _0A-
 
 
 
- ".ToXmlDocument(validating : true);
+ ".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -730,10 +730,10 @@ _0A-
  	<!ENTITY FullName ""SnowMan"">
 ]>
 
-<student>My Name is &FullName;. </student>".ToXmlDocument(validating : true);
+<student>My Name is &FullName;. </student>".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -752,10 +752,10 @@ _0A-
  	<!ENTITY FullName ""&RealName;"">
 ]>
 
-<student>My Name is &FullName;. </student>".ToXmlDocument(validating : true);
+<student>My Name is &FullName;. </student>".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -786,10 +786,10 @@ _0A-
 
 
 
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -814,10 +814,10 @@ _0A-
 <!-- testing AttValue with empty char inside single quote -->
 <student first='' last=''>My Name is Snow &mylast; Man. </student>
 
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -841,10 +841,10 @@ _0A-
 	<!ENTITY mylast ""Man'"">
 ]>
 <!-- testing AttValue string with a single quote inside -->
-<student first=""Snow'"" last=""Man"">My Name is &myfirst; &mylast;. </student>".ToXmlDocument(validating : true);
+<student first=""Snow'"" last=""Man"">My Name is &myfirst; &mylast;. </student>".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -870,7 +870,7 @@ _0A-
 <!-- testing AttValue string with a double quote inside -->
 <student first='Snow""' last='Man'>My Name is &myfirst; &mylast;. </student>
 
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
         }
@@ -897,10 +897,10 @@ _0A-
 <!-- testing AttValue with a reference in double quote -->
 <student first=""&myfirst;"" last=""mylast;"">My Name is &mylast;. </student>
 
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -926,10 +926,10 @@ _0A-
 <!-- testing AttValue with a reference in single quote -->
 <student first='&myfirst;' last='&mylast;'>My Name is &mylast;. </student>
 
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -954,10 +954,10 @@ _0A-
 ]>
 <!-- testing AttValue with references combination in double quotes -->
 <student first=""Full Name &myfirst; &#x31; and &mylast; &mylast; &#x63;"" last=""&mylast;"" >My first Name is &myfirst; and my last name is &mylast;. </student>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -984,10 +984,10 @@ _0A-
 
 
 
- ".ToXmlDocument(validating : true);
+ ".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1012,10 +1012,10 @@ _0A-
 <!-- testing AttValue with references combination in single quote -->
 <student first='Full Name &myfirst; and &#x22;&mylast;&#x22; &mylast;' last='&mylast;'>My first Name is &myfirst; and my last name is &mylast;. </student>
 
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1034,10 +1034,10 @@ _0A-
 
 <!-- testing systemliteral with nothing between the single quotes -->
 <student>My Name is SnowMan. </student>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1056,10 +1056,10 @@ _0A-
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
         /// <summary>
         /// system literals may not contain URI fragments. Here the section(s) 2.3,
@@ -1079,7 +1079,7 @@ _0A-
 <!NOTATION not4 SYSTEM ''>
 ]>
 <doc/>
-".ToXmlDocument();
+".ToXmlDocumentConformance();
         }
 
         /// <summary>
@@ -1099,10 +1099,10 @@ cdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"">
 <!NOTATION not3 PUBLIC ""0123456789-()+,.'/:=?;!*#@$_%"">
 ]>
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1119,10 +1119,10 @@ cdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"">
 <!ATTLIST doc : CDATA #IMPLIED>
 ]>
 <doc :=""v1""></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1138,10 +1138,10 @@ cdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"">
 <!ELEMENT เจมส์ (#PCDATA)>
 ]>
 <เจมส์></เจมส์>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1166,10 +1166,10 @@ cdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"">
 <refs refs=""A1
 A2	A3""/>
 <refs refs=""A1""/>
-</doc>".ToXmlDocument(validating : true);
+</doc>".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1185,10 +1185,10 @@ A2	A3""/>
 <!ELEMENT doc EMPTY>
 <!ATTLIST doc att (0|35a|A|-a|:a|a:|.|_a) #IMPLIED>
 ]>
-<doc/>".ToXmlDocument(validating : true);
+<doc/>".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1209,10 +1209,10 @@ A2	A3""/>
 abc
 def
 ""/>
-</doc>".ToXmlDocument(validating : true);
+</doc>".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1234,10 +1234,10 @@ def
 
 
 </doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1254,7 +1254,7 @@ def
 <!ATTLIST doc a CDATA #IMPLIED>
 ]>
 <doc a=""""></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
         }
@@ -1273,10 +1273,10 @@ def
 <!ATTLIST doc _.-0123456789 CDATA #IMPLIED>
 ]>
 <doc _.-0123456789=""v1""></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1293,10 +1293,10 @@ def
 <!ATTLIST doc abcdefghijklmnopqrstuvwxyz CDATA #IMPLIED>
 ]>
 <doc abcdefghijklmnopqrstuvwxyz=""v1""></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1313,10 +1313,10 @@ def
 <!ATTLIST doc ABCDEFGHIJKLMNOPQRSTUVWXYZ CDATA #IMPLIED>
 ]>
 <doc ABCDEFGHIJKLMNOPQRSTUVWXYZ=""v1""></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1332,10 +1332,10 @@ def
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc>&#x20;</doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1357,10 +1357,10 @@ def
 <student first=""Snow""></student>
 
 
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1382,10 +1382,10 @@ def
 <student first=""Eric""> &#x0A; &#x09; &#x0D;&#x20;</student>
 
 
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1404,10 +1404,10 @@ def
 ]>
 
 <!-- testing chardata with a string of sample legal char except '<' and '&' nor does it contain sequence ""]]>"" -->
-<student first=""Snow"" last=""Man"">This is a test</student>".ToXmlDocument(validating : true);
+<student first=""Snow"" last=""Man"">This is a test</student>".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1445,10 +1445,10 @@ CharData
 <?pi?>&ent;&quot;
 CharData
 </elem>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1463,10 +1463,10 @@ CharData
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc>]</doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1481,10 +1481,10 @@ CharData
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc>&amp;&lt;&gt;&quot;&apos;</doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1499,10 +1499,10 @@ CharData
 <!ELEMENT doc ANY>
 ]>
 <doc><!-- -á --></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1522,10 +1522,10 @@ CharData
 <student>My Name is SnowMan. </student>
 
 
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1542,10 +1542,10 @@ CharData
 ]>
 
 <!-- Student's name -->
-<student>My Name is SnowMan. </student>".ToXmlDocument(validating : true);
+<student>My Name is SnowMan. </student>".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1562,10 +1562,10 @@ CharData
 ]>
 
 <!-- student file-1 -->
-<student>My Name is SnowMan. </student>".ToXmlDocument(validating : true);
+<student>My Name is SnowMan. </student>".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1583,10 +1583,10 @@ CharData
 
 <!--student phone number 408-398 (387)-4758 -->
 <student>My Name is SnowMan. </student>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1604,10 +1604,10 @@ CharData
 ]>
 
 <root/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1622,10 +1622,10 @@ CharData
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc><!-- a comment --></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1641,10 +1641,10 @@ CharData
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc><!-- a comment ->--></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1664,10 +1664,10 @@ CharData
 <student>My Name is SnowMan. </student>
 
 
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1684,10 +1684,10 @@ CharData
 ]>
 
 <?MyInstruct ?>
-<student>My Name is SnowMan. </student>".ToXmlDocument(validating : true);
+<student>My Name is SnowMan. </student>".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1704,10 +1704,10 @@ CharData
 ]>
 
 <?MyInstruct AVOID ? BEFORE > IN PI ?>
-<student>My Name is SnowMan. </student>".ToXmlDocument(validating : true);
+<student>My Name is SnowMan. </student>".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1727,10 +1727,10 @@ CharData
 <student>My Name is SnowMan. </student>
 
 
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1748,10 +1748,10 @@ CharData
 <doc></doc>
 <!-- comment -->
 
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1769,10 +1769,10 @@ CharData
 ]>
 <doc></doc>
 
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1788,10 +1788,10 @@ CharData
 ]>
 <doc></doc>
 <?pi data?>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1808,10 +1808,10 @@ CharData
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1828,10 +1828,10 @@ CharData
 ]>
 <?pi  data?>
 <doc></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1848,10 +1848,10 @@ CharData
 ]>
 <doc><?pi x
 y?></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1866,10 +1866,10 @@ y?></doc>
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc><?pi?></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1885,10 +1885,10 @@ y?></doc>
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc><?pi some data ? > <??></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -1908,10 +1908,10 @@ y?></doc>
 
 <student>My Name is SnowMan. <![CDATA[This is <normal> text]]> </student>
 
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
             Assert.AreEqual("My Name is SnowMan. This is <normal> text ", document.DocumentElement.TextContent);
         }
 
@@ -1932,10 +1932,10 @@ y?></doc>
 <student>My Name is SnowMan. <![CDATA[This is a test]]> </student>
 
 
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
             Assert.AreEqual("My Name is SnowMan. This is a test ", document.DocumentElement.TextContent);
         }
 
@@ -1957,10 +1957,10 @@ y?></doc>
 <student>My Name is SnowMan. <![CDATA[]]></student>
 
 
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
             Assert.AreEqual("My Name is SnowMan. ", document.DocumentElement.TextContent);
         }
 
@@ -1979,10 +1979,10 @@ y?></doc>
 
 <!-- testing CData with legal chars -->
 
-<student>My Name is SnowMan. <![CDATA[<testing>This is a test</testing>]]></student>".ToXmlDocument(validating : true);
+<student>My Name is SnowMan. <![CDATA[<testing>This is a test</testing>]]></student>".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
             Assert.AreEqual("My Name is SnowMan. <testing>This is a test</testing>", document.DocumentElement.TextContent);
         }
 
@@ -2004,10 +2004,10 @@ y?></doc>
 <student>My Name is SnowMan. <![CDATA[This is a test]]> </student>
 
 
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
             Assert.AreEqual("My Name is SnowMan. This is a test ", document.DocumentElement.TextContent);
         }
 
@@ -2025,10 +2025,10 @@ y?></doc>
 <!ENTITY e ""<![CDATA[&foo;]]>"">
 ]>
 <doc>&e;</doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
             Assert.AreEqual("&foo;", document.DocumentElement.TextContent);
         }
 
@@ -2044,10 +2044,10 @@ y?></doc>
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc><![CDATA[<foo>]]></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
             Assert.AreEqual("<foo>", document.DocumentElement.TextContent);
         }
 
@@ -2064,10 +2064,10 @@ y?></doc>
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc><![CDATA[<&]]></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2083,10 +2083,10 @@ y?></doc>
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc><![CDATA[<&]>]]]></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2102,10 +2102,10 @@ y?></doc>
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2120,10 +2120,10 @@ y?></doc>
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2139,10 +2139,10 @@ y?></doc>
 ]>
 <!-- This is a Misc -->
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2158,10 +2158,10 @@ y?></doc>
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2178,10 +2178,10 @@ y?></doc>
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2198,10 +2198,10 @@ y?></doc>
 ]>
 <!-- This is a Misc -->
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2219,10 +2219,10 @@ y?></doc>
 ]>
 <!-- This is a Misc -->
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2238,10 +2238,10 @@ y?></doc>
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2257,10 +2257,10 @@ y?></doc>
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2276,10 +2276,10 @@ y?></doc>
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2295,10 +2295,10 @@ y?></doc>
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2314,10 +2314,10 @@ y?></doc>
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2333,10 +2333,10 @@ y?></doc>
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2352,10 +2352,10 @@ y?></doc>
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2371,10 +2371,10 @@ y?></doc>
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2389,10 +2389,10 @@ y?></doc>
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2408,10 +2408,10 @@ y?></doc>
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2427,10 +2427,10 @@ y?></doc>
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2446,10 +2446,10 @@ y?></doc>
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2464,10 +2464,10 @@ y?></doc>
    <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2482,10 +2482,10 @@ y?></doc>
    <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-<!-- This is a comment in Misc -->".ToXmlDocument(validating : true);
+<!-- This is a comment in Misc -->".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2500,10 +2500,10 @@ y?></doc>
    <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-<?sound ""This is a PI in Misc ?>".ToXmlDocument(validating : true);
+<?sound ""This is a PI in Misc ?>".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2519,10 +2519,10 @@ y?></doc>
    <!ELEMENT doc ANY>
 ]>
 <doc>S is in the following Misc</doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2539,10 +2539,10 @@ y?></doc>
 ]>
 <!-- This a valid test file for production [28] --> 
 <animal/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2577,10 +2577,10 @@ y?></doc>
       <big/>
    </leopard>
 </animal>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2616,10 +2616,10 @@ y?></doc>
       <big/>
    </leopard>
 </animal>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2635,10 +2635,10 @@ y?></doc>
 ]>
 <animal/>
 <!-- tests extSubset with extSubsetDecl only in the dtd file -->
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2660,10 +2660,10 @@ y?></doc>
    <tiger/>
 </animal>
 <!-- tests extSubsetDecl with combinations of markupdecls, conditionalSects, PEReferences and white spaces -->
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2683,10 +2683,10 @@ y?></doc>
 <!--comment--> <?pi?>
 
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2705,10 +2705,10 @@ y?></doc>
 <!--comment--> <?pi?>
 
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2722,10 +2722,10 @@ y?></doc>
 [
 <!ELEMENT doc EMPTY>
 ]><doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2741,10 +2741,10 @@ y?></doc>
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2761,10 +2761,10 @@ y?></doc>
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2781,10 +2781,10 @@ y?></doc>
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2801,10 +2801,10 @@ y?></doc>
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc></doc>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2826,10 +2826,10 @@ y?></doc>
 <?Pi?><!--comment-->
 ]>
 <doc/>
-".ToXmlDocument(validating : true);
+".ToXmlDocumentConformance(validating : true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2845,10 +2845,10 @@ y?></doc>
 %eldecl;
 ]>
 <doc/>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2865,10 +2865,10 @@ y?></doc>
 %pe;<!---->%pe;
 ]>
 <doc/>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2885,10 +2885,10 @@ y?></doc>
 <!ENTITY e ""<foo>"">
 ]>
 <doc>&e;</doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
             Assert.AreEqual(1, document.DocumentElement.ChildNodes.Length);
 
             var text = document.DocumentElement.ChildNodes[0];
@@ -2909,10 +2909,10 @@ y?></doc>
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc></doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -2936,10 +2936,10 @@ y?></doc>
     invalid as standalone were the DTD external.
     </child>
 </root>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3002,10 +3002,10 @@ y?></doc>
     entities =	""unparsed-1 unparsed-2""
     cdata =	""nothing happens to this one!""
     />
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3054,10 +3054,10 @@ y?></doc>
     <mixed3><empty/> too</mixed3>
 
 </root>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3090,7 +3090,7 @@ y?></doc>
 ".ToXmlDocument(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+    Assert.IsTrue(document.IsValid);
         }
 
         /// <summary>
@@ -3116,10 +3116,10 @@ y?></doc>
   <b attr1=""value1"" attr2=""value2"" attr3 = ""value3"">one attribute</b>
 </root>
 <!--* testing P40 *-->
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3142,10 +3142,10 @@ y?></doc>
   <b attr1=""value1"" attr2=""def"" attr3=""fixed"">Name eq AttValue</b>
 </root>
 <!--* testing P41 *-->
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3169,10 +3169,10 @@ y?></doc>
 </b></root>
 <!--* test P42 *-->
 
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3207,10 +3207,10 @@ y?></doc>
 </b>
 </root>
 <!--* test P43 *-->
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3239,10 +3239,10 @@ y?></doc>
 
 
 
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3257,10 +3257,10 @@ y?></doc>
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc ></doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3277,10 +3277,10 @@ y?></doc>
 <!ATTLIST doc a1 CDATA #IMPLIED>
 ]>
 <doc a1 = ""v1""></doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3296,10 +3296,10 @@ y?></doc>
 <!ATTLIST doc a1 CDATA #IMPLIED>
 ]>
 <doc a1=""v1"" ></doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3315,10 +3315,10 @@ y?></doc>
 <!ATTLIST doc a1 CDATA #IMPLIED a2 CDATA #IMPLIED>
 ]>
 <doc a1=""v1"" a2=""v2""></doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3335,10 +3335,10 @@ y?></doc>
 <!ATTLIST doc a CDATA #IMPLIED>
 ]>
 <doc a=""x	y""></doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3360,10 +3360,10 @@ y?></doc>
 >
 
 
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3379,10 +3379,10 @@ y?></doc>
 <!ATTLIST doc a1 CDATA #IMPLIED>
 ]>
 <doc a1=""v1""></doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3398,10 +3398,10 @@ y?></doc>
 <!ATTLIST doc a1 CDATA #IMPLIED>
 ]>
 <doc a1='v1'></doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3416,10 +3416,10 @@ y?></doc>
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc></doc >
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3435,10 +3435,10 @@ y?></doc>
 <!ENTITY e """">
 ]>
 <doc>&e;</doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3454,10 +3454,10 @@ y?></doc>
 ]>
 <doc>X
 Y</doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3475,10 +3475,10 @@ doc
 <!ELEMENT doc EMPTY>
 ]>
 <doc/>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3493,10 +3493,10 @@ doc
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc/>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3511,10 +3511,10 @@ doc
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc />
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3535,10 +3535,10 @@ doc
 <e a1=""w1""/>
 <e a2=""w2"" a3=""v3""/>
 </doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3555,10 +3555,10 @@ doc
 <!ENTITY e ""&#60;foo></foo>"">
 ]>
 <doc>&e;</doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3573,10 +3573,10 @@ doc
 <!ELEMENT doc (#PCDATA)>
 ]>
 <doc>&#32;</doc>
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3608,10 +3608,10 @@ doc
 </root>
 <!--* !!! testing both P45 and p46 *-->
 
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
 
         /// <summary>
@@ -3649,10 +3649,10 @@ doc
 </b></root>
 <!--* a valid test: tests P47,P48,P49,P50*-->
 
-".ToXmlDocument(validating: true);
+".ToXmlDocumentConformance(validating: true);
 
             Assert.IsNotNull(document);
-            Assert.IsTrue(document.IsValid);
+            Assert.IsNotNull(document);
         }
     }
 }

@@ -121,7 +121,7 @@
 </html>
 <!-- Comment -->";
             var document = source.ToHtmlDocument();
-            var comments = document.Descendents<IComment>().ToList();
+            var comments = document.Descendants<IComment>().ToList();
 
             foreach (var comment in comments)
             {
