@@ -2,6 +2,7 @@ namespace AngleSharp.Xml
 {
     using AngleSharp.Dom;
     using AngleSharp.Html;
+    using AngleSharp.Xml.Dom;
     using AngleSharp.Xhtml;
     using System;
 
@@ -63,21 +64,21 @@ namespace AngleSharp.Xml
         /// <inheritdoc />
         public virtual String OpenTag(IElement element, Boolean selfClosing)
         {
-            Confirm(element.Owner.Doctype);
+            Confirm(element.Owner);
             return ChildFormatter.OpenTag(element, selfClosing);
         }
 
         /// <inheritdoc />
         public virtual String CloseTag(IElement element, Boolean selfClosing)
         {
-            Confirm(element.Owner.Doctype);
+            Confirm(element.Owner);
             return ChildFormatter.CloseTag(element, selfClosing);
         }
 
         /// <inheritdoc />
         public virtual String Comment(IComment comment)
         {
-            Confirm(comment.Owner.Doctype);
+            Confirm(comment.Owner);
             return ChildFormatter.Comment(comment);
         }
 
@@ -91,15 +92,23 @@ namespace AngleSharp.Xml
         /// <inheritdoc />
         public virtual String Processing(IProcessingInstruction processing)
         {
-            Confirm(processing.Owner.Doctype);
+            Confirm(processing.Owner);
             return ChildFormatter.Processing(processing);
         }
 
         /// <inheritdoc />
-        public virtual String Text(ICharacterData text) => ChildFormatter.Text(text);
+        public virtual String Text(ICharacterData text)
+        {
+            Confirm(text.Owner);
+            return ChildFormatter.Text(text);
+        }
 
         /// <inheritdoc />
-        public virtual String LiteralText(ICharacterData text) => ChildFormatter.LiteralText(text);
+        public virtual String LiteralText(ICharacterData text)
+        {
+            Confirm(text.Owner);
+            return ChildFormatter.LiteralText(text);
+        }
 
         #endregion
 
@@ -110,6 +119,18 @@ namespace AngleSharp.Xml
             if (_docType == null)
             {
                 _docType = docType;
+            }
+        }
+
+        private void Confirm(IDocument document)
+        {
+            if (childFormatter == null && document is IXmlDocument)
+            {
+                ChildFormatter = XmlMarkupFormatter.Instance;
+            }
+            else
+            {
+                Confirm(document?.Doctype);
             }
         }
 

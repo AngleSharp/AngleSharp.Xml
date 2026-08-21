@@ -27,6 +27,27 @@ namespace AngleSharp.Xml.Dom
             set;
         }
 
+        public override String TextContent
+        {
+            get
+            {
+                var content = StringBuilderPool.Obtain();
+
+                foreach (var child in ((INode)this).ChildNodes)
+                {
+                    if (child.NodeType == NodeType.Element ||
+                        child.NodeType == NodeType.Text ||
+                        child.NodeType == NodeType.CharacterData)
+                    {
+                        content.Append(child.TextContent);
+                    }
+                }
+
+                return content.ToPool();
+            }
+            set => base.TextContent = value;
+        }
+
         #endregion
 
         #region Methods

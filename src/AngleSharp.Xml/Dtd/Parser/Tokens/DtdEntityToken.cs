@@ -65,7 +65,7 @@ namespace AngleSharp.Xml.Dtd.Parser
         {
             return new Entity(null, Name)
             {
-                NotationName = null,
+                NotationName = ExternNotation,
                 NodeValue = Value
             };
         }

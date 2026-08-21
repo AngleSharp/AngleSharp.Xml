@@ -30,6 +30,8 @@ namespace AngleSharp.Xml.Parser
         private readonly Dictionary<String, HashSet<String>> _internalAttributeDeclarations;
         private readonly Dictionary<String, Dictionary<String, InternalAttributeRule>> _internalAttributeRules;
         private readonly Dictionary<String, String> _internalGeneralEntities;
+        private readonly Dictionary<String, String> _fallbackUnparsedEntities;
+        private readonly HashSet<String> _fallbackNotations;
         private DtdContainer _dtd;
         private String _doctypeName;
 
@@ -55,6 +57,8 @@ namespace AngleSharp.Xml.Parser
             _internalAttributeDeclarations = new Dictionary<String, HashSet<String>>(StringComparer.Ordinal);
             _internalAttributeRules = new Dictionary<String, Dictionary<String, InternalAttributeRule>>(StringComparer.Ordinal);
             _internalGeneralEntities = new Dictionary<String, String>(StringComparer.Ordinal);
+            _fallbackUnparsedEntities = new Dictionary<String, String>(StringComparer.Ordinal);
+            _fallbackNotations = new HashSet<String>(StringComparer.Ordinal);
             _currentMode = XmlTreeMode.Initial;
         }
 
@@ -196,6 +200,14 @@ namespace AngleSharp.Xml.Parser
                 var declarationToken = (XmlDeclarationToken)token;
                 _standalone = declarationToken.Standalone;
 
+                if (_document is XmlDocument xmlDocument)
+                {
+                    xmlDocument.SetDeclaration(
+                        declarationToken.Version,
+                        declarationToken.IsEncodingMissing ? null : declarationToken.Encoding,
+                        declarationToken.Standalone);
+                }
+
                 if (!declarationToken.IsEncodingMissing)
                 {
                     SetEncoding(declarationToken.Encoding);
@@ -331,6 +343,12 @@ namespace AngleSharp.Xml.Parser
                     {
                         var attr = otherAttributes[i];
                         var item = CreateAttribute(attr.Key, attr.Value.Trim());
+
+                        if (item.NamespaceUri == NamespaceNames.XmlUri && item.LocalName == "id")
+                        {
+                            item.Value = XmlElementExtensions.NormalizeXmlId(item.Value);
+                        }
+
                         element.AddAttribute(item);
                     }
 
@@ -387,7 +405,16 @@ namespace AngleSharp.Xml.Parser
                 case XmlTokenType.CData:
                 {
                     var cdataToken = (XmlCDataToken)token;
-                    CurrentNode.AppendText(cdataToken.Data);
+
+                    if (_document is IXmlDocument xmlDocument)
+                    {
+                        CurrentNode.AppendChild(xmlDocument.CreateCDataSection(cdataToken.Data));
+                    }
+                    else
+                    {
+                        CurrentNode.AppendText(cdataToken.Data);
+                    }
+
                     break;
                 }
                 case XmlTokenType.Character:
@@ -514,6 +541,8 @@ namespace AngleSharp.Xml.Parser
             _internalAttributeDeclarations.Clear();
             _internalAttributeRules.Clear();
             _internalGeneralEntities.Clear();
+            _fallbackUnparsedEntities.Clear();
+            _fallbackNotations.Clear();
 
             var hasExternalSubset = TryLoadExternalSubset(doctypeToken.SystemIdentifier, out var externalSubset, out var externalSubsetPath);
 
@@ -619,6 +648,10 @@ namespace AngleSharp.Xml.Parser
                     var rule = new InternalAttributeRule
                     {
                         IsRequired = defaultDeclaration.StartsWith("#REQUIRED", StringComparison.Ordinal),
+                        Type = GetIdentityType(attr.Groups[2].Value),
+                        IsDefaultAllowedForId = defaultDeclaration.StartsWith("#REQUIRED", StringComparison.Ordinal) ||
+                            defaultDeclaration.StartsWith("#IMPLIED", StringComparison.Ordinal),
+                        NotationNames = GetNotationNames(attr.Groups[2].Value),
                     };
 
                     if (defaultDeclaration.StartsWith("#FIXED", StringComparison.Ordinal))
@@ -642,6 +675,19 @@ namespace AngleSharp.Xml.Parser
 
                 var quoted = match.Groups[2].Value;
                 _internalGeneralEntities[entityName] = quoted.Substring(1, quoted.Length - 2);
+            }
+
+            foreach (Match match in Regex.Matches(
+                subset,
+                "<!ENTITY\\s+([A-Za-z_][A-Za-z0-9_:\\.-]*)\\s+(?:SYSTEM\\s+(?:\"[^\"]*\"|'[^']*')|PUBLIC\\s+(?:\"[^\"]*\"|'[^']*')\\s+(?:\"[^\"]*\"|'[^']*'))\\s+NDATA\\s+([A-Za-z_][A-Za-z0-9_:\\.-]*)\\s*>",
+                RegexOptions.Singleline))
+            {
+                _fallbackUnparsedEntities[match.Groups[1].Value] = match.Groups[2].Value;
+            }
+
+            foreach (Match match in Regex.Matches(subset, "<!NOTATION\\s+([A-Za-z_][A-Za-z0-9_:\\.-]*)\\s+", RegexOptions.Singleline))
+            {
+                _fallbackNotations.Add(match.Groups[1].Value);
             }
         }
 
@@ -749,7 +795,276 @@ namespace AngleSharp.Xml.Parser
                 valid = ValidateElementAgainstInternalSubset(root);
             }
 
+            if (valid && root != null)
+            {
+                valid = ValidateIdentityAndReferences(root);
+            }
+
             xml.SetValidity(valid);
+        }
+
+        private Boolean ValidateIdentityAndReferences(Element root)
+        {
+            var declarations = GetIdentityDeclarations();
+            var notationNames = new HashSet<String>(_fallbackNotations, StringComparer.Ordinal);
+            var unparsedEntities = new Dictionary<String, String>(_fallbackUnparsedEntities, StringComparer.Ordinal);
+
+            if (_dtd != null)
+            {
+                foreach (var notation in _dtd.Notations)
+                {
+                    notationNames.Add(notation.NodeName);
+                }
+
+                foreach (var entity in _dtd.Entities)
+                {
+                    if (!String.IsNullOrEmpty(entity.NotationName))
+                    {
+                        unparsedEntities[entity.NodeName] = entity.NotationName;
+                    }
+                }
+            }
+
+            foreach (var notationName in unparsedEntities.Values)
+            {
+                if (!notationNames.Contains(notationName))
+                {
+                    return false;
+                }
+            }
+
+            foreach (var elementDeclarations in declarations.Values)
+            {
+                var idDeclarations = elementDeclarations.Count(m => m.Type == IdentityAttributeType.ID);
+                var notationDeclarations = elementDeclarations.Count(m => m.Type == IdentityAttributeType.NOTATION);
+
+                if (idDeclarations > 1 || notationDeclarations > 1 ||
+                    elementDeclarations.Any(m => m.Type == IdentityAttributeType.ID && !m.IsDefaultAllowedForId) ||
+                    elementDeclarations.Any(m => m.Type == IdentityAttributeType.NOTATION && m.NotationNames.Any(n => !notationNames.Contains(n))))
+                {
+                    return false;
+                }
+            }
+
+            var ids = new HashSet<String>(StringComparer.Ordinal);
+            var references = new List<String>();
+
+            if (!ValidateIdentityAttributes(root, declarations, ids, references, unparsedEntities))
+            {
+                return false;
+            }
+
+            return references.All(ids.Contains);
+        }
+
+        private Boolean ValidateIdentityAttributes(
+            Element element,
+            Dictionary<String, List<IdentityAttributeDeclaration>> declarations,
+            HashSet<String> ids,
+            List<String> references,
+            Dictionary<String, String> unparsedEntities)
+        {
+            if (declarations.TryGetValue(element.NodeName, out var elementDeclarations))
+            {
+                foreach (var declaration in elementDeclarations)
+                {
+                    var value = element.GetAttribute(declaration.Name);
+
+                    if (value == null)
+                    {
+                        continue;
+                    }
+
+                    var tokens = SplitTokens(value);
+
+                    if (tokens.Count == 0 || tokens.Any(token => !IsXmlName(token)))
+                    {
+                        return false;
+                    }
+
+                    var normalizedValue = String.Join(" ", tokens);
+
+                    if (!String.Equals(value, normalizedValue, StringComparison.Ordinal))
+                    {
+                        ((IElement)element).Attributes[declaration.Name].Value = normalizedValue;
+                    }
+
+                    switch (declaration.Type)
+                    {
+                        case IdentityAttributeType.ID:
+                            if (tokens.Count != 1 || !ids.Add(tokens[0]))
+                            {
+                                return false;
+                            }
+
+                            ((XmlElement)element).IdAttribute = declaration.Name;
+                            break;
+                        case IdentityAttributeType.IDREF:
+                            if (tokens.Count != 1)
+                            {
+                                return false;
+                            }
+
+                            references.Add(tokens[0]);
+                            break;
+                        case IdentityAttributeType.IDREFS:
+                            references.AddRange(tokens);
+                            break;
+                        case IdentityAttributeType.ENTITY:
+                            if (tokens.Count != 1 || !unparsedEntities.ContainsKey(tokens[0]))
+                            {
+                                return false;
+                            }
+
+                            break;
+                        case IdentityAttributeType.ENTITIES:
+                            if (tokens.Any(token => !unparsedEntities.ContainsKey(token)))
+                            {
+                                return false;
+                            }
+
+                            break;
+                    }
+                }
+            }
+
+            foreach (var child in ((INode)element).ChildNodes)
+            {
+                if (child is Element nested && !ValidateIdentityAttributes(nested, declarations, ids, references, unparsedEntities))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private Dictionary<String, List<IdentityAttributeDeclaration>> GetIdentityDeclarations()
+        {
+            var result = new Dictionary<String, List<IdentityAttributeDeclaration>>(StringComparer.Ordinal);
+
+            if (_dtd != null)
+            {
+                foreach (var declaration in _dtd.Attributes)
+                {
+                    foreach (var entry in declaration.Declarations)
+                    {
+                        var item = CreateIdentityDeclaration(entry);
+
+                        if (item != null)
+                        {
+                            AddIdentityDeclaration(result, declaration.Name, item);
+                        }
+                    }
+                }
+            }
+
+            foreach (var elementRules in _internalAttributeRules)
+            {
+                foreach (var rule in elementRules.Value)
+                {
+                    if (rule.Value.Type != IdentityAttributeType.None &&
+                        !ContainsIdentityDeclaration(result, elementRules.Key, rule.Key))
+                    {
+                        AddIdentityDeclaration(result, elementRules.Key, new IdentityAttributeDeclaration
+                        {
+                            Name = rule.Key,
+                            Type = rule.Value.Type,
+                            IsDefaultAllowedForId = rule.Value.IsDefaultAllowedForId,
+                            NotationNames = rule.Value.NotationNames,
+                        });
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private static IdentityAttributeDeclaration CreateIdentityDeclaration(AttributeDeclarationEntry entry)
+        {
+            if (entry.Type is AttributeTokenizedType tokenized)
+            {
+                return new IdentityAttributeDeclaration
+                {
+                    Name = entry.Name,
+                    Type = (IdentityAttributeType)Enum.Parse(typeof(IdentityAttributeType), tokenized.Value.ToString()),
+                    IsDefaultAllowedForId = entry.Default is AttributeImpliedValue || entry.Default is AttributeRequiredValue,
+                };
+            }
+
+            if (entry.Type is AttributeEnumeratedType enumerated && enumerated.IsNotation)
+            {
+                return new IdentityAttributeDeclaration
+                {
+                    Name = entry.Name,
+                    Type = IdentityAttributeType.NOTATION,
+                    NotationNames = enumerated.Names,
+                };
+            }
+
+            return null;
+        }
+
+        private static void AddIdentityDeclaration(
+            Dictionary<String, List<IdentityAttributeDeclaration>> declarations,
+            String elementName,
+            IdentityAttributeDeclaration declaration)
+        {
+            if (!declarations.TryGetValue(elementName, out var items))
+            {
+                items = new List<IdentityAttributeDeclaration>();
+                declarations[elementName] = items;
+            }
+
+            items.Add(declaration);
+        }
+
+        private static Boolean ContainsIdentityDeclaration(
+            Dictionary<String, List<IdentityAttributeDeclaration>> declarations,
+            String elementName,
+            String attributeName) =>
+            declarations.TryGetValue(elementName, out var items) && items.Any(m => m.Name == attributeName);
+
+        private static List<String> SplitTokens(String value) => value
+            .Split((Char[])null, StringSplitOptions.RemoveEmptyEntries)
+            .ToList();
+
+        private static Boolean IsXmlName(String value)
+        {
+            if (String.IsNullOrEmpty(value) || !value[0].IsXmlNameStart())
+            {
+                return false;
+            }
+
+            for (var i = 1; i < value.Length; i++)
+            {
+                if (!value[i].IsXmlName())
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static IdentityAttributeType GetIdentityType(String value)
+        {
+            var type = value.Trim();
+
+            if (type.StartsWith("NOTATION", StringComparison.Ordinal))
+            {
+                return IdentityAttributeType.NOTATION;
+            }
+
+            return Enum.TryParse(type, out IdentityAttributeType result) ? result : IdentityAttributeType.None;
+        }
+
+        private static IEnumerable<String> GetNotationNames(String value)
+        {
+            var match = Regex.Match(value, "^NOTATION\\s*\\(([^\\)]*)\\)$");
+            return match.Success ?
+                match.Groups[1].Value.Split('|').Select(m => m.Trim()).Where(m => m.Length > 0).ToList() :
+                Enumerable.Empty<String>();
         }
 
         private Boolean ValidateElementAgainstDtd(Element element)
@@ -1041,7 +1356,37 @@ namespace AngleSharp.Xml.Parser
 
             public String FixedValue { get; set; }
 
+            public IdentityAttributeType Type { get; set; }
+
+            public Boolean IsDefaultAllowedForId { get; set; }
+
+            public IEnumerable<String> NotationNames { get; set; } = Enumerable.Empty<String>();
+
             public Boolean HasFixedValue => FixedValue != null;
+        }
+
+        private sealed class IdentityAttributeDeclaration
+        {
+            public String Name { get; set; }
+
+            public IdentityAttributeType Type { get; set; }
+
+            public Boolean IsDefaultAllowedForId { get; set; }
+
+            public IEnumerable<String> NotationNames { get; set; } = Enumerable.Empty<String>();
+        }
+
+        private enum IdentityAttributeType
+        {
+            None,
+            ID,
+            IDREF,
+            IDREFS,
+            ENTITY,
+            ENTITIES,
+            NMTOKEN,
+            NMTOKENS,
+            NOTATION,
         }
 
         #endregion

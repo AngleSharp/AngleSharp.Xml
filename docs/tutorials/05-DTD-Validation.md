@@ -75,11 +75,27 @@ Current DTD-related behavior includes:
   - Undeclared attributes are flagged invalid (except namespace declarations)
   - #REQUIRED constraints are enforced
   - #FIXED constraints are enforced when attribute is present
+  - ID values are normalized and must be unique across the document
+  - Each element type may declare at most one ID attribute, with #IMPLIED or #REQUIRED defaults
+  - IDREF and IDREFS values must resolve to declared IDs, including forward references
+  - ENTITY and ENTITIES values must name declared unparsed entities
+  - Unparsed entities and NOTATION attributes must reference declared notations
 - Internal general entity replacement in text nodes for declared internal entities
 - External subset loading for local file-based SYSTEM identifiers
   - Absolute file paths are supported
   - Relative paths are resolved against the current process working directory
 - External general entity replacement when entities are declared in loaded local external subsets
+
+## DTD ID lookup
+
+DTD-declared IDs can be inspected and looked up after parsing:
+
+```cs
+var id = element.GetDtdId();
+var target = document.GetElementByDtdId("chapter-1");
+```
+
+Lookup reads the current attribute value, so later DOM mutations are reflected immediately. The declared ID attribute metadata is preserved when XML elements are cloned.
 
 ## What is currently limited or not supported
 
@@ -92,7 +108,7 @@ You should be aware of these boundaries:
 - Full content-model grammar support is incomplete in internal fallback paths
   - Complex nested groups and advanced quantifier combinations may not be fully validated
 - Attribute default-value materialization from DTD declarations is limited
-- XSD validation is not included
+- XML Schema 1.0 validation is available separately through `ValidateXsd`
 
 ## Recommended usage pattern
 

@@ -97,6 +97,11 @@ namespace AngleSharp.Xml
         /// <inheritdoc />
         public virtual String Text(ICharacterData text)
         {
+            if (text is Dom.IXmlCDataSection)
+            {
+                return String.Concat("<![CDATA[", text.Data, "]]>");
+            }
+
             var content = text.Data;
             return EscapeText(content);
         }

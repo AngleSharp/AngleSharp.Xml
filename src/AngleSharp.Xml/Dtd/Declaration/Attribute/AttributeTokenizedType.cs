@@ -44,71 +44,23 @@ namespace AngleSharp.Xml.Dtd.Declaration
             {
                 case TokenizedType.ENTITIES:
                 {
-                    //TODO
-                    break;
+                    return CheckNames(attr, false);
                 }
                 case TokenizedType.ENTITY:
                 {
-                    //TODO
-                    break;
+                    return CheckNames(attr, true);
                 }
                 case TokenizedType.ID:
                 {
-                    if (String.IsNullOrEmpty(attr) || !attr[0].IsXmlNameStart())
-                    {
-                        return false;
-                    }
-
-                    for (int i = 1; i < attr.Length; i++)
-                    {
-                        if (!attr[i].IsXmlName())
-                        {
-                            return false;
-                        }
-                    }
-
-                    //TODO only one ID per element
-                    return true;
+                    return CheckNames(attr, true);
                 }
                 case TokenizedType.IDREF:
                 {
-                    if (String.IsNullOrEmpty(attr) || !attr[0].IsXmlNameStart())
-                        return false;
-
-                    for (var i = 1; i < attr.Length; i++)
-                    {
-                        if (!attr[i].IsXmlName())
-                        {
-                            return false;
-                        }
-                    }
-
-                    //TODO check reference
-                    return true;
+                    return CheckNames(attr, true);
                 }
                 case TokenizedType.IDREFS:
                 {
-                    var start = true;
-
-                    for (var i = 0; i < attr.Length; i++)
-                    {
-                        if (!attr[i].IsSpaceCharacter())
-                        {
-                            if (start && !attr[i].IsXmlNameStart())
-                                return false;
-                            else if (!start && !attr[i].IsXmlName())
-                                return false;
-                            else if (start)
-                                start = false;
-                        }
-                        else
-                        {
-                            start = true;
-                        }
-                    }
-
-                    //TODO check references
-                    return true;
+                    return CheckNames(attr, false);
                 }
                 case TokenizedType.NMTOKEN:
                 {
@@ -133,6 +85,34 @@ namespace AngleSharp.Xml.Dtd.Declaration
                     }
 
                     break;
+                }
+            }
+
+            return true;
+        }
+
+        private static Boolean CheckNames(String value, Boolean requiresSingleName)
+        {
+            var names = value.Split((Char[])null, StringSplitOptions.RemoveEmptyEntries);
+
+            if (names.Length == 0 || requiresSingleName && names.Length != 1)
+            {
+                return false;
+            }
+
+            foreach (var name in names)
+            {
+                if (String.IsNullOrEmpty(name) || !name[0].IsXmlNameStart())
+                {
+                    return false;
+                }
+
+                for (var i = 1; i < name.Length; i++)
+                {
+                    if (!name[i].IsXmlName())
+                    {
+                        return false;
+                    }
                 }
             }
 
