@@ -2,6 +2,7 @@ namespace AngleSharp.Xml.Tests.Dom
 {
     using AngleSharp.Xml.Parser;
     using NUnit.Framework;
+    using System;
 
     [TestFixture]
     public class XmlTree
@@ -81,6 +82,42 @@ namespace AngleSharp.Xml.Tests.Dom
             querySelector.InnerHtml = "<a></a>";
 
             Assert.AreEqual("<div><a></a></div>", xmlDocument.ToHtml());
+        }
+
+        [TestCase("<r>abc</r>", "abc")]
+        [TestCase("<r><![CDATA[a<b]]></r>", "a<b")]
+        [TestCase("<r><!-- c --></r>", "")]
+        [TestCase("<r><?p q?></r>", "")]
+        [TestCase("<r/>", "")]
+        public void TextContentOfElementWithAtMostOneChild(String source, String expected)
+        {
+            var document = source.ToXmlDocument();
+
+            Assert.AreEqual(expected, document.DocumentElement.TextContent);
+        }
+
+        [Test]
+        public void TextContentOfChildrenHoldingOneNodeKeepsDocumentOrder()
+        {
+            var document = "<r><a>x</a><b><![CDATA[y]]></b><c><!-- z --></c><d/><e><?p q?></e>w</r>".ToXmlDocument();
+
+            Assert.AreEqual("xyw", document.DocumentElement.TextContent);
+        }
+
+        [Test]
+        public void TextContentUsesTheTextContentOfNonXmlElementChildren()
+        {
+            var document = "<r/>".ToXmlDocument();
+            var root = document.DocumentElement;
+            var html = document.CreateElement("span");
+            html.TextContent = "s";
+            root.AppendChild(html);
+
+            Assert.AreEqual("s", root.TextContent);
+
+            root.AppendChild(document.CreateTextNode("t"));
+
+            Assert.AreEqual("st", root.TextContent);
         }
     }
 }

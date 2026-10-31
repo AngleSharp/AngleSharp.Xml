@@ -149,5 +149,9 @@
         /// (0x312) No parameter reference recursion allowed.
         /// </summary>
         DtdPEReferenceRecursion = 0x312,
+        /// <summary>
+        /// (0x313) Expanding the declared entities exceeds the allowed number of characters.
+        /// </summary>
+        EntityExpansionLimitExceeded = 0x313,
     }
 }

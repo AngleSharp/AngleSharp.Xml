@@ -97,6 +97,10 @@ var target = document.GetElementByDtdId("chapter-1");
 
 Lookup reads the current attribute value, so later DOM mutations are reflected immediately. The declared ID attribute metadata is preserved when XML elements are cloned.
 
+## Entity expansion limit
+
+Expanding declared entities can multiply a small document into a huge one: each entity can reference another several times. The parser counts every character produced by expanding a declared entity, in text and in attribute values, against `XmlParserOptions.MaxCharactersFromEntities` (10,000,000 by default, 0 for no limit). Beyond the limit it throws an `XmlParseException`, or keeps the remaining references as text when errors are suppressed. See the [API tutorial](01-API.md#maxcharactersfromentities).
+
 ## What is currently limited or not supported
 
 You should be aware of these boundaries:
@@ -105,6 +109,7 @@ You should be aware of these boundaries:
   - HTTP/network retrieval is not implemented
   - PUBLIC identifier resolution/catalog behavior is not implemented
 - Parameter entity and external-subset behavior is not a full XML 1.0 conformance implementation
+  - Parameter entity references inside entity values are kept as literal text, not expanded
 - Full content-model grammar support is incomplete in internal fallback paths
   - Complex nested groups and advanced quantifier combinations may not be fully validated
 - Attribute default-value materialization from DTD declarations is limited

@@ -102,6 +102,7 @@ namespace AngleSharp.Xml.Parser
             var token = default(XmlToken);
             _options = options;
             _tokenizer.IsSuppressingErrors = options.IsSuppressingErrors;
+            _tokenizer.MaxCharactersFromEntities = options.MaxCharactersFromEntities;
 
             do
             {
@@ -129,6 +130,7 @@ namespace AngleSharp.Xml.Parser
             var token = default(XmlToken);
             _options = options;
             _tokenizer.IsSuppressingErrors = options.IsSuppressingErrors;
+            _tokenizer.MaxCharactersFromEntities = options.MaxCharactersFromEntities;
 
             do
             {
@@ -420,7 +422,7 @@ namespace AngleSharp.Xml.Parser
                 case XmlTokenType.Character:
                 {
                     var charToken = (XmlCharacterToken)token;
-                    CurrentNode.AppendText(ExpandInternalEntities(charToken.Data));
+                    CurrentNode.AppendText(ExpandInternalEntities(charToken.Data, charToken.Position));
                     break;
                 }
                 case XmlTokenType.EndOfFile:
@@ -787,12 +789,19 @@ namespace AngleSharp.Xml.Parser
 
             if (valid && root != null && hasDtdElementDeclarations)
             {
-                valid = !_dtd.IsInvalid && ValidateElementAgainstDtd(root);
+                valid = !_dtd.IsInvalid && ValidateElementsAgainstDtd(root);
             }
 
             if (valid && root != null && _internalElementModels.Count > 0)
             {
-                valid = ValidateElementAgainstInternalSubset(root);
+                var contentModels = new Dictionary<String, ContentModel>(StringComparer.Ordinal);
+
+                foreach (var pair in _internalElementModels)
+                {
+                    contentModels.Add(pair.Key, ContentModel.Parse(pair.Value));
+                }
+
+                valid = ValidateElements(root, element => ValidateElementAgainstInternalSubset(element, contentModels));
             }
 
             if (valid && root != null)
@@ -846,15 +855,55 @@ namespace AngleSharp.Xml.Parser
                 }
             }
 
+            // Without identity declarations no element has anything to check, rewrite or reference,
+            // so walking the tree (as every document without a DOCTYPE would) cannot change the result
+            if (declarations.Count == 0)
+            {
+                return true;
+            }
+
             var ids = new HashSet<String>(StringComparer.Ordinal);
             var references = new List<String>();
 
-            if (!ValidateIdentityAttributes(root, declarations, ids, references, unparsedEntities))
+            if (!ValidateElements(root, element => ValidateIdentityAttributes(element, declarations, ids, references, unparsedEntities)))
             {
                 return false;
             }
 
             return references.All(ids.Contains);
+        }
+
+        /// <summary>
+        /// Applies the validation to the root and each descendant element in document order,
+        /// stopping at the first failure. Walks with an explicit stack, so deeply nested
+        /// documents cannot overflow the call stack.
+        /// </summary>
+        private static Boolean ValidateElements(Element root, Func<Element, Boolean> validate)
+        {
+            var pending = new Stack<Element>();
+            pending.Push(root);
+
+            while (pending.Count > 0)
+            {
+                var element = pending.Pop();
+
+                if (!validate(element))
+                {
+                    return false;
+                }
+
+                var children = ((INode)element).ChildNodes;
+
+                for (var i = children.Length - 1; i >= 0; i--)
+                {
+                    if (children[i] is Element nested)
+                    {
+                        pending.Push(nested);
+                    }
+                }
+            }
+
+            return true;
         }
 
         private Boolean ValidateIdentityAttributes(
@@ -925,14 +974,6 @@ namespace AngleSharp.Xml.Parser
 
                             break;
                     }
-                }
-            }
-
-            foreach (var child in ((INode)element).ChildNodes)
-            {
-                if (child is Element nested && !ValidateIdentityAttributes(nested, declarations, ids, references, unparsedEntities))
-                {
-                    return false;
                 }
             }
 
@@ -1067,39 +1108,80 @@ namespace AngleSharp.Xml.Parser
                 Enumerable.Empty<String>();
         }
 
-        private Boolean ValidateElementAgainstDtd(Element element)
+        private Boolean ValidateElementsAgainstDtd(Element root)
         {
-            var declaration = _dtd.Elements.FirstOrDefault(m => String.Equals(m.Name, element.NodeName, StringComparison.Ordinal));
+            // Declarations are looked up by name once per document instead of searched on every
+            // element. The first element declaration of a name wins, as the search found it first;
+            // attribute declarations keep their order. A declaration without a name matched nothing.
+            var elementDeclarations = new Dictionary<String, ElementDeclaration>(StringComparer.Ordinal);
 
-            if (declaration == null || !declaration.Check(element))
+            foreach (var declaration in _dtd.Elements)
             {
-                return false;
-            }
-
-            var attributeDeclarations = _dtd.Attributes
-                .Where(m => String.Equals(m.Name, element.NodeName, StringComparison.Ordinal))
-                .ToList();
-
-            for (var i = 0; i < attributeDeclarations.Count; i++)
-            {
-                if (!attributeDeclarations[i].Check(element))
+                if (declaration.Name != null && !elementDeclarations.ContainsKey(declaration.Name))
                 {
-                    return false;
+                    elementDeclarations.Add(declaration.Name, declaration);
                 }
             }
 
-            if (attributeDeclarations.Count > 0)
+            var attributeDeclarations = new Dictionary<String, List<AttributeDeclaration>>(StringComparer.Ordinal);
+
+            foreach (var declaration in _dtd.Attributes)
+            {
+                if (declaration.Name != null)
+                {
+                    if (!attributeDeclarations.TryGetValue(declaration.Name, out var list))
+                    {
+                        list = new List<AttributeDeclaration>();
+                        attributeDeclarations.Add(declaration.Name, list);
+                    }
+
+                    list.Add(declaration);
+                }
+            }
+
+            var declaredAttributes = new Dictionary<String, HashSet<String>>(StringComparer.Ordinal);
+
+            foreach (var pair in attributeDeclarations)
             {
                 var declared = new HashSet<String>(StringComparer.Ordinal);
-                var elementNode = (IElement)element;
 
-                for (var i = 0; i < attributeDeclarations.Count; i++)
+                foreach (var declaration in pair.Value)
                 {
-                    foreach (var entry in attributeDeclarations[i].Declarations)
+                    foreach (var entry in declaration.Declarations)
                     {
                         declared.Add(entry.Name);
                     }
                 }
+
+                declaredAttributes.Add(pair.Key, declared);
+            }
+
+            return ValidateElements(root, element => ValidateElementAgainstDtd(element, elementDeclarations, attributeDeclarations, declaredAttributes));
+        }
+
+        private static Boolean ValidateElementAgainstDtd(
+            Element element,
+            Dictionary<String, ElementDeclaration> elementDeclarations,
+            Dictionary<String, List<AttributeDeclaration>> attributeDeclarations,
+            Dictionary<String, HashSet<String>> declaredAttributes)
+        {
+            if (!elementDeclarations.TryGetValue(element.NodeName, out var declaration) || !declaration.Check(element))
+            {
+                return false;
+            }
+
+            if (attributeDeclarations.TryGetValue(element.NodeName, out var elementAttributes))
+            {
+                for (var i = 0; i < elementAttributes.Count; i++)
+                {
+                    if (!elementAttributes[i].Check(element))
+                    {
+                        return false;
+                    }
+                }
+
+                var declared = declaredAttributes[element.NodeName];
+                var elementNode = (IElement)element;
 
                 foreach (var attr in elementNode.Attributes)
                 {
@@ -1117,20 +1199,12 @@ namespace AngleSharp.Xml.Parser
                 }
             }
 
-            foreach (var child in ((INode)element).ChildNodes)
-            {
-                if (child is Element nested && !ValidateElementAgainstDtd(nested))
-                {
-                    return false;
-                }
-            }
-
             return true;
         }
 
-        private Boolean ValidateElementAgainstInternalSubset(Element element)
+        private Boolean ValidateElementAgainstInternalSubset(Element element, Dictionary<String, ContentModel> contentModels)
         {
-            if (!_internalElementModels.TryGetValue(element.NodeName, out var model))
+            if (!contentModels.TryGetValue(element.NodeName, out var model))
             {
                 return false;
             }
@@ -1177,98 +1251,135 @@ namespace AngleSharp.Xml.Parser
                 }
             }
 
-            if (!ValidateContentModel(element, model))
-            {
-                return false;
-            }
-
-            foreach (var child in ((INode)element).ChildNodes)
-            {
-                if (child is Element nested && !ValidateElementAgainstInternalSubset(nested))
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return ValidateContentModel(element, model);
         }
 
-        private static Boolean ValidateContentModel(Element element, String model)
+        private static Boolean ValidateContentModel(Element element, ContentModel model)
         {
-            if (String.Equals(model, "ANY", StringComparison.Ordinal))
+            if (model.Kind == ContentModelKind.Any)
             {
                 return true;
             }
 
-            var significant = ((INode)element).ChildNodes.Where(m =>
-                m is IElement || (m is IText text && !String.IsNullOrWhiteSpace(text.Data))).ToList();
+            // Significant children are elements and texts that are not only whitespace
+            var children = ((INode)element).ChildNodes;
+            var matched = 0;
 
-            if (String.Equals(model, "EMPTY", StringComparison.Ordinal))
+            for (var i = 0; i < children.Length; i++)
             {
-                return significant.Count == 0;
-            }
+                var child = children[i];
 
-            if (Regex.IsMatch(model, "^\\(#PCDATA(\\|[A-Za-z_][A-Za-z0-9_:\\.-]*)*\\)\\*$"))
-            {
-                var names = new HashSet<String>(
-                    model.Substring(1, model.Length - 3)
-                        .Split('|')
-                        .Where(m => !String.Equals(m, "#PCDATA", StringComparison.Ordinal)),
-                    StringComparer.Ordinal);
-
-                foreach (var node in significant)
+                if (child is IElement childElement)
                 {
-                    if (node is IElement child && !names.Contains(child.NodeName))
+                    switch (model.Kind)
+                    {
+                        case ContentModelKind.Empty:
+                            return false;
+                        case ContentModelKind.Mixed when !model.Names.Contains(childElement.NodeName):
+                            return false;
+                        case ContentModelKind.Sequence:
+                            if (matched == model.Sequence.Count || !String.Equals(model.Sequence[matched], childElement.NodeName, StringComparison.Ordinal))
+                            {
+                                return false;
+                            }
+
+                            matched++;
+                            break;
+                    }
+                }
+                else if (child is IText text && !String.IsNullOrWhiteSpace(text.Data))
+                {
+                    if (model.Kind == ContentModelKind.Empty || model.Kind == ContentModelKind.Sequence ||
+                        (model.Kind == ContentModelKind.Other && !model.AllowsText))
                     {
                         return false;
                     }
                 }
-
-                return true;
             }
 
-            var elementContentModel = Regex.Match(model, "^\\(([A-Za-z_][A-Za-z0-9_:\\.-]*(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_:\\.-]*)*)\\)$");
+            return model.Kind != ContentModelKind.Sequence || matched == model.Sequence.Count;
+        }
 
-            if (elementContentModel.Success)
+        private enum ContentModelKind
+        {
+            Any,
+            Empty,
+            Mixed,
+            Sequence,
+            Other,
+        }
+
+        /// <summary>
+        /// An element's declared content model, classified once per document instead of matched
+        /// against the regular expressions on every element it applies to.
+        /// </summary>
+        private sealed class ContentModel
+        {
+            private ContentModel(ContentModelKind kind)
             {
-                if (significant.Any(m => m is IText))
+                Kind = kind;
+            }
+
+            public ContentModelKind Kind { get; }
+
+            /// <summary>
+            /// The element names a mixed model allows.
+            /// </summary>
+            public HashSet<String> Names { get; private set; }
+
+            /// <summary>
+            /// The element names a sequence model requires, in order.
+            /// </summary>
+            public List<String> Sequence { get; private set; }
+
+            /// <summary>
+            /// Whether any other model allows text.
+            /// </summary>
+            public Boolean AllowsText { get; private set; }
+
+            public static ContentModel Parse(String model)
+            {
+                if (String.Equals(model, "ANY", StringComparison.Ordinal))
                 {
-                    return false;
+                    return new ContentModel(ContentModelKind.Any);
                 }
 
-                var expected = elementContentModel.Groups[1].Value
-                    .Split(',')
-                    .Select(m => m.Trim())
-                    .Where(m => m.Length > 0)
-                    .ToList();
-
-                var actual = significant
-                    .OfType<IElement>()
-                    .Select(m => m.NodeName)
-                    .ToList();
-
-                if (expected.Count != actual.Count)
+                if (String.Equals(model, "EMPTY", StringComparison.Ordinal))
                 {
-                    return false;
+                    return new ContentModel(ContentModelKind.Empty);
                 }
 
-                for (var i = 0; i < expected.Count; i++)
+                if (Regex.IsMatch(model, "^\\(#PCDATA(\\|[A-Za-z_][A-Za-z0-9_:\\.-]*)*\\)\\*$"))
                 {
-                    if (!String.Equals(expected[i], actual[i], StringComparison.Ordinal))
+                    return new ContentModel(ContentModelKind.Mixed)
                     {
-                        return false;
-                    }
+                        Names = new HashSet<String>(
+                            model.Substring(1, model.Length - 3)
+                                .Split('|')
+                                .Where(m => !String.Equals(m, "#PCDATA", StringComparison.Ordinal)),
+                            StringComparer.Ordinal),
+                    };
                 }
 
-                return true;
-            }
+                var elementContentModel = Regex.Match(model, "^\\(([A-Za-z_][A-Za-z0-9_:\\.-]*(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_:\\.-]*)*)\\)$");
 
-            if (!model.Contains("#PCDATA", StringComparison.Ordinal) && significant.Any(m => m is IText))
-            {
-                return false;
-            }
+                if (elementContentModel.Success)
+                {
+                    return new ContentModel(ContentModelKind.Sequence)
+                    {
+                        Sequence = elementContentModel.Groups[1].Value
+                            .Split(',')
+                            .Select(m => m.Trim())
+                            .Where(m => m.Length > 0)
+                            .ToList(),
+                    };
+                }
 
-            return true;
+                return new ContentModel(ContentModelKind.Other)
+                {
+                    AllowsText = model.Contains("#PCDATA", StringComparison.Ordinal),
+                };
+            }
         }
 
         private static String Unquote(String value)
@@ -1289,7 +1400,7 @@ namespace AngleSharp.Xml.Parser
             return value;
         }
 
-        private String ExpandInternalEntities(String data)
+        private String ExpandInternalEntities(String data, TextPosition position)
         {
             if (String.IsNullOrEmpty(data) || _internalGeneralEntities.Count == 0)
             {
@@ -1306,7 +1417,11 @@ namespace AngleSharp.Xml.Parser
                 {
                     var name = match.Groups[1].Value;
 
-                    if (_internalGeneralEntities.TryGetValue(name, out var replacement))
+                    // Every round can multiply the text by the references an entity holds, so each
+                    // replacement counts against the expansion limit before the text grows;
+                    // beyond it, with errors suppressed, the reference stays text
+                    if (_internalGeneralEntities.TryGetValue(name, out var replacement) &&
+                        _tokenizer.ClaimEntityCharacters(replacement.Length, position))
                     {
                         changed = true;
                         return replacement;

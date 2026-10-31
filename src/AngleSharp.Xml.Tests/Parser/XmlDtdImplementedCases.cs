@@ -1,6 +1,7 @@
 namespace AngleSharp.Xml.Tests.Parser
 {
     using NUnit.Framework;
+    using System;
 
     /// <summary>
     /// DTD-related cases that are known to work with the current implementation.
@@ -366,6 +367,71 @@ namespace AngleSharp.Xml.Tests.Parser
 
                         Assert.IsNotNull(document);
                         Assert.IsFalse(document.IsValid);
+                }
+
+                [TestCase("<r><a/><b/></r>", true)]
+                [TestCase("<r>\n  <a/>\n  <b/>\n</r>", true)]
+                [TestCase("<r><a/></r>", false)]
+                [TestCase("<r><a/><b/><b/></r>", false)]
+                [TestCase("<r><b/><a/></r>", false)]
+                [TestCase("<r><a/>text<b/></r>", false)]
+                public void SequenceContentModelChecksOrderCountAndText(String body, Boolean valid)
+                {
+                        var document = ("<!DOCTYPE r [<!ELEMENT r (a, b)><!ELEMENT a EMPTY><!ELEMENT b EMPTY>]>" + body).ToXmlDocument();
+
+                        Assert.AreEqual(valid, document.IsValid);
+                }
+
+                [TestCase("<r>t<a/>t<a/></r>", true)]
+                [TestCase("<r>t<b/></r>", false)]
+                public void MixedContentModelOnlyAllowsDeclaredChildren(String body, Boolean valid)
+                {
+                        var document = ("<!DOCTYPE r [<!ELEMENT r (#PCDATA|a)*><!ELEMENT a EMPTY><!ELEMENT b EMPTY>]>" + body).ToXmlDocument();
+
+                        Assert.AreEqual(valid, document.IsValid);
+                }
+
+                [TestCase("<r/>", true)]
+                [TestCase("<r><a/></r>", false)]
+                [TestCase("<r>text</r>", false)]
+                public void EmptyContentModelRejectsElementsAndText(String body, Boolean valid)
+                {
+                        var document = ("<!DOCTYPE r [<!ELEMENT r EMPTY><!ELEMENT a EMPTY>]>" + body).ToXmlDocument();
+
+                        Assert.AreEqual(valid, document.IsValid);
+                }
+
+                [TestCase("(#PCDATA)", "<r>text</r>", true)]
+                [TestCase("(a|b)*", "<r><a/><b/><a/></r>", true)]
+                [TestCase("(a|b)*", "<r><a/>text</r>", false)]
+                public void OtherContentModelsAllowTextOnlyWithPcdata(String model, String body, Boolean valid)
+                {
+                        var document = ("<!DOCTYPE r [<!ELEMENT r " + model + "><!ELEMENT a EMPTY><!ELEMENT b EMPTY>]>" + body).ToXmlDocument();
+
+                        Assert.AreEqual(valid, document.IsValid);
+                }
+
+                [Test]
+                public void RepeatedIdValuesAreValidWithoutIdDeclarations()
+                {
+                        var withoutDoctype = "<r id=\"x\" ref=\"nowhere\"><r id=\"x\"/></r>".ToXmlDocument();
+                        var withoutIdType = "<!DOCTYPE r [<!ELEMENT r ANY><!ATTLIST r id CDATA #IMPLIED>]><r id=\"x\"><r id=\"x\"/></r>".ToXmlDocument();
+
+                        Assert.IsTrue(withoutDoctype.IsValid);
+                        Assert.IsTrue(withoutIdType.IsValid);
+                }
+
+                [Test]
+                public void RepeatedIdValuesAndDanglingReferencesAreInvalidWithIdDeclarations()
+                {
+                        var doctype = "<!DOCTYPE r [<!ELEMENT r ANY><!ATTLIST r id ID #IMPLIED ref IDREF #IMPLIED>]>";
+                        var unique = (doctype + "<r id=\"x\"><r id=\"y\" ref=\"x\"/></r>").ToXmlDocument();
+                        var repeated = (doctype + "<r id=\"x\"><r id=\"x\"/></r>").ToXmlDocument();
+                        var dangling = (doctype + "<r id=\"x\"><r id=\"y\" ref=\"nowhere\"/></r>").ToXmlDocument();
+
+                        Assert.IsTrue(unique.IsValid);
+                        Assert.IsFalse(repeated.IsValid);
+                        Assert.IsFalse(dangling.IsValid);
                 }
 
                 [Test]
