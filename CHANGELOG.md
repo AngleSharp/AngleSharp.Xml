@@ -1,3 +1,9 @@
+# 1.3.0
+
+Released on Sunday, November 1 2026.
+
+- tbd.
+
 # 1.2.0
 
 Released on Friday, August 21 2026.
