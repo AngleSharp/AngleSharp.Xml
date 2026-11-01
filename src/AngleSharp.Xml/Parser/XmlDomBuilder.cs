@@ -30,6 +30,7 @@ namespace AngleSharp.Xml.Parser
         private readonly Dictionary<String, HashSet<String>> _internalAttributeDeclarations;
         private readonly Dictionary<String, Dictionary<String, InternalAttributeRule>> _internalAttributeRules;
         private readonly Dictionary<String, String> _internalGeneralEntities;
+        private readonly Dictionary<String, String> _internalGeneralEntityContents;
         private readonly Dictionary<String, String> _fallbackUnparsedEntities;
         private readonly HashSet<String> _fallbackNotations;
         private DtdContainer _dtd;
@@ -57,6 +58,7 @@ namespace AngleSharp.Xml.Parser
             _internalAttributeDeclarations = new Dictionary<String, HashSet<String>>(StringComparer.Ordinal);
             _internalAttributeRules = new Dictionary<String, Dictionary<String, InternalAttributeRule>>(StringComparer.Ordinal);
             _internalGeneralEntities = new Dictionary<String, String>(StringComparer.Ordinal);
+            _internalGeneralEntityContents = new Dictionary<String, String>(StringComparer.Ordinal);
             _fallbackUnparsedEntities = new Dictionary<String, String>(StringComparer.Ordinal);
             _fallbackNotations = new HashSet<String>(StringComparer.Ordinal);
             _currentMode = XmlTreeMode.Initial;
@@ -543,6 +545,7 @@ namespace AngleSharp.Xml.Parser
             _internalAttributeDeclarations.Clear();
             _internalAttributeRules.Clear();
             _internalGeneralEntities.Clear();
+            _internalGeneralEntityContents.Clear();
             _fallbackUnparsedEntities.Clear();
             _fallbackNotations.Clear();
 
@@ -698,6 +701,11 @@ namespace AngleSharp.Xml.Parser
             foreach (var entry in _internalGeneralEntities)
             {
                 _tokenizer.RegisterGeneralEntity(entry.Key, entry.Value);
+
+                // In element content an entity's CDATA sections contribute their content; unwrapping
+                // the declared text instead of the expanded text keeps escaped text such as
+                // "&lt;![CDATA[" as it is, and costs one pass per declaration
+                _internalGeneralEntityContents[entry.Key] = XmlTokenizer.UnwrapCDataSections(entry.Value);
             }
         }
 
@@ -1420,7 +1428,7 @@ namespace AngleSharp.Xml.Parser
                     // Every round can multiply the text by the references an entity holds, so each
                     // replacement counts against the expansion limit before the text grows;
                     // beyond it, with errors suppressed, the reference stays text
-                    if (_internalGeneralEntities.TryGetValue(name, out var replacement) &&
+                    if (_internalGeneralEntityContents.TryGetValue(name, out var replacement) &&
                         _tokenizer.ClaimEntityCharacters(replacement.Length, position))
                     {
                         changed = true;
@@ -1436,7 +1444,7 @@ namespace AngleSharp.Xml.Parser
                 }
             }
 
-            return Regex.Replace(value, "<!\\[CDATA\\[(.*?)\\]\\]>", "$1", RegexOptions.Singleline);
+            return value;
         }
 
         private void SetEncoding(String charSet)

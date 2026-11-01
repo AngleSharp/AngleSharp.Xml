@@ -6,6 +6,7 @@ namespace AngleSharp.Xml.Parser
     using AngleSharp.Xml.Parser.Tokens;
     using System;
     using System.Collections.Generic;
+    using System.Text;
 
     /// <summary>
     /// Performs the tokenization of the source code. Most of
@@ -17,6 +18,7 @@ namespace AngleSharp.Xml.Parser
 
         private readonly IEntityProvider _resolver;
         private readonly Dictionary<String, String> _generalEntities;
+        private readonly Dictionary<String, String> _generalEntityContents;
         private TextPosition _position;
         private Int64 _charactersFromEntities;
 
@@ -34,6 +36,7 @@ namespace AngleSharp.Xml.Parser
         {
             _resolver = resolver;
             _generalEntities = new Dictionary<String, String>(StringComparer.Ordinal);
+            _generalEntityContents = new Dictionary<String, String>(StringComparer.Ordinal);
         }
 
         #endregion
@@ -90,7 +93,49 @@ namespace AngleSharp.Xml.Parser
             if (!String.IsNullOrEmpty(name) && value != null)
             {
                 _generalEntities[name + ";"] = value;
+                _generalEntityContents[name + ";"] = UnwrapCDataSections(value);
             }
+        }
+
+        /// <summary>
+        /// Replaces each CDATA section in an entity's replacement text by its content, as the text
+        /// the entity contributes to element content. Equivalent to replacing
+        /// <c>&lt;!\[CDATA\[(.*?)\]\]&gt;</c> by its group, in a single pass.
+        /// </summary>
+        /// <param name="value">The replacement text.</param>
+        /// <returns>The text with the CDATA sections unwrapped.</returns>
+        internal static String UnwrapCDataSections(String value)
+        {
+            const String start = "<![CDATA[";
+            const String end = "]]>";
+            var sectionStart = value.IndexOf(start, StringComparison.Ordinal);
+
+            if (sectionStart < 0)
+            {
+                return value;
+            }
+
+            var result = new StringBuilder(value.Length);
+            var position = 0;
+
+            while (sectionStart >= 0)
+            {
+                var contentStart = sectionStart + start.Length;
+                var sectionEnd = value.IndexOf(end, contentStart, StringComparison.Ordinal);
+
+                // Without a terminator after it, no later start has one either
+                if (sectionEnd < 0)
+                {
+                    break;
+                }
+
+                result.Append(value, position, sectionStart - position);
+                result.Append(value, contentStart, sectionEnd - contentStart);
+                position = sectionEnd + end.Length;
+                sectionStart = value.IndexOf(start, position, StringComparison.Ordinal);
+            }
+
+            return result.Append(value, position, value.Length - position).ToString();
         }
 
         /// <summary>
@@ -161,7 +206,7 @@ namespace AngleSharp.Xml.Parser
 
                     case Symbols.Ampersand:
                         hasCharacterReference = true;
-                        StringBuffer.Append(CharacterReference());
+                        StringBuffer.Append(CharacterReference(true));
                         c = GetNext();
                         break;
 
@@ -240,8 +285,12 @@ namespace AngleSharp.Xml.Parser
         /// <summary>
         /// Called once an &amp; character is being seen.
         /// </summary>
+        /// <param name="inContent">
+        /// True in element content, where a declared entity's CDATA sections contribute their
+        /// content; false in attribute values, where the replacement text is used as it is.
+        /// </param>
         /// <returns>The entity token.</returns>
-        private String CharacterReference()
+        private String CharacterReference(Boolean inContent)
         {
             var c = GetNext();
             var start = StringBuffer.Length;
@@ -304,19 +353,24 @@ namespace AngleSharp.Xml.Parser
                     var content = StringBuffer.Append(c).ToString(start, ++length);
                     var entity = _resolver.GetSymbol(content);
 
-                    // A declared entity counts against the expansion limit; beyond it, with errors
-                    // suppressed, the reference stays text as an unknown one does
-                    if (String.IsNullOrEmpty(entity) &&
-                        _generalEntities.TryGetValue(content, out entity) &&
-                        !ClaimEntityCharacters(entity.Length, _position))
-                    {
-                        entity = null;
-                    }
-
                     if (!String.IsNullOrEmpty(entity))
                     {
                         StringBuffer.Remove(start, length);
                         return entity;
+                    }
+
+                    // A declared entity counts against the expansion limit; beyond it, with errors
+                    // suppressed, the reference stays text as an unknown one does. In content its
+                    // CDATA sections contribute their content, which may be empty.
+                    if (_generalEntities.TryGetValue(content, out var declared) && declared.Length > 0)
+                    {
+                        var replacement = inContent ? _generalEntityContents[content] : declared;
+
+                        if (ClaimEntityCharacters(replacement.Length, _position))
+                        {
+                            StringBuffer.Remove(start, length);
+                            return replacement;
+                        }
                     }
                 }
 
@@ -1444,7 +1498,7 @@ namespace AngleSharp.Xml.Parser
 
                 if (c == Symbols.Ampersand)
                 {
-                    StringBuffer.Append(CharacterReference());
+                    StringBuffer.Append(CharacterReference(false));
                 }
                 else
                 {
