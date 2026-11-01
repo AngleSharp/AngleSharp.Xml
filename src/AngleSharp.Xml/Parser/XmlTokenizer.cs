@@ -18,6 +18,7 @@ namespace AngleSharp.Xml.Parser
         private readonly IEntityProvider _resolver;
         private readonly Dictionary<String, String> _generalEntities;
         private TextPosition _position;
+        private Int64 _charactersFromEntities;
 
         #endregion
 
@@ -43,6 +44,16 @@ namespace AngleSharp.Xml.Parser
         /// Gets or sets if some errors should be suppressed.
         /// </summary>
         public Boolean IsSuppressingErrors
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum number of characters the expansion of declared entities may
+        /// produce in total; 0 means no limit.
+        /// </summary>
+        public Int64 MaxCharactersFromEntities
         {
             get;
             set;
@@ -80,6 +91,36 @@ namespace AngleSharp.Xml.Parser
             {
                 _generalEntities[name + ";"] = value;
             }
+        }
+
+        /// <summary>
+        /// Counts the characters one expansion of a declared entity produces against
+        /// <see cref="MaxCharactersFromEntities"/>, before the expansion is made.
+        /// </summary>
+        /// <param name="count">The number of characters the expansion produces.</param>
+        /// <param name="position">The position to report the error at.</param>
+        /// <returns>
+        /// True if the expansion stays within the limit; false if it would exceed it and errors
+        /// are suppressed, so the reference should be kept as text.
+        /// </returns>
+        public Boolean ClaimEntityCharacters(Int32 count, TextPosition position)
+        {
+            if (MaxCharactersFromEntities > 0)
+            {
+                if (count > MaxCharactersFromEntities - _charactersFromEntities)
+                {
+                    if (!IsSuppressingErrors)
+                    {
+                        throw XmlParseError.EntityExpansionLimitExceeded.At(position);
+                    }
+
+                    return false;
+                }
+
+                _charactersFromEntities += count;
+            }
+
+            return true;
         }
 
         #endregion
@@ -263,9 +304,13 @@ namespace AngleSharp.Xml.Parser
                     var content = StringBuffer.Append(c).ToString(start, ++length);
                     var entity = _resolver.GetSymbol(content);
 
-                    if (String.IsNullOrEmpty(entity))
+                    // A declared entity counts against the expansion limit; beyond it, with errors
+                    // suppressed, the reference stays text as an unknown one does
+                    if (String.IsNullOrEmpty(entity) &&
+                        _generalEntities.TryGetValue(content, out entity) &&
+                        !ClaimEntityCharacters(entity.Length, _position))
                     {
-                        _generalEntities.TryGetValue(content, out entity);
+                        entity = null;
                     }
 
                     if (!String.IsNullOrEmpty(entity))

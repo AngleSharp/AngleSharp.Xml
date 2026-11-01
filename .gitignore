@@ -199,3 +199,6 @@ pip-log.txt
 
 # Fallout build tool
 .fallout/temp
+
+# BenchmarkDotNet
+BenchmarkDotNet.Artifacts/

@@ -2,7 +2,14 @@
 
 Released on Sunday, November 1 2026.
 
-- tbd.
+- Updated to use a minimum of AngleSharp 1.9
+- Improved performance of `TextContent` on XML elements, which no longer allocates for an element holding a single text or CDATA section
+- Improved performance of DTD validation: content models are parsed once per document, and documents without ID declarations skip the identity walk
+- Fixed parsing deeply nested documents overflowing the stack and ending the process; the DTD and identity validation walks now use an explicit stack
+- Fixed `TextContent` of deeply nested XML elements overflowing the stack
+- Fixed unbounded expansion of nested entities ("billion laughs"), which let a small document exhaust memory; expansion now stops at `XmlParserOptions.MaxCharactersFromEntities`
+- Added trimming and Native AOT compatibility (`IsAotCompatible`) for the .NET 8 and .NET 10 targets
+- Added `XmlParserOptions.MaxCharactersFromEntities` (default 10,000,000, 0 for no limit), like `System.Xml`'s setting of the same name
 
 # 1.2.0
 
