@@ -78,6 +78,19 @@ var parser = new XmlParser(new XmlParserOptions
 });
 ```
 
+### MaximumDepth
+
+The deepest level at which the parser nests elements, counting the root element as level 1, like `HtmlParserOptions.MaximumDepth` in AngleSharp. It defaults to 512 (`XmlParserOptions.DefaultMaximumDepth`); zero or a negative value restores the default, and `Int32.MaxValue` lifts the limit. XML puts no limit on nesting, but code walking a tree that is thousands of levels deep recursively can overflow the call stack, which ends the process.
+
+An element beyond the limit throws an `XmlParseException`. With `IsSuppressingErrors`, it is attached at the limit instead, as a sibling of the deepest element, as the HTML parser does; text that follows a closed sibling then stays in its own element.
+
+```cs
+var parser = new XmlParser(new XmlParserOptions
+{
+	MaximumDepth = 2000,
+});
+```
+
 ### OnCreated
 
 Callback invoked when an element has been created, including source position.

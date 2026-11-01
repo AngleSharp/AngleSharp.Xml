@@ -157,7 +157,7 @@ Parser files:
 - `Parser/XmlParser.cs`: parser facade and document creation.
 - `Parser/XmlDomBuilder.cs`: tree construction, DOCTYPE handling, DTD validation, and entity expansion.
 - `Parser/XmlTokenizer.cs`: XML lexical tokenizer and character/entity reference handling.
-- `Parser/XmlParserOptions.cs`: suppress-errors, source-reference, and element-created callback options.
+- `Parser/XmlParserOptions.cs`: suppress-errors, source-reference, element-created callback, entity expansion limit, and nesting depth limit options.
 - `Parser/XmlParseError*.cs`: parse error definitions and exception mapping.
 - `Parser/Tokens/`: token models for declarations, DOCTYPE, tags, text, CDATA, comments, processing instructions, and EOF.
 
@@ -245,6 +245,7 @@ The parser also supports streams, fragments, and asynchronous overloads. `XmlPar
 - `IsKeepingSourceReferences`: keeps source token references on created elements for diagnostics/tooling.
 - `OnCreated`: callback receiving each created element and its `TextPosition`.
 - `MaxCharactersFromEntities`: cap on the characters produced by expanding DTD-declared entities (default `DefaultMaxCharactersFromEntities`, 10,000,000; 0 = no limit), counted in the tokenizer and in `XmlDomBuilder.ExpandInternalEntities` through `XmlTokenizer.ClaimEntityCharacters`. Any new entity expansion path must claim its characters there too.
+- `MaximumDepth`: the deepest level the parser nests elements at (root = level 1; default `DefaultMaximumDepth`, 512, as core's `HtmlParserOptions.MaximumDepth`; zero or negative restores the default, `Int32.MaxValue` lifts it). Beyond it the parser throws `MaximumDepthExceeded`; with `IsSuppressingErrors` the element is attached at the limit (`XmlDomBuilder.GetInsertionParent`). Tests and benchmarks that parse deeper documents must lift it, as `XmlDeepNesting` does.
 
 ### Validity
 

@@ -316,6 +316,32 @@ namespace AngleSharp.Xml.Parser
         }
 
         /// <summary>
+        /// Gets the node a new element is attached to, keeping it within
+        /// <see cref="XmlParserOptions.MaximumDepth"/>: an element beyond it throws, or with errors
+        /// suppressed goes to the open element one level above the limit, so it becomes a sibling
+        /// of the deepest element, as in the HTML parser. Each open element is then within the
+        /// limit, so its text and other content can go to it directly.
+        /// </summary>
+        /// <param name="position">The position to report the error at.</param>
+        private Node GetInsertionParent(TextPosition position)
+        {
+            var maximumDepth = _options.MaximumDepth;
+
+            if (_openElements.Count < maximumDepth)
+            {
+                return CurrentNode;
+            }
+
+            if (!_options.IsSuppressingErrors)
+            {
+                throw XmlParseError.MaximumDepthExceeded.At(position);
+            }
+
+            // The root element stays the parent at the least, as the HTML parser keeps it
+            return _openElements[Math.Max(maximumDepth - 1, 1) - 1];
+        }
+
+        /// <summary>
         /// In the body state - no doctypes and declarations allowed.
         /// </summary>
         /// <param name="token">The consumed token.</param>
@@ -327,7 +353,7 @@ namespace AngleSharp.Xml.Parser
                 {
                     var tagToken = (XmlTagToken)token;
                     var element = CreateElement(tagToken.Name, tagToken.IsSelfClosing);
-                    CurrentNode.AppendChild(element);
+                    GetInsertionParent(tagToken.Position).AppendChild(element);
 
                     var namespaceDeclarations = tagToken.Attributes
                         .Where(attr => attr.Key.StartsWith("xmlns"))
