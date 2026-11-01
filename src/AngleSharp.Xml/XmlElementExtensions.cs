@@ -178,50 +178,43 @@ namespace AngleSharp.Xml
             return null;
         }
 
-        private static IElement FindByXmlId(IElement element, String elementId)
+        private static IElement FindByXmlId(IElement root, String elementId) =>
+            FindFirst(root, element => element.GetXmlId() == elementId);
+
+        private static IElement FindByDtdId(IElement root, String elementId) =>
+            FindFirst(root, element => element.GetDtdId() == elementId);
+
+        /// <summary>
+        /// Finds the first element in document order, starting with the root, that matches. Walks
+        /// with an explicit stack, so deeply nested documents cannot overflow the call stack.
+        /// </summary>
+        private static IElement FindFirst(IElement root, Func<IElement, Boolean> matches)
         {
-            if (element == null)
+            if (root == null)
             {
                 return null;
             }
 
-            if (element.GetXmlId() == elementId)
-            {
-                return element;
-            }
+            var pending = new Stack<IElement>();
+            pending.Push(root);
 
-            foreach (var child in element.Children)
+            while (pending.Count > 0)
             {
-                var match = FindByXmlId(child, elementId);
+                var element = pending.Pop();
 
-                if (match != null)
+                if (matches(element))
                 {
-                    return match;
+                    return element;
                 }
-            }
 
-            return null;
-        }
+                var children = element.ChildNodes;
 
-        private static IElement FindByDtdId(IElement element, String elementId)
-        {
-            if (element == null)
-            {
-                return null;
-            }
-
-            if (element.GetDtdId() == elementId)
-            {
-                return element;
-            }
-
-            foreach (var child in element.Children)
-            {
-                var match = FindByDtdId(child, elementId);
-
-                if (match != null)
+                for (var i = children.Length - 1; i >= 0; i--)
                 {
-                    return match;
+                    if (children[i] is IElement child)
+                    {
+                        pending.Push(child);
+                    }
                 }
             }
 
@@ -325,67 +318,79 @@ namespace AngleSharp.Xml
             return slash < 0 ? referencePath : baseParts.Path.Substring(0, slash + 1) + referencePath;
         }
 
+        /// <summary>
+        /// The remove_dot_segments algorithm of RFC 3986, section 5.2.4. Reads the input through an
+        /// index and builds the output in place, so a path is processed in linear time; the
+        /// <c>xml:base</c> chain of a deep document resolves one such path per level.
+        /// </summary>
         private static String RemoveDotSegments(String value)
         {
             var input = value;
-            var output = String.Empty;
+            var position = 0;
+            var output = new StringBuilder(value.Length);
 
-            while (input.Length > 0)
+            while (position < input.Length)
             {
-                if (input.StartsWith("../", StringComparison.Ordinal))
+                var remaining = input.Length - position;
+
+                if (StartsWith(input, position, "../"))
                 {
-                    input = input.Substring(3);
+                    position += 3;
                 }
-                else if (input.StartsWith("./", StringComparison.Ordinal))
+                else if (StartsWith(input, position, "./"))
                 {
-                    input = input.Substring(2);
+                    position += 2;
                 }
-                else if (input.StartsWith("/./", StringComparison.Ordinal))
+                else if (StartsWith(input, position, "/./"))
                 {
-                    input = input.Substring(2);
+                    position += 2;
                 }
-                else if (input == "/.")
+                else if (remaining == 2 && StartsWith(input, position, "/."))
                 {
                     input = "/";
+                    position = 0;
                 }
-                else if (input.StartsWith("/../", StringComparison.Ordinal))
+                else if (StartsWith(input, position, "/../"))
                 {
-                    input = input.Substring(3);
-                    output = RemoveLastSegment(output);
+                    position += 3;
+                    RemoveLastSegment(output);
                 }
-                else if (input == "/..")
+                else if (remaining == 3 && StartsWith(input, position, "/.."))
                 {
                     input = "/";
-                    output = RemoveLastSegment(output);
+                    position = 0;
+                    RemoveLastSegment(output);
                 }
-                else if (input == "." || input == "..")
+                else if (remaining == 1 && input[position] == '.' || remaining == 2 && StartsWith(input, position, ".."))
                 {
-                    input = String.Empty;
+                    position = input.Length;
                 }
                 else
                 {
-                    var slash = input.IndexOf('/', input[0] == '/' ? 1 : 0);
-
-                    if (slash < 0)
-                    {
-                        output += input;
-                        input = String.Empty;
-                    }
-                    else
-                    {
-                        output += input.Substring(0, slash);
-                        input = input.Substring(slash);
-                    }
+                    var slash = input.IndexOf('/', input[position] == '/' ? position + 1 : position);
+                    var end = slash < 0 ? input.Length : slash;
+                    output.Append(input, position, end - position);
+                    position = end;
                 }
             }
 
-            return output;
+            return output.ToString();
         }
 
-        private static String RemoveLastSegment(String value)
+        private static Boolean StartsWith(String value, Int32 position, String prefix) =>
+            value.Length - position >= prefix.Length &&
+            String.CompareOrdinal(value, position, prefix, 0, prefix.Length) == 0;
+
+        private static void RemoveLastSegment(StringBuilder value)
         {
-            var slash = value.LastIndexOf('/');
-            return slash < 0 ? String.Empty : value.Substring(0, slash);
+            var slash = value.Length - 1;
+
+            while (slash >= 0 && value[slash] != '/')
+            {
+                slash--;
+            }
+
+            value.Length = Math.Max(slash, 0);
         }
 
         sealed class UriReference

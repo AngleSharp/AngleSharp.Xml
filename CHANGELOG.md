@@ -3,6 +3,9 @@
 Released on Sunday, November 1 2026.
 
 - tbd.
+- Improved performance of `xml:base` resolution (`GetXmlBaseUri`), which took cubic time in the nesting depth, and of canonicalization on deeply nested documents
+- Fixed canonicalization (`ToCanonicalXml`) of deeply nested documents overflowing the stack and ending the process
+- Fixed `GetElementByXmlId` and `GetElementByDtdId` overflowing the stack and ending the process on deeply nested documents
 
 # 1.2.0
 

@@ -49,7 +49,7 @@ namespace AngleSharp.Xml
             }
             else if (node is IElement element)
             {
-                WriteElement(element, new Dictionary<String, String>(StringComparer.Ordinal), true);
+                WriteSubtree(element, true);
             }
             else
             {
@@ -74,7 +74,7 @@ namespace AngleSharp.Xml
             {
                 if (child == root)
                 {
-                    WriteElement(root, new Dictionary<String, String>(StringComparer.Ordinal), false);
+                    WriteSubtree(root, false);
                     afterRoot = true;
                 }
                 else if (child is IProcessingInstruction processing)
@@ -103,10 +103,83 @@ namespace AngleSharp.Xml
             }
         }
 
-        private void WriteElement(IElement element, Dictionary<String, String> renderedNamespaces, Boolean isSubtreeRoot)
+        /// <summary>
+        /// Writes the element and its descendants in document order. Walks with an explicit stack,
+        /// so deeply nested documents cannot overflow the call stack, and hands each element's
+        /// in-scope namespaces down to its children instead of collecting them from the ancestors
+        /// again for every element.
+        /// </summary>
+        private void WriteSubtree(IElement root, Boolean isSubtreeRoot)
         {
-            var inScopeNamespaces = GetInScopeNamespaces(element);
-            ValidateNamespaces(inScopeNamespaces);
+            var rootNamespaces = GetInScopeNamespaces(root);
+            ValidateNamespaces(rootNamespaces);
+            var pending = new Stack<PendingNode>();
+            pending.Push(new PendingNode(root, new Dictionary<String, String>(StringComparer.Ordinal), rootNamespaces, null));
+
+            while (pending.Count > 0)
+            {
+                var current = pending.Pop();
+
+                if (current.EndTag != null)
+                {
+                    _output.Append("</").Append(current.EndTag).Append('>');
+                }
+                else if (current.Node is IElement element)
+                {
+                    var inScopeNamespaces = element == root ? rootNamespaces : AddNamespaceDeclarations(element, current.InScopeNamespaces);
+                    var qualifiedName = WriteStartTag(element, current.RenderedNamespaces, inScopeNamespaces, isSubtreeRoot && element == root, out var childNamespaces);
+                    var children = element.ChildNodes;
+                    pending.Push(new PendingNode(null, null, null, qualifiedName));
+
+                    for (var i = children.Length - 1; i >= 0; i--)
+                    {
+                        pending.Push(new PendingNode(children[i], childNamespaces, inScopeNamespaces, null));
+                    }
+                }
+                else
+                {
+                    WriteNode(current.Node);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the namespaces in scope on the element from those in scope on its parent: the same
+        /// dictionary when the element declares none, otherwise a validated copy with its declarations.
+        /// </summary>
+        private static Dictionary<String, String> AddNamespaceDeclarations(IElement element, Dictionary<String, String> parentNamespaces)
+        {
+            var result = parentNamespaces;
+
+            foreach (var attribute in element.Attributes)
+            {
+                if (IsNamespaceDeclaration(attribute))
+                {
+                    if (result == parentNamespaces)
+                    {
+                        result = new Dictionary<String, String>(parentNamespaces, StringComparer.Ordinal);
+                    }
+
+                    var prefix = attribute.Name == "xmlns" ? String.Empty : attribute.LocalName;
+                    result[prefix] = attribute.Value;
+                }
+            }
+
+            if (result != parentNamespaces)
+            {
+                ValidateNamespaces(result);
+            }
+
+            return result;
+        }
+
+        private String WriteStartTag(
+            IElement element,
+            Dictionary<String, String> renderedNamespaces,
+            Dictionary<String, String> inScopeNamespaces,
+            Boolean isSubtreeRoot,
+            out Dictionary<String, String> childNamespaces)
+        {
             var namespaces = GetNamespacesToRender(element, inScopeNamespaces, renderedNamespaces);
             var attributes = GetAttributes(element, isSubtreeRoot);
             var qualifiedName = GetQualifiedName(element.Prefix, element.LocalName);
@@ -131,28 +204,24 @@ namespace AngleSharp.Xml
             }
 
             _output.Append('>');
-            var childNamespaces = new Dictionary<String, String>(renderedNamespaces, StringComparer.Ordinal);
+            childNamespaces = renderedNamespaces;
 
             foreach (var declaration in namespaces)
             {
+                if (childNamespaces == renderedNamespaces)
+                {
+                    childNamespaces = new Dictionary<String, String>(renderedNamespaces, StringComparer.Ordinal);
+                }
+
                 childNamespaces[declaration.Key] = declaration.Value;
             }
 
-            foreach (var child in element.ChildNodes)
-            {
-                WriteNode(child, childNamespaces);
-            }
-
-            _output.Append("</").Append(qualifiedName).Append('>');
+            return qualifiedName;
         }
 
-        private void WriteNode(INode node, Dictionary<String, String> renderedNamespaces)
+        private void WriteNode(INode node)
         {
-            if (node is IElement element)
-            {
-                WriteElement(element, renderedNamespaces, false);
-            }
-            else if (node is IProcessingInstruction processing)
+            if (node is IProcessingInstruction processing)
             {
                 WriteProcessing(processing);
             }
@@ -521,6 +590,29 @@ namespace AngleSharp.Xml
 
         private static String GetQualifiedName(String prefix, String localName) =>
             String.IsNullOrEmpty(prefix) ? localName : prefix + ":" + localName;
+
+        /// <summary>
+        /// A node still to be written with the namespaces of its parent, or the end tag of an
+        /// element whose children have been written.
+        /// </summary>
+        readonly struct PendingNode
+        {
+            public PendingNode(INode node, Dictionary<String, String> renderedNamespaces, Dictionary<String, String> inScopeNamespaces, String endTag)
+            {
+                Node = node;
+                RenderedNamespaces = renderedNamespaces;
+                InScopeNamespaces = inScopeNamespaces;
+                EndTag = endTag;
+            }
+
+            public INode Node { get; }
+
+            public Dictionary<String, String> RenderedNamespaces { get; }
+
+            public Dictionary<String, String> InScopeNamespaces { get; }
+
+            public String EndTag { get; }
+        }
 
         sealed class CanonicalAttribute
         {

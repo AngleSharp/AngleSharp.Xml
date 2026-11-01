@@ -18,6 +18,44 @@ namespace AngleSharp.Xml.Tests.Dom
             Assert.AreEqual("https://example.com/a/assets/", item.GetXmlBaseUrl().Href);
         }
 
+        [TestCase("g", "http://a/b/c/g")]
+        [TestCase("./g", "http://a/b/c/g")]
+        [TestCase("g/", "http://a/b/c/g/")]
+        [TestCase("/g", "http://a/g")]
+        [TestCase("//g", "http://g")]
+        [TestCase("g?y", "http://a/b/c/g?y")]
+        [TestCase("g#s", "http://a/b/c/g#s")]
+        [TestCase(";x", "http://a/b/c/;x")]
+        [TestCase(".", "http://a/b/c/")]
+        [TestCase("./", "http://a/b/c/")]
+        [TestCase("..", "http://a/b/")]
+        [TestCase("../", "http://a/b/")]
+        [TestCase("../g", "http://a/b/g")]
+        [TestCase("../..", "http://a/")]
+        [TestCase("../../", "http://a/")]
+        [TestCase("../../g", "http://a/g")]
+        [TestCase("../../../g", "http://a/g")]
+        [TestCase("../../../../g", "http://a/g")]
+        [TestCase("/./g", "http://a/g")]
+        [TestCase("/../g", "http://a/g")]
+        [TestCase("g.", "http://a/b/c/g.")]
+        [TestCase(".g", "http://a/b/c/.g")]
+        [TestCase("g..", "http://a/b/c/g..")]
+        [TestCase("..g", "http://a/b/c/..g")]
+        [TestCase("./../g", "http://a/b/g")]
+        [TestCase("./g/.", "http://a/b/c/g/")]
+        [TestCase("g/./h", "http://a/b/c/g/h")]
+        [TestCase("g/../h", "http://a/b/c/h")]
+        [TestCase("g;x=1/./y", "http://a/b/c/g;x=1/y")]
+        [TestCase("g;x=1/../y", "http://a/b/c/y")]
+        public void XmlBaseResolvesReferencesAsInRfc3986(String reference, String expected)
+        {
+            // The reference resolution examples of RFC 3986, sections 5.4.1 and 5.4.2
+            var document = $"<root xml:base='http://a/b/c/d;p?q'><item xml:base='{reference}' /></root>".ToXmlDocument();
+
+            Assert.AreEqual(expected, document.QuerySelector("item").GetXmlBaseUri());
+        }
+
         [Test]
         public void XmlBasePreservesNonAsciiCharactersAndSameDocumentReferences()
         {
