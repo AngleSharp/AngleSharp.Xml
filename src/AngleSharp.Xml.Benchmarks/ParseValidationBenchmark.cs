@@ -20,7 +20,7 @@ namespace AngleSharp.Xml.Benchmarks
     [MemoryDiagnoser]
     public class ParseValidationBenchmark
     {
-        private readonly XmlParser parser = new XmlParser();
+        private readonly XmlParser parser = CreateParser();
         private String source;
         private String externalSubsetPath;
 
@@ -85,5 +85,17 @@ namespace AngleSharp.Xml.Benchmarks
 
         [Benchmark]
         public Boolean Parse() => parser.ParseDocument(source).IsValid;
+
+        /// <summary>
+        /// A parser without a depth limit, so the deep shapes measure their full depth. Builds
+        /// with XmlParserOptions.MaximumDepth stop at 512 levels by default; older builds have
+        /// no limit and lack the option, so it is set when present.
+        /// </summary>
+        private static XmlParser CreateParser()
+        {
+            Object options = new XmlParserOptions();
+            typeof(XmlParserOptions).GetProperty("MaximumDepth")?.SetValue(options, Int32.MaxValue);
+            return new XmlParser((XmlParserOptions)options);
+        }
     }
 }

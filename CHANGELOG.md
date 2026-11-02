@@ -11,6 +11,7 @@ Released on Sunday, November 1 2026.
 - Fixed unbounded expansion of nested entities ("billion laughs"), which let a small document exhaust memory; expansion now stops at `XmlParserOptions.MaxCharactersFromEntities`
 - Added trimming and Native AOT compatibility (`IsAotCompatible`) for the .NET 8 and .NET 10 targets
 - Added `XmlParserOptions.MaxCharactersFromEntities` (default 10,000,000, 0 for no limit), like `System.Xml`'s setting of the same name
+- Added `XmlParserOptions.MaximumDepth` (default 512), like `HtmlParserOptions.MaximumDepth`: deeper elements throw, or are attached at the limit when errors are suppressed
 
 # 1.2.0
 
