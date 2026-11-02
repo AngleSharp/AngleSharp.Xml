@@ -179,12 +179,13 @@ DTD files:
 - `Parser/XmlNotWfDocuments.cs`: not-well-formed XML fixtures.
 - `Parser/XmlNotWfExtDtd.cs`: not-well-formed external DTD fixtures.
 - `Parser/XmlDtdImplementedCases.cs`: focused, currently supported DTD validation cases.
-- `Parser/XmlExternalDtdSupport.cs`: local-file external DTD/entity regression tests.
+- `Parser/XmlExternalDtdSupport.cs`: external DTD loading through the resource loader, with `Mocks/MockRequester.cs`.
 - `Tokenizer/XmlDTD.cs`: DTD tokenizer/parser samples, including historical commented assertions.
 - `Tokenizer/XmlTokenization.cs`: XML tokenizer tests.
 - `Dom/`: DOM samples and tree behavior.
 - `Xhtml/`: XHTML formatter and preservation tests.
 - `Mocks/MockEntityProvider.cs`: entity provider test double.
+- `Mocks/MockRequester.cs`: requester serving fixed resources for `mock:` and `http://*.test`, registered as the only requester so tests never reach the network.
 - `TestExtensions.cs`: test parsing helpers, including permissive conformance fallback behavior.
 
 The tests use NUnit 3, NUnit3TestAdapter, Microsoft.NET.Test.Sdk, and target `net8.0`.
@@ -244,7 +245,7 @@ The parser also supports streams, fragments, and asynchronous overloads. `XmlPar
 - `IsSuppressingErrors`: recovery mode; the parser attempts to return a document instead of throwing. The resulting DOM may be incomplete or surprising. Do not treat this as strict validation.
 - `IsKeepingSourceReferences`: keeps source token references on created elements for diagnostics/tooling.
 - `OnCreated`: callback receiving each created element and its `TextPosition`.
-- `MaxCharactersFromEntities`: cap on the characters produced by expanding DTD-declared entities (default `DefaultMaxCharactersFromEntities`, 10,000,000; 0 = no limit), counted in the tokenizer and in `XmlDomBuilder.ExpandInternalEntities` through `XmlTokenizer.ClaimEntityCharacters`. Any new entity expansion path must claim its characters there too.
+- `MaxCharactersFromEntities`: cap on the characters produced by expanding DTD-declared entities (default `DefaultMaxCharactersFromEntities`, 10,000,000; 0 = no limit), counted in `XmlDomBuilder.ResolveEntityReferences` through `XmlTokenizer.ClaimEntityCharacters`. Any new entity expansion path must claim its characters there too.
 - `MaximumDepth`: the deepest level the parser nests elements at (root = level 1; default `DefaultMaximumDepth`, 512, as core's `HtmlParserOptions.MaximumDepth`; zero or negative restores the default, `Int32.MaxValue` lifts it). Beyond it the parser throws `MaximumDepthExceeded`; with `IsSuppressingErrors` the element is attached at the limit (`XmlDomBuilder.GetInsertionParent`). Tests and benchmarks that parse deeper documents must lift it, as `XmlDeepNesting` does.
 
 ### Validity
@@ -262,12 +263,12 @@ Currently supported or partially supported behavior includes:
 - Common element models such as `ANY`, `EMPTY`, mixed `(#PCDATA|name|...)*`, and simple ordered sequences.
 - Internal attribute checks, including undeclared attributes, `#REQUIRED`, and `#FIXED` cases.
 - Internal general entity replacement.
-- Local file-based external `SYSTEM` subset loading.
-- Local external general entity replacement in supported cases.
+- External `SYSTEM` subset loading through the browsing context's `IResourceLoader` (only with resource loading enabled; the requesters decide the protocols). `XmlDomBuilder.LoadExternalSubsetAsync` starts at the DOCTYPE and the parse goes on; `CompleteAsync` waits for it at the end (the synchronous parse blocks there), builds the DTD, and resolves the entity references the tokenizer kept as written (`XmlEntityReference`, offsets per text node or attribute) before validating. Resolve by recorded offset, never by searching the text: escaped `&amp;name;` reads as `&name;`. Never read files or URLs a document names directly.
+- Replacement of entities declared in a loaded external subset.
 
 Known limitations:
 
-- No HTTP/network retrieval for external DTDs/entities.
+- External entities are not loaded; the external subset only through the resource loader.
 - No complete PUBLIC identifier or XML catalog resolution workflow.
 - Parameter entities and external-subset semantics are not full XML conformance.
 - Complex content-model grammar and all quantifier combinations are not guaranteed by fallback validation paths.
@@ -371,7 +372,7 @@ dotnet run -c Release --project src/AngleSharp.Xml.Benchmarks -f net8.0 -- --fil
 - XML entity names passed to the built-in provider include the trailing semicolon (`amp;`, not `amp`).
 - `IsSuppressingErrors` changes control flow and can produce a non-null but structurally unreliable document.
 - A passing broad conformance helper test does not prove strict XML conformance.
-- External DTD support is local-file-oriented and must not be described as network/catalog-aware.
+- External DTD support depends on the configured resource loader and requesters; it has no PUBLIC identifier or catalog resolution.
 - DTD `IsValid` is not XSD validation and does not replace domain-specific validation.
 - The docs index and DTD support matrix should be updated when DTD behavior changes.
 

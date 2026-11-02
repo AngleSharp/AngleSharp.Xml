@@ -4,7 +4,6 @@ namespace AngleSharp.Xml.Dtd.Parser
     using AngleSharp.Text;
     using System;
     using System.Diagnostics;
-    using System.IO;
 
     /// <summary>
     /// The parser for the Document Type Definition.
@@ -18,7 +17,6 @@ namespace AngleSharp.Xml.Dtd.Parser
         private readonly DtdTokenizer _tokenizer;
         private readonly DtdContainer _result;
         private readonly TextSource _src;
-
         #endregion
 
         #region ctor
@@ -44,7 +42,6 @@ namespace AngleSharp.Xml.Dtd.Parser
             _result = container;
             _src = source;
         }
-
         #endregion
 
         #region Properties
@@ -62,7 +59,6 @@ namespace AngleSharp.Xml.Dtd.Parser
         /// Gets the DtdContainer, i.e. the result of the computation.
         /// </summary>
         public DtdContainer Result => _result;
-
         #endregion
 
         #region Methods
@@ -83,7 +79,6 @@ namespace AngleSharp.Xml.Dtd.Parser
 
             _result.Text = _tokenizer.Content;
         }
-
         #endregion
 
         #region Consuming
@@ -141,7 +136,6 @@ namespace AngleSharp.Xml.Dtd.Parser
                     break;
             }
         }
-
         #endregion
 
         #region Helpers
@@ -170,9 +164,12 @@ namespace AngleSharp.Xml.Dtd.Parser
         /// <param name="token">The entity token to add.</param>
         void AddEntity(DtdEntityToken token)
         {
+            // An external entity's replacement text is not loaded: the document names the file or
+            // URL, and reading it here would bypass the resource loader that decides what may be
+            // fetched (only the external DTD subset is fetched, through it)
             if (token.IsExtern)
             {
-                token.Value = GetText(token.SystemIdentifier);
+                token.Value = String.Empty;
             }
 
             if (token.IsParameter)
@@ -183,117 +180,6 @@ namespace AngleSharp.Xml.Dtd.Parser
             {
                 _result.AddEntity(token.ToElement());
             }
-        }
-
-        /// <summary>
-        /// Gets the text included in the external source.
-        /// </summary>
-        /// <param name="url">The URL of the external source.</param>
-        /// <returns>The contained string.</returns>
-        String GetText(String url)
-        {
-            if (String.IsNullOrWhiteSpace(url))
-            {
-                return String.Empty;
-            }
-
-            if (TryResolvePath(url, out var path))
-            {
-                try
-                {
-                    return File.ReadAllText(path);
-                }
-                catch
-                {
-                    return String.Empty;
-                }
-            }
-
-            //if (Configuration.HasHttpRequester)
-            //{
-            //    if (!Location.IsAbsolute(url))
-            //        url = Location.MakeAbsolute(_result.Url, url);
-
-            //    var http = Configuration.GetHttpRequester();
-            //    var response = http.Request(new DefaultHttpRequest { Address = new Uri(url) });
-            //    var stream = new SourceManager(response.Content);
-            //    var tok = new DtdPlainTokenizer(_result, stream);
-            //    var token = tok.Get();
-
-            //    if (token.Type == DtdTokenType.TextDecl)
-            //    {
-            //        var pi = (DtdDeclToken)token;
-
-            //        if (!String.IsNullOrEmpty(pi.Encoding))
-            //        {
-            //            SetEncoding(stream, pi.Encoding);
-            //        }
-
-            //        token = tok.Get();
-            //    }
-
-            //    if (token.Type == DtdTokenType.Comment)
-            //    {
-            //        return ((DtdCommentToken)token).Data;
-            //    }
-            //}
-
-            return String.Empty;
-        }
-
-        Boolean TryResolvePath(String url, out String fullPath)
-        {
-            fullPath = String.Empty;
-
-            try
-            {
-                if (Path.IsPathRooted(url) && File.Exists(url))
-                {
-                    fullPath = Path.GetFullPath(url);
-                    return true;
-                }
-
-                if (Uri.TryCreate(url, UriKind.Absolute, out var absolute) && absolute.IsFile)
-                {
-                    var path = absolute.LocalPath;
-
-                    if (File.Exists(path))
-                    {
-                        fullPath = Path.GetFullPath(path);
-                        return true;
-                    }
-                }
-
-                if (!String.IsNullOrWhiteSpace(_result.Url))
-                {
-                    var basePath = _result.Url;
-                    var baseDirectory = File.Exists(basePath) ? Path.GetDirectoryName(basePath) : basePath;
-
-                    if (!String.IsNullOrEmpty(baseDirectory))
-                    {
-                        var combined = Path.Combine(baseDirectory, url);
-
-                        if (File.Exists(combined))
-                        {
-                            fullPath = Path.GetFullPath(combined);
-                            return true;
-                        }
-                    }
-                }
-
-                var fallback = Path.Combine(Environment.CurrentDirectory, url);
-
-                if (File.Exists(fallback))
-                {
-                    fullPath = Path.GetFullPath(fallback);
-                    return true;
-                }
-            }
-            catch
-            {
-            }
-
-            return false;
         }
 
         #endregion

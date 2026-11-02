@@ -42,7 +42,7 @@ Parse with XmlParser and inspect `document.IsValid`. This gives practical DTD va
 
 ## Are external DTD files automatically resolved?
 
-Partially. Local file-based SYSTEM identifiers are supported. Network retrieval and PUBLIC identifier/catalog resolution are not implemented as a full conformance feature. If you depend on those external subset/entity workflows for strict compliance, add an external validation layer in your pipeline.
+Only with resource loading enabled. The external subset is fetched through the browsing context's resource loader and its requesters, so it loads from the protocols they serve (HTTP with AngleSharp's default requester, local files with AngleSharp.Io's file requester); see [Loading the external subset](05-DTD-Validation.md#loading-the-external-subset). External entities are not loaded. PUBLIC identifier/catalog resolution is not implemented as a full conformance feature. If you depend on those external subset/entity workflows for strict compliance, add an external validation layer in your pipeline.
 
 ## Is XPath included?
 

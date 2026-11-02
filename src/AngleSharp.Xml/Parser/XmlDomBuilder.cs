@@ -3,6 +3,7 @@ namespace AngleSharp.Xml.Parser
     using AngleSharp.Xml.Dtd.Declaration;
     using AngleSharp.Xml.Dtd.Parser;
     using AngleSharp.Dom;
+    using AngleSharp.Io;
     using AngleSharp.Text;
     using AngleSharp.Xml.Dom;
     using AngleSharp.Xml.Parser.Tokens;
@@ -10,6 +11,8 @@ namespace AngleSharp.Xml.Parser
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Net;
+    using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -35,6 +38,10 @@ namespace AngleSharp.Xml.Parser
         private readonly HashSet<String> _fallbackNotations;
         private DtdContainer _dtd;
         private String _doctypeName;
+        private XmlDoctypeToken _doctypeToken;
+        private Task<ExternalSubset> _externalSubsetLoading;
+        private CancellationToken _cancel;
+        private readonly List<PendingEntityReferences> _pendingReferences = new List<PendingEntityReferences>();
 
         private XmlParserOptions _options;
         private XmlTreeMode _currentMode;
@@ -103,6 +110,7 @@ namespace AngleSharp.Xml.Parser
             var source = _document.Source;
             var token = default(XmlToken);
             _options = options;
+            _cancel = cancelToken;
             _tokenizer.IsSuppressingErrors = options.IsSuppressingErrors;
             _tokenizer.MaxCharactersFromEntities = options.MaxCharactersFromEntities;
 
@@ -118,7 +126,7 @@ namespace AngleSharp.Xml.Parser
             }
             while (token.Type != XmlTokenType.EndOfFile);
 
-            ApplyValidation();
+            await CompleteAsync().ConfigureAwait(false);
 
             return _document;
         }
@@ -131,6 +139,7 @@ namespace AngleSharp.Xml.Parser
         {
             var token = default(XmlToken);
             _options = options;
+            _cancel = CancellationToken.None;
             _tokenizer.IsSuppressingErrors = options.IsSuppressingErrors;
             _tokenizer.MaxCharactersFromEntities = options.MaxCharactersFromEntities;
 
@@ -141,9 +150,31 @@ namespace AngleSharp.Xml.Parser
             }
             while (token.Type != XmlTokenType.EndOfFile);
 
-            ApplyValidation();
+            // The same completion as the asynchronous path, waited for: a caller that parses
+            // synchronously with requesters configured must not run them on a
+            // synchronization context this thread is blocking
+            CompleteAsync().GetAwaiter().GetResult();
 
             return _document;
+        }
+
+        /// <summary>
+        /// Completes the parse once the tree is built, in the same way on both paths: waits for
+        /// the external subset the DOCTYPE started loading, builds the DTD from it and the
+        /// internal subset, resolves the entity references the text kept, and validates.
+        /// </summary>
+        private async Task CompleteAsync()
+        {
+            if (_doctypeToken != null)
+            {
+                var externalSubset = _externalSubsetLoading != null ?
+                    await _externalSubsetLoading.ConfigureAwait(false) :
+                    null;
+                ParseDoctypeSubset(_doctypeToken, externalSubset);
+            }
+
+            ResolveEntityReferences();
+            ApplyValidation();
         }
 
         /// <summary>
@@ -245,7 +276,10 @@ namespace AngleSharp.Xml.Parser
                     _document.AppendChild(doctypeNode);
                     _doctypeName = doctypeToken.Name;
 
-                    ParseDoctypeSubset(doctypeToken);
+                    // The DTD is only needed once the tree is built, so the external subset
+                    // loads while the parse goes on
+                    _doctypeToken = doctypeToken;
+                    _externalSubsetLoading = LoadExternalSubsetAsync(doctypeToken, _cancel);
 
                     _currentMode = XmlTreeMode.Misc;
 
@@ -355,31 +389,38 @@ namespace AngleSharp.Xml.Parser
                     var element = CreateElement(tagToken.Name, tagToken.IsSelfClosing);
                     GetInsertionParent(tagToken.Position).AppendChild(element);
 
-                    var namespaceDeclarations = tagToken.Attributes
-                        .Where(attr => attr.Key.StartsWith("xmlns"))
-                        .ToList();
-                    var otherAttributes = tagToken.Attributes
-                        .Where(attr => !attr.Key.StartsWith("xmlns"))
-                        .ToList();
+                    var attributes = tagToken.Attributes;
 
-                    for (var i = 0; i < namespaceDeclarations.Count; i++)
+                    // The namespace declarations go first, then the other attributes
+                    for (var pass = 0; pass < 2; pass++)
                     {
-                        var attr = namespaceDeclarations[i];
-                        var item = CreateAttribute(attr.Key, attr.Value.Trim());
-                        element.AddAttribute(item);
-                    }
-
-                    for (var i = 0; i < otherAttributes.Count; i++)
-                    {
-                        var attr = otherAttributes[i];
-                        var item = CreateAttribute(attr.Key, attr.Value.Trim());
-
-                        if (item.NamespaceUri == NamespaceNames.XmlUri && item.LocalName == "id")
+                        for (var i = 0; i < attributes.Count; i++)
                         {
-                            item.Value = XmlElementExtensions.NormalizeXmlId(item.Value);
-                        }
+                            var attr = attributes[i];
 
-                        element.AddAttribute(item);
+                            if (attr.Key.StartsWith("xmlns") != (pass == 0))
+                            {
+                                continue;
+                            }
+
+                            var item = CreateAttribute(attr.Key, attr.Value.Trim());
+                            var references = tagToken.GetAttributeReferences(i);
+                            var isXmlId = pass == 1 && item.NamespaceUri == NamespaceNames.XmlUri && item.LocalName == "id";
+
+                            // An xml:id is normalized once its entities are resolved
+                            if (isXmlId && references == null)
+                            {
+                                item.Value = XmlElementExtensions.NormalizeXmlId(item.Value);
+                            }
+
+                            element.AddAttribute(item);
+
+                            if (references != null)
+                            {
+                                var trimmed = attr.Value.Length - attr.Value.TrimStart().Length;
+                                _pendingReferences.Add(new PendingEntityReferences(item, isXmlId, references, -trimmed));
+                            }
+                        }
                     }
 
                     if (!tagToken.IsSelfClosing)
@@ -450,7 +491,26 @@ namespace AngleSharp.Xml.Parser
                 case XmlTokenType.Character:
                 {
                     var charToken = (XmlCharacterToken)token;
-                    CurrentNode.AppendText(ExpandInternalEntities(charToken.Data, charToken.Position));
+                    var parent = CurrentNode;
+                    parent.AppendText(charToken.Data);
+
+                    // The text may have joined the text node before it, so the references are
+                    // kept with their offsets in the node
+                    if (charToken.EntityReferences != null && ((INode)parent).LastChild is IText text)
+                    {
+                        var shift = text.Length - charToken.Data.Length;
+                        var last = _pendingReferences.Count > 0 ? _pendingReferences[_pendingReferences.Count - 1] : null;
+
+                        if (last != null && last.Text == text)
+                        {
+                            last.Add(charToken.EntityReferences, shift);
+                        }
+                        else
+                        {
+                            _pendingReferences.Add(new PendingEntityReferences(text, charToken.EntityReferences, shift));
+                        }
+                    }
+
                     break;
                 }
                 case XmlTokenType.EndOfFile:
@@ -562,7 +622,7 @@ namespace AngleSharp.Xml.Parser
             return t >= 1.0 && t < 2.0;
         }
 
-        private void ParseDoctypeSubset(XmlDoctypeToken doctypeToken)
+        private void ParseDoctypeSubset(XmlDoctypeToken doctypeToken, ExternalSubset loadedSubset)
         {
             var subset = doctypeToken.InternalSubset ?? String.Empty;
 
@@ -575,7 +635,9 @@ namespace AngleSharp.Xml.Parser
             _fallbackUnparsedEntities.Clear();
             _fallbackNotations.Clear();
 
-            var hasExternalSubset = TryLoadExternalSubset(doctypeToken.SystemIdentifier, out var externalSubset, out var externalSubsetPath);
+            var externalSubset = loadedSubset?.Content;
+            var externalSubsetPath = loadedSubset?.Url ?? String.Empty;
+            var hasExternalSubset = externalSubset != null;
 
             if (hasExternalSubset || subset.Length > 0)
             {
@@ -632,7 +694,7 @@ namespace AngleSharp.Xml.Parser
 
             ParseSubsetFallbackDeclarations(subset);
 
-            RegisterTokenizerEntities();
+            UnwrapEntityContents();
         }
 
         private void ParseSubsetFallbackDeclarations(String subset)
@@ -722,12 +784,10 @@ namespace AngleSharp.Xml.Parser
             }
         }
 
-        private void RegisterTokenizerEntities()
+        private void UnwrapEntityContents()
         {
             foreach (var entry in _internalGeneralEntities)
             {
-                _tokenizer.RegisterGeneralEntity(entry.Key, entry.Value);
-
                 // In element content an entity's CDATA sections contribute their content; unwrapping
                 // the declared text instead of the expanded text keeps escaped text such as
                 // "&lt;![CDATA[" as it is, and costs one pass per declaration
@@ -735,71 +795,62 @@ namespace AngleSharp.Xml.Parser
             }
         }
 
-        private Boolean TryLoadExternalSubset(String systemIdentifier, out String content, out String fullPath)
+        /// <summary>
+        /// Loads the external subset a DOCTYPE token names, while the parse goes on. The document
+        /// names the resource, so it is fetched like any other resource of the document: through
+        /// the browsing context's resource loader, which only exists when resource loading is
+        /// enabled, and its requesters, which decide which protocols (http:, file:, ...) are
+        /// served. Without them nothing is loaded. The parse waits for it when it completes.
+        /// </summary>
+        /// <param name="doctypeToken">The consumed DOCTYPE token.</param>
+        /// <param name="cancel">The token to cancel the download with.</param>
+        /// <returns>The loaded subset, or null if there is none.</returns>
+        private async Task<ExternalSubset> LoadExternalSubsetAsync(XmlDoctypeToken doctypeToken, CancellationToken cancel)
         {
-            content = String.Empty;
-            fullPath = String.Empty;
+            var systemIdentifier = doctypeToken.SystemIdentifier;
+            var loader = _document.Context?.GetService<IResourceLoader>();
 
-            if (String.IsNullOrWhiteSpace(systemIdentifier))
+            if (loader == null || String.IsNullOrWhiteSpace(systemIdentifier))
             {
-                return false;
+                return null;
             }
 
-            if (!TryResolveSystemPath(systemIdentifier, out fullPath))
+            var baseUrl = _document.BaseUrl;
+            var target = baseUrl != null && !baseUrl.IsInvalid ? new Url(baseUrl, systemIdentifier) : new Url(systemIdentifier);
+
+            if (target.IsInvalid)
             {
-                return false;
+                return null;
             }
 
-            try
-            {
-                content = File.ReadAllText(fullPath);
-                return true;
-            }
-            catch
-            {
-                content = String.Empty;
-                fullPath = String.Empty;
-                return false;
-            }
-        }
+            // A resource request names the element it is made for, for its origin and referrer;
+            // the DOCTYPE comes before any element, so a detached one of the document stands in
+            var request = new ResourceRequest(new XmlElement(_document, doctypeToken.Name ?? "doctype"), target);
+            var download = loader.FetchAsync(request);
 
-        private Boolean TryResolveSystemPath(String systemIdentifier, out String fullPath)
-        {
-            fullPath = String.Empty;
-
-            try
+            using (cancel.Register(download.Cancel))
             {
-                if (Path.IsPathRooted(systemIdentifier) && File.Exists(systemIdentifier))
+                try
                 {
-                    fullPath = Path.GetFullPath(systemIdentifier);
-                    return true;
-                }
-
-                if (Uri.TryCreate(systemIdentifier, UriKind.Absolute, out var uri) && uri.IsFile)
-                {
-                    var localPath = uri.LocalPath;
-
-                    if (File.Exists(localPath))
+                    using (var response = await download.Task.ConfigureAwait(false))
                     {
-                        fullPath = Path.GetFullPath(localPath);
-                        return true;
+                        if (response != null && response.StatusCode == HttpStatusCode.OK)
+                        {
+                            using (var reader = new StreamReader(response.Content, Encoding.UTF8, true))
+                            {
+                                var content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                                return new ExternalSubset(content, target.Href);
+                            }
+                        }
                     }
                 }
-
-                var baseDirectory = Environment.CurrentDirectory;
-                var combinedPath = Path.Combine(baseDirectory, systemIdentifier);
-
-                if (File.Exists(combinedPath))
+                catch (Exception) when (!cancel.IsCancellationRequested)
                 {
-                    fullPath = Path.GetFullPath(combinedPath);
-                    return true;
+                    // An external subset that cannot be loaded is ignored, as an unreadable file was
                 }
             }
-            catch
-            {
-            }
 
-            return false;
+            return null;
         }
 
         private void ApplyValidation()
@@ -1434,13 +1485,72 @@ namespace AngleSharp.Xml.Parser
             return value;
         }
 
-        private String ExpandInternalEntities(String data, TextPosition position)
+        /// <summary>
+        /// Replaces the entity references the text and attribute values kept while parsing, now
+        /// that the whole DTD is known. In element content an entity contributes its text with the
+        /// CDATA sections unwrapped and its nested references expanded; in an attribute value its
+        /// replacement text as declared. An undeclared entity throws, or with errors suppressed
+        /// stays as written, as one beyond the expansion limit does.
+        /// </summary>
+        private void ResolveEntityReferences()
         {
-            if (String.IsNullOrEmpty(data) || _internalGeneralEntities.Count == 0)
+            foreach (var pending in _pendingReferences)
             {
-                return data;
+                var isContent = pending.Text != null;
+                var value = isContent ? pending.Text.Data : pending.Attribute.Value;
+                var result = new StringBuilder(value.Length);
+                var position = 0;
+
+                foreach (var entry in pending.References)
+                {
+                    var offset = entry.Key;
+                    result.Append(value, position, offset - position);
+                    result.Append(ResolveEntityReference(entry.Value, isContent));
+                    position = offset + entry.Value.Length;
+                }
+
+                result.Append(value, position, value.Length - position);
+
+                if (isContent)
+                {
+                    pending.Text.Data = result.ToString();
+                }
+                else
+                {
+                    // As the parser trimmed and normalized the value before, now with the entities
+                    var resolved = result.ToString().Trim();
+                    pending.Attribute.Value = pending.IsXmlId ? XmlElementExtensions.NormalizeXmlId(resolved) : resolved;
+                }
             }
 
+            _pendingReferences.Clear();
+        }
+
+        private String ResolveEntityReference(XmlEntityReference reference, Boolean isContent)
+        {
+            var name = reference.Name;
+
+            if (_internalGeneralEntities.TryGetValue(name, out var declared))
+            {
+                // Each replacement counts against the expansion limit before the text grows;
+                // beyond it, with errors suppressed, the reference stays as written
+                var replacement = isContent ? _internalGeneralEntityContents[name] : declared;
+
+                if (_tokenizer.ClaimEntityCharacters(replacement.Length, reference.Position))
+                {
+                    return isContent ? ExpandNestedEntities(replacement, reference.Position) : replacement;
+                }
+            }
+            else if (!_options.IsSuppressingErrors)
+            {
+                throw XmlParseError.CharacterReferenceInvalidCode.At(reference.Position);
+            }
+
+            return "&" + name + ";";
+        }
+
+        private String ExpandNestedEntities(String data, TextPosition position)
+        {
             var value = data;
 
             for (var i = 0; i < 5; i++)
@@ -1471,6 +1581,62 @@ namespace AngleSharp.Xml.Parser
             }
 
             return value;
+        }
+
+        /// <summary>
+        /// An external subset as it was loaded, with the URL it came from.
+        /// </summary>
+        private sealed class ExternalSubset
+        {
+            public ExternalSubset(String content, String url)
+            {
+                Content = content;
+                Url = url;
+            }
+
+            public String Content { get; }
+
+            public String Url { get; }
+        }
+
+        /// <summary>
+        /// The entity references a text node or attribute value kept while parsing, by their
+        /// offset in it, in document order.
+        /// </summary>
+        private sealed class PendingEntityReferences
+        {
+            public PendingEntityReferences(IText text, List<XmlEntityReference> references, Int32 shift)
+            {
+                Text = text;
+                Add(references, shift);
+            }
+
+            public PendingEntityReferences(Attr attribute, Boolean isXmlId, List<XmlEntityReference> references, Int32 shift)
+            {
+                Attribute = attribute;
+                IsXmlId = isXmlId;
+                Add(references, shift);
+            }
+
+            public IText Text { get; }
+
+            public Attr Attribute { get; }
+
+            public Boolean IsXmlId { get; }
+
+            public List<KeyValuePair<Int32, XmlEntityReference>> References { get; } = new List<KeyValuePair<Int32, XmlEntityReference>>();
+
+            /// <summary>
+            /// Adds the references of a token's text, whose offsets in the node are shifted by
+            /// the text the node held before it.
+            /// </summary>
+            public void Add(List<XmlEntityReference> references, Int32 shift)
+            {
+                foreach (var reference in references)
+                {
+                    References.Add(new KeyValuePair<Int32, XmlEntityReference>(reference.Offset + shift, reference));
+                }
+            }
         }
 
         private void SetEncoding(String charSet)

@@ -17,8 +17,7 @@ namespace AngleSharp.Xml.Parser
         #region Fields
 
         private readonly IEntityProvider _resolver;
-        private readonly Dictionary<String, String> _generalEntities;
-        private readonly Dictionary<String, String> _generalEntityContents;
+        private List<XmlEntityReference> _entityReferences;
         private TextPosition _position;
         private Int64 _charactersFromEntities;
 
@@ -35,8 +34,7 @@ namespace AngleSharp.Xml.Parser
             : base(source)
         {
             _resolver = resolver;
-            _generalEntities = new Dictionary<String, String>(StringComparer.Ordinal);
-            _generalEntityContents = new Dictionary<String, String>(StringComparer.Ordinal);
+
         }
 
         #endregion
@@ -83,19 +81,6 @@ namespace AngleSharp.Xml.Parser
             return NewEof();
         }
 
-        /// <summary>
-        /// Registers a custom general entity declaration for the current parse run.
-        /// </summary>
-        /// <param name="name">The entity name without trailing semicolon.</param>
-        /// <param name="value">The replacement text.</param>
-        public void RegisterGeneralEntity(String name, String value)
-        {
-            if (!String.IsNullOrEmpty(name) && value != null)
-            {
-                _generalEntities[name + ";"] = value;
-                _generalEntityContents[name + ";"] = UnwrapCDataSections(value);
-            }
-        }
 
         /// <summary>
         /// Replaces each CDATA section in an entity's replacement text by its content, as the text
@@ -194,6 +179,7 @@ namespace AngleSharp.Xml.Parser
         private XmlToken DataText(Char c)
         {
             var hasCharacterReference = false;
+            _entityReferences = null;
 
             while (true)
             {
@@ -206,7 +192,7 @@ namespace AngleSharp.Xml.Parser
 
                     case Symbols.Ampersand:
                         hasCharacterReference = true;
-                        StringBuffer.Append(CharacterReference(true));
+                        StringBuffer.Append(CharacterReference());
                         c = GetNext();
                         break;
 
@@ -285,12 +271,8 @@ namespace AngleSharp.Xml.Parser
         /// <summary>
         /// Called once an &amp; character is being seen.
         /// </summary>
-        /// <param name="inContent">
-        /// True in element content, where a declared entity's CDATA sections contribute their
-        /// content; false in attribute values, where the replacement text is used as it is.
-        /// </param>
         /// <returns>The entity token.</returns>
-        private String CharacterReference(Boolean inContent)
+        private String CharacterReference()
         {
             var c = GetNext();
             var start = StringBuffer.Length;
@@ -359,19 +341,13 @@ namespace AngleSharp.Xml.Parser
                         return entity;
                     }
 
-                    // A declared entity counts against the expansion limit; beyond it, with errors
-                    // suppressed, the reference stays text as an unknown one does. In content its
-                    // CDATA sections contribute their content, which may be empty.
-                    if (_generalEntities.TryGetValue(content, out var declared) && declared.Length > 0)
-                    {
-                        var replacement = inContent ? _generalEntityContents[content] : declared;
-
-                        if (ClaimEntityCharacters(replacement.Length, _position))
-                        {
-                            StringBuffer.Remove(start, length);
-                            return replacement;
-                        }
-                    }
+                    // Any other entity is declared in the DTD or unknown, which is only decided
+                    // at the end of the parse, once the whole DTD is there: the reference stays in
+                    // the text as written, and its offset is kept for the builder to resolve it
+                    StringBuffer.Insert(start, Symbols.Ampersand);
+                    _entityReferences = _entityReferences ?? new List<XmlEntityReference>();
+                    _entityReferences.Add(new XmlEntityReference(start, content.Substring(0, content.Length - 1), _position));
+                    return String.Empty;
                 }
 
                 if (!IsSuppressingErrors)
@@ -1476,6 +1452,7 @@ namespace AngleSharp.Xml.Parser
         private XmlToken AttributeValue(XmlTagToken tag, Char quote)
         {
             var c = GetNext();
+            _entityReferences = null;
 
             while (c != quote)
             {
@@ -1498,7 +1475,7 @@ namespace AngleSharp.Xml.Parser
 
                 if (c == Symbols.Ampersand)
                 {
-                    StringBuffer.Append(CharacterReference(false));
+                    StringBuffer.Append(CharacterReference());
                 }
                 else
                 {
@@ -1508,7 +1485,7 @@ namespace AngleSharp.Xml.Parser
                 c = GetNext();
             }
 
-            tag.SetAttributeValue(FlushBuffer());
+            tag.SetAttributeValue(FlushBuffer(), TakeEntityReferences());
             return AttributeAfterValue(tag);
         }
 
@@ -1744,7 +1721,17 @@ namespace AngleSharp.Xml.Parser
         private XmlCharacterToken NewCharacters(Boolean hasCharacterReference = false)
         {
             var content = FlushBuffer();
-            return new XmlCharacterToken(_position, content, hasCharacterReference);
+            return new XmlCharacterToken(_position, content, hasCharacterReference)
+            {
+                EntityReferences = TakeEntityReferences(),
+            };
+        }
+
+        private List<XmlEntityReference> TakeEntityReferences()
+        {
+            var references = _entityReferences;
+            _entityReferences = null;
+            return references;
         }
 
         private XmlCommentToken NewComment()
