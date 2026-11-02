@@ -98,8 +98,8 @@ namespace AngleSharp.Xml.Benchmarks
         /// browsing context that loads the External rows' DTD from the local file. Builds with
         /// XmlParserOptions.MaximumDepth stop at 512 levels by default; older builds have no
         /// limit and lack the option, so it is set when present. Builds that fetch the external
-        /// subset through the resource loader need resource loading and a file: requester;
-        /// older builds read the file themselves and ignore both.
+        /// subset through the resource loader need resource loading and a requester for the
+        /// DTD's path; older builds read the file themselves and ignore both.
         /// </summary>
         private static XmlParser CreateParser()
         {

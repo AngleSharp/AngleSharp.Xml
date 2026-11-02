@@ -8,22 +8,22 @@ namespace AngleSharp.Xml.Benchmarks
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Serves file: URLs from the local disk, as AngleSharp.Io's file requester does, so the
-    /// External rows can load their DTD through the resource loader.
+    /// Serves the External rows' DTD from the local disk, so builds that fetch the external subset
+    /// through the resource loader can load it. The DOCTYPE names the plain Windows path older
+    /// builds read directly; as a URL, its drive letter is the protocol (C:\... is c:).
     /// </summary>
     sealed class LocalFileRequester : BaseRequester
     {
         public override Boolean SupportsProtocol(String protocol) =>
-            String.Equals(protocol, "file", StringComparison.OrdinalIgnoreCase);
+            protocol.Length == 1 && Char.IsLetter(protocol[0]);
 
         protected override Task<IResponse> PerformRequestAsync(Request request, CancellationToken cancel)
         {
-            var path = new Uri(request.Address.Href).LocalPath;
             IResponse response = new DefaultResponse
             {
                 Address = request.Address,
                 StatusCode = HttpStatusCode.OK,
-                Content = new MemoryStream(File.ReadAllBytes(path)),
+                Content = new MemoryStream(File.ReadAllBytes(request.Address.Href)),
             };
             return Task.FromResult(response);
         }
