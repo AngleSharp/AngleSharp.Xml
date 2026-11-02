@@ -104,9 +104,31 @@ function Get-Median([Double[]] $values) {
     return $sorted[[Int32][Math]::Floor($sorted.Count / 2)]
 }
 
-# The CSV report writes every mean in ns and every allocation in B, with invariant separators
+# BenchmarkDotNet writes the unit into each CSV cell and picks it per row ("952.654 μs",
+# "1,280.41 KB"), with invariant separators, so each value is converted to ns or B
+$timeUnits = @{ 'ns' = 1.0; 'us' = 1e3; 'ms' = 1e6; 's' = 1e9 }
+$sizeUnits = @{ 'B' = 1.0; 'KB' = 1024.0; 'MB' = 1048576.0; 'GB' = 1073741824.0 }
+
+function ConvertFrom-Cell([String] $cell, [Hashtable] $units) {
+    # Microseconds come as the Greek mu or the micro sign, which hashtable keys cannot tell apart
+    $text = $cell.Trim().Replace([Char]0x03BC, 'u').Replace([Char]0x00B5, 'u')
+
+    # A failed benchmark reports NA; a row without allocations can report -
+    if ($text -eq 'NA') { return [Double]::NaN }
+    if ($text -eq '-') { return 0.0 }
+
+    if ($text -notmatch '^(?<value>[\d,]*\.?\d+)\s*(?<unit>\S+)$' -or -not $units.ContainsKey($Matches.unit)) {
+        throw "Cannot read the value '$cell' from the BenchmarkDotNet report."
+    }
+
+    return [Double]::Parse(($Matches.value -replace ',', ''), [Globalization.CultureInfo]::InvariantCulture) * $units[$Matches.unit]
+}
+
 function Write-Summary {
-    $rows = foreach ($csv in Get-ChildItem $OutputDirectory -Recurse -Filter *-report.csv) {
+    # Only this run's rounds: the baseline source trees live in the output directory too, and
+    # a report BenchmarkDotNet left in one of them would otherwise count as a build
+    $reports = Get-ChildItem $OutputDirectory -Directory -Filter 'round-*' | ForEach-Object { Get-ChildItem $_.FullName -Recurse -Filter *-report.csv }
+    $rows = foreach ($csv in $reports) {
         $build = $csv.Directory.Parent.Name
 
         foreach ($row in Import-Csv $csv.FullName) {
@@ -115,11 +137,14 @@ function Write-Summary {
             [PSCustomObject]@{
                 Build = $build
                 Case = ("$($row.Type -replace 'Benchmark$', '') $parameters").Trim()
-                Mean = [Double]($row.Mean -replace '[^\d.]', '')
-                Allocated = [Double]($row.Allocated -replace '[^\d.]', '')
+                Mean = ConvertFrom-Cell $row.Mean $timeUnits
+                Allocated = ConvertFrom-Cell $row.Allocated $sizeUnits
             }
         }
     }
+
+    # A failed benchmark has no mean to compare
+    $rows = @($rows | Where-Object { -not [Double]::IsNaN($_.Mean) })
 
     $lines = @(
         "# Benchmark comparison",
