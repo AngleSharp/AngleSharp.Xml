@@ -2,7 +2,7 @@
 
 Released on Sunday, November 1 2026.
 
-- Updated to use a minimum of AngleSharp 1.9
+- Updated to use a minimum of AngleSharp 1.9.1
 - Improved performance of `TextContent` on XML elements, which no longer allocates for an element holding a single text or CDATA section
 - Improved performance of DTD validation: content models are parsed once per document, and documents without ID declarations skip the identity walk
 - Fixed parsing deeply nested documents overflowing the stack and ending the process; the DTD and identity validation walks now use an explicit stack

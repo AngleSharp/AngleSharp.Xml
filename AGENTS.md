@@ -20,7 +20,7 @@ The public README describes the intended positioning: XML behavior that integrat
 - Primary development branch is `devel`.
 - The repository currently uses the Fallout build orchestrator, version 10.4.x in the checked-in build tooling.
 - The current project version in `src/Directory.Build.props` is `1.3.0`.
-- The package's AngleSharp dependency defaults to version `1.9.0` and allows versions below `2.0.0`.
+- The package's AngleSharp dependency defaults to version `1.9.1` and allows versions below `2.0.0`.
 - There is no repository-level AGENTS.md or copilot instruction file other than this one.
 - The worktree should be checked with `git status --short` before making assumptions about local changes. Never discard changes that are already present.
 
@@ -67,7 +67,7 @@ The scripts:
 The default local target runs restore, compile, tests, and package creation. The build reads the version from `CHANGELOG.md` and supports parameters such as:
 
 ```sh
-./build.sh -AngleSharpVersion 1.9.0
+./build.sh -AngleSharpVersion 1.9.1
 ./build.sh -Target RunUnitTests
 ./build.sh -Target Compile
 ./build.sh -Target Package
@@ -105,7 +105,7 @@ The solution is `src/AngleSharp.Xml.sln`; it contains the library, tests, and bu
 
 `.github/workflows/ci.yml` runs on push and pull request.
 
-- Linux uses .NET `10.0.x` and runs `./build.sh -AngleSharpVersion 1.9.0`.
+- Linux uses .NET `10.0.x` and runs `./build.sh -AngleSharpVersion 1.9.1`.
 - Windows uses .NET `10.0.x` and runs `build.ps1`.
 - Windows publishes on `main`, pre-publishes on `devel`, and performs the default build for other refs.
 - Documentation deployment is conditional on repository secrets and the configured docs branch/path.
@@ -345,7 +345,7 @@ dotnet run -c Release --project src/AngleSharp.Xml.Benchmarks -f net8.0 -- --fil
 - Keep the shapes within what the oldest compared build survives. Before the explicit-stack walks, the old code overflowed the call stack parsing at about 2600 levels with a DTD (2850 without) and in `TextContent` at about 5000 (net8.0, 1 MB stack), which is why the deep shapes stop at 2000 and 4000.
 - Every shape must stay valid against its DTD: an invalid document stops the walks at the first error and measures an early exit. `GlobalSetup` throws if one is not.
 - A parse allocates megabytes, so when the garbage collector runs during it can move a row by 5-10% either way, and the direction changes with the document size. That is why the catalog comes in three sizes (`catalog-500`, `catalog`, `catalog-2000`). A difference at one size alone is not proof. A change that really costs work shows at every size; one that flips sign between sizes is GC timing. To confirm, rerun with BenchmarkDotNet's `--envVars DOTNET_GCgen0size:20000000` (512 MB Gen0, so no Gen0 or Gen1 collection runs during a parse) and compare the work alone.
-- Parsing builds the tree through AngleSharp's `AppendChild`, which costs O(depth) per insert in AngleSharp up to 1.9.0, so the deep parse rows include core's quadratic tree building.
+- Parsing builds the tree through AngleSharp's `AppendChild`, which costs O(depth) per insert in AngleSharp up to 1.9.0 (fixed in 1.9.1), so deep parse rows of builds compared on 1.9.0 include core's quadratic tree building.
 
 ## Coding and Editing Conventions
 
