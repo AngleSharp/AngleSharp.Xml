@@ -65,9 +65,35 @@ var parser = new XmlParser(new XmlParserOptions
 
 If true, elements keep token source references. This is useful for diagnostics and tooling.
 
+### MaxCharactersFromEntities
+
+The maximum number of characters that expanding the entities declared in the document's DTD may produce in total, like `System.Xml.XmlReaderSettings.MaxCharactersFromEntities`. Zero (0) means no limit. Unlike `System.Xml`, which prohibits DTD processing by default, this parser always processes the DTD, so the limit defaults to 10,000,000 characters (`XmlParserOptions.DefaultMaxCharactersFromEntities`) to stop entities that expand exponentially ("billion laughs") from exhausting memory.
+
+Exceeding the limit throws an `XmlParseException`. With `IsSuppressingErrors`, the references beyond the limit are kept as text instead. The built-in entities (`&amp;`, `&lt;`, ...) and character references do not count.
+
+```cs
+var parser = new XmlParser(new XmlParserOptions
+{
+	MaxCharactersFromEntities = 100_000,
+});
+```
+
+### MaximumDepth
+
+The deepest level at which the parser nests elements, counting the root element as level 1, like `HtmlParserOptions.MaximumDepth` in AngleSharp. It defaults to 512 (`XmlParserOptions.DefaultMaximumDepth`); zero or a negative value restores the default, and `Int32.MaxValue` lifts the limit. XML puts no limit on nesting, but code walking a tree that is thousands of levels deep recursively can overflow the call stack, which ends the process.
+
+An element beyond the limit throws an `XmlParseException`. With `IsSuppressingErrors`, it is attached at the limit instead, as a sibling of the deepest element, as the HTML parser does; text that follows a closed sibling then stays in its own element.
+
+```cs
+var parser = new XmlParser(new XmlParserOptions
+{
+	MaximumDepth = 2000,
+});
+```
+
 ### OnCreated
 
-Callback invoked when an element has been created, including source position.
+Callback invoked when an element has been created, including source position. References to DTD-declared entities are only resolved at the end of the parse, so the element's attribute values still hold them as written.
 
 ```cs
 var parser = new XmlParser(new XmlParserOptions

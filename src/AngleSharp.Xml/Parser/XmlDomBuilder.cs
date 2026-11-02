@@ -3,6 +3,7 @@ namespace AngleSharp.Xml.Parser
     using AngleSharp.Xml.Dtd.Declaration;
     using AngleSharp.Xml.Dtd.Parser;
     using AngleSharp.Dom;
+    using AngleSharp.Io;
     using AngleSharp.Text;
     using AngleSharp.Xml.Dom;
     using AngleSharp.Xml.Parser.Tokens;
@@ -10,6 +11,8 @@ namespace AngleSharp.Xml.Parser
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Net;
+    using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -30,10 +33,15 @@ namespace AngleSharp.Xml.Parser
         private readonly Dictionary<String, HashSet<String>> _internalAttributeDeclarations;
         private readonly Dictionary<String, Dictionary<String, InternalAttributeRule>> _internalAttributeRules;
         private readonly Dictionary<String, String> _internalGeneralEntities;
+        private readonly Dictionary<String, String> _internalGeneralEntityContents;
         private readonly Dictionary<String, String> _fallbackUnparsedEntities;
         private readonly HashSet<String> _fallbackNotations;
         private DtdContainer _dtd;
         private String _doctypeName;
+        private XmlDoctypeToken _doctypeToken;
+        private Task<ExternalSubset> _externalSubsetLoading;
+        private CancellationToken _cancel;
+        private readonly List<PendingEntityReferences> _pendingReferences = new List<PendingEntityReferences>();
 
         private XmlParserOptions _options;
         private XmlTreeMode _currentMode;
@@ -57,6 +65,7 @@ namespace AngleSharp.Xml.Parser
             _internalAttributeDeclarations = new Dictionary<String, HashSet<String>>(StringComparer.Ordinal);
             _internalAttributeRules = new Dictionary<String, Dictionary<String, InternalAttributeRule>>(StringComparer.Ordinal);
             _internalGeneralEntities = new Dictionary<String, String>(StringComparer.Ordinal);
+            _internalGeneralEntityContents = new Dictionary<String, String>(StringComparer.Ordinal);
             _fallbackUnparsedEntities = new Dictionary<String, String>(StringComparer.Ordinal);
             _fallbackNotations = new HashSet<String>(StringComparer.Ordinal);
             _currentMode = XmlTreeMode.Initial;
@@ -101,7 +110,9 @@ namespace AngleSharp.Xml.Parser
             var source = _document.Source;
             var token = default(XmlToken);
             _options = options;
+            _cancel = cancelToken;
             _tokenizer.IsSuppressingErrors = options.IsSuppressingErrors;
+            _tokenizer.MaxCharactersFromEntities = options.MaxCharactersFromEntities;
 
             do
             {
@@ -115,7 +126,7 @@ namespace AngleSharp.Xml.Parser
             }
             while (token.Type != XmlTokenType.EndOfFile);
 
-            ApplyValidation();
+            await CompleteAsync().ConfigureAwait(false);
 
             return _document;
         }
@@ -128,7 +139,9 @@ namespace AngleSharp.Xml.Parser
         {
             var token = default(XmlToken);
             _options = options;
+            _cancel = CancellationToken.None;
             _tokenizer.IsSuppressingErrors = options.IsSuppressingErrors;
+            _tokenizer.MaxCharactersFromEntities = options.MaxCharactersFromEntities;
 
             do
             {
@@ -137,9 +150,31 @@ namespace AngleSharp.Xml.Parser
             }
             while (token.Type != XmlTokenType.EndOfFile);
 
-            ApplyValidation();
+            // The same completion as the asynchronous path, waited for: a caller that parses
+            // synchronously with requesters configured must not run them on a
+            // synchronization context this thread is blocking
+            CompleteAsync().GetAwaiter().GetResult();
 
             return _document;
+        }
+
+        /// <summary>
+        /// Completes the parse once the tree is built, in the same way on both paths: waits for
+        /// the external subset the DOCTYPE started loading, builds the DTD from it and the
+        /// internal subset, resolves the entity references the text kept, and validates.
+        /// </summary>
+        private async Task CompleteAsync()
+        {
+            if (_doctypeToken != null)
+            {
+                var externalSubset = _externalSubsetLoading != null ?
+                    await _externalSubsetLoading.ConfigureAwait(false) :
+                    null;
+                ParseDoctypeSubset(_doctypeToken, externalSubset);
+            }
+
+            ResolveEntityReferences();
+            ApplyValidation();
         }
 
         /// <summary>
@@ -241,7 +276,10 @@ namespace AngleSharp.Xml.Parser
                     _document.AppendChild(doctypeNode);
                     _doctypeName = doctypeToken.Name;
 
-                    ParseDoctypeSubset(doctypeToken);
+                    // The DTD is only needed once the tree is built, so the external subset
+                    // loads while the parse goes on
+                    _doctypeToken = doctypeToken;
+                    _externalSubsetLoading = LoadExternalSubsetAsync(doctypeToken, _cancel);
 
                     _currentMode = XmlTreeMode.Misc;
 
@@ -312,6 +350,32 @@ namespace AngleSharp.Xml.Parser
         }
 
         /// <summary>
+        /// Gets the node a new element is attached to, keeping it within
+        /// <see cref="XmlParserOptions.MaximumDepth"/>: an element beyond it throws, or with errors
+        /// suppressed goes to the open element one level above the limit, so it becomes a sibling
+        /// of the deepest element, as in the HTML parser. Each open element is then within the
+        /// limit, so its text and other content can go to it directly.
+        /// </summary>
+        /// <param name="position">The position to report the error at.</param>
+        private Node GetInsertionParent(TextPosition position)
+        {
+            var maximumDepth = _options.MaximumDepth;
+
+            if (_openElements.Count < maximumDepth)
+            {
+                return CurrentNode;
+            }
+
+            if (!_options.IsSuppressingErrors)
+            {
+                throw XmlParseError.MaximumDepthExceeded.At(position);
+            }
+
+            // The root element stays the parent at the least, as the HTML parser keeps it
+            return _openElements[Math.Max(maximumDepth - 1, 1) - 1];
+        }
+
+        /// <summary>
         /// In the body state - no doctypes and declarations allowed.
         /// </summary>
         /// <param name="token">The consumed token.</param>
@@ -323,33 +387,40 @@ namespace AngleSharp.Xml.Parser
                 {
                     var tagToken = (XmlTagToken)token;
                     var element = CreateElement(tagToken.Name, tagToken.IsSelfClosing);
-                    CurrentNode.AppendChild(element);
+                    GetInsertionParent(tagToken.Position).AppendChild(element);
 
-                    var namespaceDeclarations = tagToken.Attributes
-                        .Where(attr => attr.Key.StartsWith("xmlns"))
-                        .ToList();
-                    var otherAttributes = tagToken.Attributes
-                        .Where(attr => !attr.Key.StartsWith("xmlns"))
-                        .ToList();
+                    var attributes = tagToken.Attributes;
 
-                    for (var i = 0; i < namespaceDeclarations.Count; i++)
+                    // The namespace declarations go first, then the other attributes
+                    for (var pass = 0; pass < 2; pass++)
                     {
-                        var attr = namespaceDeclarations[i];
-                        var item = CreateAttribute(attr.Key, attr.Value.Trim());
-                        element.AddAttribute(item);
-                    }
-
-                    for (var i = 0; i < otherAttributes.Count; i++)
-                    {
-                        var attr = otherAttributes[i];
-                        var item = CreateAttribute(attr.Key, attr.Value.Trim());
-
-                        if (item.NamespaceUri == NamespaceNames.XmlUri && item.LocalName == "id")
+                        for (var i = 0; i < attributes.Count; i++)
                         {
-                            item.Value = XmlElementExtensions.NormalizeXmlId(item.Value);
-                        }
+                            var attr = attributes[i];
 
-                        element.AddAttribute(item);
+                            if (attr.Key.StartsWith("xmlns") != (pass == 0))
+                            {
+                                continue;
+                            }
+
+                            var item = CreateAttribute(attr.Key, attr.Value.Trim());
+                            var references = tagToken.GetAttributeReferences(i);
+                            var isXmlId = pass == 1 && item.NamespaceUri == NamespaceNames.XmlUri && item.LocalName == "id";
+
+                            // An xml:id is normalized once its entities are resolved
+                            if (isXmlId && references == null)
+                            {
+                                item.Value = XmlElementExtensions.NormalizeXmlId(item.Value);
+                            }
+
+                            element.AddAttribute(item);
+
+                            if (references != null)
+                            {
+                                var trimmed = attr.Value.Length - attr.Value.TrimStart().Length;
+                                _pendingReferences.Add(new PendingEntityReferences(item, isXmlId, references, -trimmed));
+                            }
+                        }
                     }
 
                     if (!tagToken.IsSelfClosing)
@@ -420,7 +491,26 @@ namespace AngleSharp.Xml.Parser
                 case XmlTokenType.Character:
                 {
                     var charToken = (XmlCharacterToken)token;
-                    CurrentNode.AppendText(ExpandInternalEntities(charToken.Data));
+                    var parent = CurrentNode;
+                    parent.AppendText(charToken.Data);
+
+                    // The text may have joined the text node before it, so the references are
+                    // kept with their offsets in the node
+                    if (charToken.EntityReferences != null && ((INode)parent).LastChild is IText text)
+                    {
+                        var shift = text.Length - charToken.Data.Length;
+                        var last = _pendingReferences.Count > 0 ? _pendingReferences[_pendingReferences.Count - 1] : null;
+
+                        if (last != null && last.Text == text)
+                        {
+                            last.Add(charToken.EntityReferences, shift);
+                        }
+                        else
+                        {
+                            _pendingReferences.Add(new PendingEntityReferences(text, charToken.EntityReferences, shift));
+                        }
+                    }
+
                     break;
                 }
                 case XmlTokenType.EndOfFile:
@@ -532,7 +622,7 @@ namespace AngleSharp.Xml.Parser
             return t >= 1.0 && t < 2.0;
         }
 
-        private void ParseDoctypeSubset(XmlDoctypeToken doctypeToken)
+        private void ParseDoctypeSubset(XmlDoctypeToken doctypeToken, ExternalSubset loadedSubset)
         {
             var subset = doctypeToken.InternalSubset ?? String.Empty;
 
@@ -541,10 +631,13 @@ namespace AngleSharp.Xml.Parser
             _internalAttributeDeclarations.Clear();
             _internalAttributeRules.Clear();
             _internalGeneralEntities.Clear();
+            _internalGeneralEntityContents.Clear();
             _fallbackUnparsedEntities.Clear();
             _fallbackNotations.Clear();
 
-            var hasExternalSubset = TryLoadExternalSubset(doctypeToken.SystemIdentifier, out var externalSubset, out var externalSubsetPath);
+            var externalSubset = loadedSubset?.Content;
+            var externalSubsetPath = loadedSubset?.Url ?? String.Empty;
+            var hasExternalSubset = externalSubset != null;
 
             if (hasExternalSubset || subset.Length > 0)
             {
@@ -601,7 +694,7 @@ namespace AngleSharp.Xml.Parser
 
             ParseSubsetFallbackDeclarations(subset);
 
-            RegisterTokenizerEntities();
+            UnwrapEntityContents();
         }
 
         private void ParseSubsetFallbackDeclarations(String subset)
@@ -691,79 +784,73 @@ namespace AngleSharp.Xml.Parser
             }
         }
 
-        private void RegisterTokenizerEntities()
+        private void UnwrapEntityContents()
         {
             foreach (var entry in _internalGeneralEntities)
             {
-                _tokenizer.RegisterGeneralEntity(entry.Key, entry.Value);
+                // In element content an entity's CDATA sections contribute their content; unwrapping
+                // the declared text instead of the expanded text keeps escaped text such as
+                // "&lt;![CDATA[" as it is, and costs one pass per declaration
+                _internalGeneralEntityContents[entry.Key] = XmlTokenizer.UnwrapCDataSections(entry.Value);
             }
         }
 
-        private Boolean TryLoadExternalSubset(String systemIdentifier, out String content, out String fullPath)
+        /// <summary>
+        /// Loads the external subset a DOCTYPE token names, while the parse goes on. The document
+        /// names the resource, so it is fetched like any other resource of the document: through
+        /// the browsing context's resource loader, which only exists when resource loading is
+        /// enabled, and its requesters, which decide which protocols (http:, file:, ...) are
+        /// served. Without them nothing is loaded. The parse waits for it when it completes.
+        /// </summary>
+        /// <param name="doctypeToken">The consumed DOCTYPE token.</param>
+        /// <param name="cancel">The token to cancel the download with.</param>
+        /// <returns>The loaded subset, or null if there is none.</returns>
+        private async Task<ExternalSubset> LoadExternalSubsetAsync(XmlDoctypeToken doctypeToken, CancellationToken cancel)
         {
-            content = String.Empty;
-            fullPath = String.Empty;
+            var systemIdentifier = doctypeToken.SystemIdentifier;
+            var loader = _document.Context?.GetService<IResourceLoader>();
 
-            if (String.IsNullOrWhiteSpace(systemIdentifier))
+            if (loader == null || String.IsNullOrWhiteSpace(systemIdentifier))
             {
-                return false;
+                return null;
             }
 
-            if (!TryResolveSystemPath(systemIdentifier, out fullPath))
+            var baseUrl = _document.BaseUrl;
+            var target = baseUrl != null && !baseUrl.IsInvalid ? new Url(baseUrl, systemIdentifier) : new Url(systemIdentifier);
+
+            if (target.IsInvalid)
             {
-                return false;
+                return null;
             }
 
-            try
-            {
-                content = File.ReadAllText(fullPath);
-                return true;
-            }
-            catch
-            {
-                content = String.Empty;
-                fullPath = String.Empty;
-                return false;
-            }
-        }
+            // A resource request names the element it is made for, for its origin and referrer;
+            // the DOCTYPE comes before any element, so a detached one of the document stands in
+            var request = new ResourceRequest(new XmlElement(_document, doctypeToken.Name ?? "doctype"), target);
+            var download = loader.FetchAsync(request);
 
-        private Boolean TryResolveSystemPath(String systemIdentifier, out String fullPath)
-        {
-            fullPath = String.Empty;
-
-            try
+            using (cancel.Register(download.Cancel))
             {
-                if (Path.IsPathRooted(systemIdentifier) && File.Exists(systemIdentifier))
+                try
                 {
-                    fullPath = Path.GetFullPath(systemIdentifier);
-                    return true;
-                }
-
-                if (Uri.TryCreate(systemIdentifier, UriKind.Absolute, out var uri) && uri.IsFile)
-                {
-                    var localPath = uri.LocalPath;
-
-                    if (File.Exists(localPath))
+                    using (var response = await download.Task.ConfigureAwait(false))
                     {
-                        fullPath = Path.GetFullPath(localPath);
-                        return true;
+                        if (response != null && response.StatusCode == HttpStatusCode.OK)
+                        {
+                            using (var reader = new StreamReader(response.Content, Encoding.UTF8, true))
+                            {
+                                var content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                                return new ExternalSubset(content, target.Href);
+                            }
+                        }
                     }
                 }
-
-                var baseDirectory = Environment.CurrentDirectory;
-                var combinedPath = Path.Combine(baseDirectory, systemIdentifier);
-
-                if (File.Exists(combinedPath))
+                catch (Exception) when (!cancel.IsCancellationRequested)
                 {
-                    fullPath = Path.GetFullPath(combinedPath);
-                    return true;
+                    // An external subset that cannot be loaded is ignored, as an unreadable file was
                 }
             }
-            catch
-            {
-            }
 
-            return false;
+            return null;
         }
 
         private void ApplyValidation()
@@ -787,12 +874,19 @@ namespace AngleSharp.Xml.Parser
 
             if (valid && root != null && hasDtdElementDeclarations)
             {
-                valid = !_dtd.IsInvalid && ValidateElementAgainstDtd(root);
+                valid = !_dtd.IsInvalid && ValidateElementsAgainstDtd(root);
             }
 
             if (valid && root != null && _internalElementModels.Count > 0)
             {
-                valid = ValidateElementAgainstInternalSubset(root);
+                var contentModels = new Dictionary<String, ContentModel>(StringComparer.Ordinal);
+
+                foreach (var pair in _internalElementModels)
+                {
+                    contentModels.Add(pair.Key, ContentModel.Parse(pair.Value));
+                }
+
+                valid = ValidateElements(root, element => ValidateElementAgainstInternalSubset(element, contentModels));
             }
 
             if (valid && root != null)
@@ -846,15 +940,55 @@ namespace AngleSharp.Xml.Parser
                 }
             }
 
+            // Without identity declarations no element has anything to check, rewrite or reference,
+            // so walking the tree (as every document without a DOCTYPE would) cannot change the result
+            if (declarations.Count == 0)
+            {
+                return true;
+            }
+
             var ids = new HashSet<String>(StringComparer.Ordinal);
             var references = new List<String>();
 
-            if (!ValidateIdentityAttributes(root, declarations, ids, references, unparsedEntities))
+            if (!ValidateElements(root, element => ValidateIdentityAttributes(element, declarations, ids, references, unparsedEntities)))
             {
                 return false;
             }
 
             return references.All(ids.Contains);
+        }
+
+        /// <summary>
+        /// Applies the validation to the root and each descendant element in document order,
+        /// stopping at the first failure. Walks with an explicit stack, so deeply nested
+        /// documents cannot overflow the call stack.
+        /// </summary>
+        private static Boolean ValidateElements(Element root, Func<Element, Boolean> validate)
+        {
+            var pending = new Stack<Element>();
+            pending.Push(root);
+
+            while (pending.Count > 0)
+            {
+                var element = pending.Pop();
+
+                if (!validate(element))
+                {
+                    return false;
+                }
+
+                var children = ((INode)element).ChildNodes;
+
+                for (var i = children.Length - 1; i >= 0; i--)
+                {
+                    if (children[i] is Element nested)
+                    {
+                        pending.Push(nested);
+                    }
+                }
+            }
+
+            return true;
         }
 
         private Boolean ValidateIdentityAttributes(
@@ -925,14 +1059,6 @@ namespace AngleSharp.Xml.Parser
 
                             break;
                     }
-                }
-            }
-
-            foreach (var child in ((INode)element).ChildNodes)
-            {
-                if (child is Element nested && !ValidateIdentityAttributes(nested, declarations, ids, references, unparsedEntities))
-                {
-                    return false;
                 }
             }
 
@@ -1067,39 +1193,80 @@ namespace AngleSharp.Xml.Parser
                 Enumerable.Empty<String>();
         }
 
-        private Boolean ValidateElementAgainstDtd(Element element)
+        private Boolean ValidateElementsAgainstDtd(Element root)
         {
-            var declaration = _dtd.Elements.FirstOrDefault(m => String.Equals(m.Name, element.NodeName, StringComparison.Ordinal));
+            // Declarations are looked up by name once per document instead of searched on every
+            // element. The first element declaration of a name wins, as the search found it first;
+            // attribute declarations keep their order. A declaration without a name matched nothing.
+            var elementDeclarations = new Dictionary<String, ElementDeclaration>(StringComparer.Ordinal);
 
-            if (declaration == null || !declaration.Check(element))
+            foreach (var declaration in _dtd.Elements)
             {
-                return false;
-            }
-
-            var attributeDeclarations = _dtd.Attributes
-                .Where(m => String.Equals(m.Name, element.NodeName, StringComparison.Ordinal))
-                .ToList();
-
-            for (var i = 0; i < attributeDeclarations.Count; i++)
-            {
-                if (!attributeDeclarations[i].Check(element))
+                if (declaration.Name != null && !elementDeclarations.ContainsKey(declaration.Name))
                 {
-                    return false;
+                    elementDeclarations.Add(declaration.Name, declaration);
                 }
             }
 
-            if (attributeDeclarations.Count > 0)
+            var attributeDeclarations = new Dictionary<String, List<AttributeDeclaration>>(StringComparer.Ordinal);
+
+            foreach (var declaration in _dtd.Attributes)
+            {
+                if (declaration.Name != null)
+                {
+                    if (!attributeDeclarations.TryGetValue(declaration.Name, out var list))
+                    {
+                        list = new List<AttributeDeclaration>();
+                        attributeDeclarations.Add(declaration.Name, list);
+                    }
+
+                    list.Add(declaration);
+                }
+            }
+
+            var declaredAttributes = new Dictionary<String, HashSet<String>>(StringComparer.Ordinal);
+
+            foreach (var pair in attributeDeclarations)
             {
                 var declared = new HashSet<String>(StringComparer.Ordinal);
-                var elementNode = (IElement)element;
 
-                for (var i = 0; i < attributeDeclarations.Count; i++)
+                foreach (var declaration in pair.Value)
                 {
-                    foreach (var entry in attributeDeclarations[i].Declarations)
+                    foreach (var entry in declaration.Declarations)
                     {
                         declared.Add(entry.Name);
                     }
                 }
+
+                declaredAttributes.Add(pair.Key, declared);
+            }
+
+            return ValidateElements(root, element => ValidateElementAgainstDtd(element, elementDeclarations, attributeDeclarations, declaredAttributes));
+        }
+
+        private static Boolean ValidateElementAgainstDtd(
+            Element element,
+            Dictionary<String, ElementDeclaration> elementDeclarations,
+            Dictionary<String, List<AttributeDeclaration>> attributeDeclarations,
+            Dictionary<String, HashSet<String>> declaredAttributes)
+        {
+            if (!elementDeclarations.TryGetValue(element.NodeName, out var declaration) || !declaration.Check(element))
+            {
+                return false;
+            }
+
+            if (attributeDeclarations.TryGetValue(element.NodeName, out var elementAttributes))
+            {
+                for (var i = 0; i < elementAttributes.Count; i++)
+                {
+                    if (!elementAttributes[i].Check(element))
+                    {
+                        return false;
+                    }
+                }
+
+                var declared = declaredAttributes[element.NodeName];
+                var elementNode = (IElement)element;
 
                 foreach (var attr in elementNode.Attributes)
                 {
@@ -1117,20 +1284,12 @@ namespace AngleSharp.Xml.Parser
                 }
             }
 
-            foreach (var child in ((INode)element).ChildNodes)
-            {
-                if (child is Element nested && !ValidateElementAgainstDtd(nested))
-                {
-                    return false;
-                }
-            }
-
             return true;
         }
 
-        private Boolean ValidateElementAgainstInternalSubset(Element element)
+        private Boolean ValidateElementAgainstInternalSubset(Element element, Dictionary<String, ContentModel> contentModels)
         {
-            if (!_internalElementModels.TryGetValue(element.NodeName, out var model))
+            if (!contentModels.TryGetValue(element.NodeName, out var model))
             {
                 return false;
             }
@@ -1177,98 +1336,135 @@ namespace AngleSharp.Xml.Parser
                 }
             }
 
-            if (!ValidateContentModel(element, model))
-            {
-                return false;
-            }
-
-            foreach (var child in ((INode)element).ChildNodes)
-            {
-                if (child is Element nested && !ValidateElementAgainstInternalSubset(nested))
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return ValidateContentModel(element, model);
         }
 
-        private static Boolean ValidateContentModel(Element element, String model)
+        private static Boolean ValidateContentModel(Element element, ContentModel model)
         {
-            if (String.Equals(model, "ANY", StringComparison.Ordinal))
+            if (model.Kind == ContentModelKind.Any)
             {
                 return true;
             }
 
-            var significant = ((INode)element).ChildNodes.Where(m =>
-                m is IElement || (m is IText text && !String.IsNullOrWhiteSpace(text.Data))).ToList();
+            // Significant children are elements and texts that are not only whitespace
+            var children = ((INode)element).ChildNodes;
+            var matched = 0;
 
-            if (String.Equals(model, "EMPTY", StringComparison.Ordinal))
+            for (var i = 0; i < children.Length; i++)
             {
-                return significant.Count == 0;
-            }
+                var child = children[i];
 
-            if (Regex.IsMatch(model, "^\\(#PCDATA(\\|[A-Za-z_][A-Za-z0-9_:\\.-]*)*\\)\\*$"))
-            {
-                var names = new HashSet<String>(
-                    model.Substring(1, model.Length - 3)
-                        .Split('|')
-                        .Where(m => !String.Equals(m, "#PCDATA", StringComparison.Ordinal)),
-                    StringComparer.Ordinal);
-
-                foreach (var node in significant)
+                if (child is IElement childElement)
                 {
-                    if (node is IElement child && !names.Contains(child.NodeName))
+                    switch (model.Kind)
+                    {
+                        case ContentModelKind.Empty:
+                            return false;
+                        case ContentModelKind.Mixed when !model.Names.Contains(childElement.NodeName):
+                            return false;
+                        case ContentModelKind.Sequence:
+                            if (matched == model.Sequence.Count || !String.Equals(model.Sequence[matched], childElement.NodeName, StringComparison.Ordinal))
+                            {
+                                return false;
+                            }
+
+                            matched++;
+                            break;
+                    }
+                }
+                else if (child is IText text && !String.IsNullOrWhiteSpace(text.Data))
+                {
+                    if (model.Kind == ContentModelKind.Empty || model.Kind == ContentModelKind.Sequence ||
+                        (model.Kind == ContentModelKind.Other && !model.AllowsText))
                     {
                         return false;
                     }
                 }
-
-                return true;
             }
 
-            var elementContentModel = Regex.Match(model, "^\\(([A-Za-z_][A-Za-z0-9_:\\.-]*(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_:\\.-]*)*)\\)$");
+            return model.Kind != ContentModelKind.Sequence || matched == model.Sequence.Count;
+        }
 
-            if (elementContentModel.Success)
+        private enum ContentModelKind
+        {
+            Any,
+            Empty,
+            Mixed,
+            Sequence,
+            Other,
+        }
+
+        /// <summary>
+        /// An element's declared content model, classified once per document instead of matched
+        /// against the regular expressions on every element it applies to.
+        /// </summary>
+        private sealed class ContentModel
+        {
+            private ContentModel(ContentModelKind kind)
             {
-                if (significant.Any(m => m is IText))
+                Kind = kind;
+            }
+
+            public ContentModelKind Kind { get; }
+
+            /// <summary>
+            /// The element names a mixed model allows.
+            /// </summary>
+            public HashSet<String> Names { get; private set; }
+
+            /// <summary>
+            /// The element names a sequence model requires, in order.
+            /// </summary>
+            public List<String> Sequence { get; private set; }
+
+            /// <summary>
+            /// Whether any other model allows text.
+            /// </summary>
+            public Boolean AllowsText { get; private set; }
+
+            public static ContentModel Parse(String model)
+            {
+                if (String.Equals(model, "ANY", StringComparison.Ordinal))
                 {
-                    return false;
+                    return new ContentModel(ContentModelKind.Any);
                 }
 
-                var expected = elementContentModel.Groups[1].Value
-                    .Split(',')
-                    .Select(m => m.Trim())
-                    .Where(m => m.Length > 0)
-                    .ToList();
-
-                var actual = significant
-                    .OfType<IElement>()
-                    .Select(m => m.NodeName)
-                    .ToList();
-
-                if (expected.Count != actual.Count)
+                if (String.Equals(model, "EMPTY", StringComparison.Ordinal))
                 {
-                    return false;
+                    return new ContentModel(ContentModelKind.Empty);
                 }
 
-                for (var i = 0; i < expected.Count; i++)
+                if (Regex.IsMatch(model, "^\\(#PCDATA(\\|[A-Za-z_][A-Za-z0-9_:\\.-]*)*\\)\\*$"))
                 {
-                    if (!String.Equals(expected[i], actual[i], StringComparison.Ordinal))
+                    return new ContentModel(ContentModelKind.Mixed)
                     {
-                        return false;
-                    }
+                        Names = new HashSet<String>(
+                            model.Substring(1, model.Length - 3)
+                                .Split('|')
+                                .Where(m => !String.Equals(m, "#PCDATA", StringComparison.Ordinal)),
+                            StringComparer.Ordinal),
+                    };
                 }
 
-                return true;
-            }
+                var elementContentModel = Regex.Match(model, "^\\(([A-Za-z_][A-Za-z0-9_:\\.-]*(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_:\\.-]*)*)\\)$");
 
-            if (!model.Contains("#PCDATA", StringComparison.Ordinal) && significant.Any(m => m is IText))
-            {
-                return false;
-            }
+                if (elementContentModel.Success)
+                {
+                    return new ContentModel(ContentModelKind.Sequence)
+                    {
+                        Sequence = elementContentModel.Groups[1].Value
+                            .Split(',')
+                            .Select(m => m.Trim())
+                            .Where(m => m.Length > 0)
+                            .ToList(),
+                    };
+                }
 
-            return true;
+                return new ContentModel(ContentModelKind.Other)
+                {
+                    AllowsText = model.Contains("#PCDATA", StringComparison.Ordinal),
+                };
+            }
         }
 
         private static String Unquote(String value)
@@ -1289,13 +1485,72 @@ namespace AngleSharp.Xml.Parser
             return value;
         }
 
-        private String ExpandInternalEntities(String data)
+        /// <summary>
+        /// Replaces the entity references the text and attribute values kept while parsing, now
+        /// that the whole DTD is known. In element content an entity contributes its text with the
+        /// CDATA sections unwrapped and its nested references expanded; in an attribute value its
+        /// replacement text as declared. An undeclared entity throws, or with errors suppressed
+        /// stays as written, as one beyond the expansion limit does.
+        /// </summary>
+        private void ResolveEntityReferences()
         {
-            if (String.IsNullOrEmpty(data) || _internalGeneralEntities.Count == 0)
+            foreach (var pending in _pendingReferences)
             {
-                return data;
+                var isContent = pending.Text != null;
+                var value = isContent ? pending.Text.Data : pending.Attribute.Value;
+                var result = new StringBuilder(value.Length);
+                var position = 0;
+
+                foreach (var entry in pending.References)
+                {
+                    var offset = entry.Key;
+                    result.Append(value, position, offset - position);
+                    result.Append(ResolveEntityReference(entry.Value, isContent));
+                    position = offset + entry.Value.Length;
+                }
+
+                result.Append(value, position, value.Length - position);
+
+                if (isContent)
+                {
+                    pending.Text.Data = result.ToString();
+                }
+                else
+                {
+                    // As the parser trimmed and normalized the value before, now with the entities
+                    var resolved = result.ToString().Trim();
+                    pending.Attribute.Value = pending.IsXmlId ? XmlElementExtensions.NormalizeXmlId(resolved) : resolved;
+                }
             }
 
+            _pendingReferences.Clear();
+        }
+
+        private String ResolveEntityReference(XmlEntityReference reference, Boolean isContent)
+        {
+            var name = reference.Name;
+
+            if (_internalGeneralEntities.TryGetValue(name, out var declared))
+            {
+                // Each replacement counts against the expansion limit before the text grows;
+                // beyond it, with errors suppressed, the reference stays as written
+                var replacement = isContent ? _internalGeneralEntityContents[name] : declared;
+
+                if (_tokenizer.ClaimEntityCharacters(replacement.Length, reference.Position))
+                {
+                    return isContent ? ExpandNestedEntities(replacement, reference.Position) : replacement;
+                }
+            }
+            else if (!_options.IsSuppressingErrors)
+            {
+                throw XmlParseError.CharacterReferenceInvalidCode.At(reference.Position);
+            }
+
+            return "&" + name + ";";
+        }
+
+        private String ExpandNestedEntities(String data, TextPosition position)
+        {
             var value = data;
 
             for (var i = 0; i < 5; i++)
@@ -1306,7 +1561,11 @@ namespace AngleSharp.Xml.Parser
                 {
                     var name = match.Groups[1].Value;
 
-                    if (_internalGeneralEntities.TryGetValue(name, out var replacement))
+                    // Every round can multiply the text by the references an entity holds, so each
+                    // replacement counts against the expansion limit before the text grows;
+                    // beyond it, with errors suppressed, the reference stays text
+                    if (_internalGeneralEntityContents.TryGetValue(name, out var replacement) &&
+                        _tokenizer.ClaimEntityCharacters(replacement.Length, position))
                     {
                         changed = true;
                         return replacement;
@@ -1321,7 +1580,63 @@ namespace AngleSharp.Xml.Parser
                 }
             }
 
-            return Regex.Replace(value, "<!\\[CDATA\\[(.*?)\\]\\]>", "$1", RegexOptions.Singleline);
+            return value;
+        }
+
+        /// <summary>
+        /// An external subset as it was loaded, with the URL it came from.
+        /// </summary>
+        private sealed class ExternalSubset
+        {
+            public ExternalSubset(String content, String url)
+            {
+                Content = content;
+                Url = url;
+            }
+
+            public String Content { get; }
+
+            public String Url { get; }
+        }
+
+        /// <summary>
+        /// The entity references a text node or attribute value kept while parsing, by their
+        /// offset in it, in document order.
+        /// </summary>
+        private sealed class PendingEntityReferences
+        {
+            public PendingEntityReferences(IText text, List<XmlEntityReference> references, Int32 shift)
+            {
+                Text = text;
+                Add(references, shift);
+            }
+
+            public PendingEntityReferences(Attr attribute, Boolean isXmlId, List<XmlEntityReference> references, Int32 shift)
+            {
+                Attribute = attribute;
+                IsXmlId = isXmlId;
+                Add(references, shift);
+            }
+
+            public IText Text { get; }
+
+            public Attr Attribute { get; }
+
+            public Boolean IsXmlId { get; }
+
+            public List<KeyValuePair<Int32, XmlEntityReference>> References { get; } = new List<KeyValuePair<Int32, XmlEntityReference>>();
+
+            /// <summary>
+            /// Adds the references of a token's text, whose offsets in the node are shifted by
+            /// the text the node held before it.
+            /// </summary>
+            public void Add(List<XmlEntityReference> references, Int32 shift)
+            {
+                foreach (var reference in references)
+                {
+                    References.Add(new KeyValuePair<Int32, XmlEntityReference>(reference.Offset + shift, reference));
+                }
+            }
         }
 
         private void SetEncoding(String charSet)

@@ -6,6 +6,7 @@ namespace AngleSharp.Xml.Parser
     using AngleSharp.Xml.Parser.Tokens;
     using System;
     using System.Collections.Generic;
+    using System.Text;
 
     /// <summary>
     /// Performs the tokenization of the source code. Most of
@@ -16,8 +17,9 @@ namespace AngleSharp.Xml.Parser
         #region Fields
 
         private readonly IEntityProvider _resolver;
-        private readonly Dictionary<String, String> _generalEntities;
+        private List<XmlEntityReference> _entityReferences;
         private TextPosition _position;
+        private Int64 _charactersFromEntities;
 
         #endregion
 
@@ -32,7 +34,7 @@ namespace AngleSharp.Xml.Parser
             : base(source)
         {
             _resolver = resolver;
-            _generalEntities = new Dictionary<String, String>(StringComparer.Ordinal);
+
         }
 
         #endregion
@@ -43,6 +45,16 @@ namespace AngleSharp.Xml.Parser
         /// Gets or sets if some errors should be suppressed.
         /// </summary>
         public Boolean IsSuppressingErrors
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum number of characters the expansion of declared entities may
+        /// produce in total; 0 means no limit.
+        /// </summary>
+        public Int64 MaxCharactersFromEntities
         {
             get;
             set;
@@ -69,17 +81,76 @@ namespace AngleSharp.Xml.Parser
             return NewEof();
         }
 
+
         /// <summary>
-        /// Registers a custom general entity declaration for the current parse run.
+        /// Replaces each CDATA section in an entity's replacement text by its content, as the text
+        /// the entity contributes to element content. Equivalent to replacing
+        /// <c>&lt;!\[CDATA\[(.*?)\]\]&gt;</c> by its group, in a single pass.
         /// </summary>
-        /// <param name="name">The entity name without trailing semicolon.</param>
         /// <param name="value">The replacement text.</param>
-        public void RegisterGeneralEntity(String name, String value)
+        /// <returns>The text with the CDATA sections unwrapped.</returns>
+        internal static String UnwrapCDataSections(String value)
         {
-            if (!String.IsNullOrEmpty(name) && value != null)
+            const String start = "<![CDATA[";
+            const String end = "]]>";
+            var sectionStart = value.IndexOf(start, StringComparison.Ordinal);
+
+            if (sectionStart < 0)
             {
-                _generalEntities[name + ";"] = value;
+                return value;
             }
+
+            var result = new StringBuilder(value.Length);
+            var position = 0;
+
+            while (sectionStart >= 0)
+            {
+                var contentStart = sectionStart + start.Length;
+                var sectionEnd = value.IndexOf(end, contentStart, StringComparison.Ordinal);
+
+                // Without a terminator after it, no later start has one either
+                if (sectionEnd < 0)
+                {
+                    break;
+                }
+
+                result.Append(value, position, sectionStart - position);
+                result.Append(value, contentStart, sectionEnd - contentStart);
+                position = sectionEnd + end.Length;
+                sectionStart = value.IndexOf(start, position, StringComparison.Ordinal);
+            }
+
+            return result.Append(value, position, value.Length - position).ToString();
+        }
+
+        /// <summary>
+        /// Counts the characters one expansion of a declared entity produces against
+        /// <see cref="MaxCharactersFromEntities"/>, before the expansion is made.
+        /// </summary>
+        /// <param name="count">The number of characters the expansion produces.</param>
+        /// <param name="position">The position to report the error at.</param>
+        /// <returns>
+        /// True if the expansion stays within the limit; false if it would exceed it and errors
+        /// are suppressed, so the reference should be kept as text.
+        /// </returns>
+        public Boolean ClaimEntityCharacters(Int32 count, TextPosition position)
+        {
+            if (MaxCharactersFromEntities > 0)
+            {
+                if (count > MaxCharactersFromEntities - _charactersFromEntities)
+                {
+                    if (!IsSuppressingErrors)
+                    {
+                        throw XmlParseError.EntityExpansionLimitExceeded.At(position);
+                    }
+
+                    return false;
+                }
+
+                _charactersFromEntities += count;
+            }
+
+            return true;
         }
 
         #endregion
@@ -108,6 +179,7 @@ namespace AngleSharp.Xml.Parser
         private XmlToken DataText(Char c)
         {
             var hasCharacterReference = false;
+            _entityReferences = null;
 
             while (true)
             {
@@ -263,16 +335,19 @@ namespace AngleSharp.Xml.Parser
                     var content = StringBuffer.Append(c).ToString(start, ++length);
                     var entity = _resolver.GetSymbol(content);
 
-                    if (String.IsNullOrEmpty(entity))
-                    {
-                        _generalEntities.TryGetValue(content, out entity);
-                    }
-
                     if (!String.IsNullOrEmpty(entity))
                     {
                         StringBuffer.Remove(start, length);
                         return entity;
                     }
+
+                    // Any other entity is declared in the DTD or unknown, which is only decided
+                    // at the end of the parse, once the whole DTD is there: the reference stays in
+                    // the text as written, and its offset is kept for the builder to resolve it
+                    StringBuffer.Insert(start, Symbols.Ampersand);
+                    _entityReferences = _entityReferences ?? new List<XmlEntityReference>();
+                    _entityReferences.Add(new XmlEntityReference(start, content.Substring(0, content.Length - 1), _position));
+                    return String.Empty;
                 }
 
                 if (!IsSuppressingErrors)
@@ -1377,6 +1452,7 @@ namespace AngleSharp.Xml.Parser
         private XmlToken AttributeValue(XmlTagToken tag, Char quote)
         {
             var c = GetNext();
+            _entityReferences = null;
 
             while (c != quote)
             {
@@ -1409,7 +1485,7 @@ namespace AngleSharp.Xml.Parser
                 c = GetNext();
             }
 
-            tag.SetAttributeValue(FlushBuffer());
+            tag.SetAttributeValue(FlushBuffer(), TakeEntityReferences());
             return AttributeAfterValue(tag);
         }
 
@@ -1645,7 +1721,17 @@ namespace AngleSharp.Xml.Parser
         private XmlCharacterToken NewCharacters(Boolean hasCharacterReference = false)
         {
             var content = FlushBuffer();
-            return new XmlCharacterToken(_position, content, hasCharacterReference);
+            return new XmlCharacterToken(_position, content, hasCharacterReference)
+            {
+                EntityReferences = TakeEntityReferences(),
+            };
+        }
+
+        private List<XmlEntityReference> TakeEntityReferences()
+        {
+            var references = _entityReferences;
+            _entityReferences = null;
+            return references;
         }
 
         private XmlCommentToken NewComment()

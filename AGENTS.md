@@ -19,8 +19,8 @@ The public README describes the intended positioning: XML behavior that integrat
 
 - Primary development branch is `devel`.
 - The repository currently uses the Fallout build orchestrator, version 10.4.x in the checked-in build tooling.
-- The current project version in `src/Directory.Build.props` is `1.2.0`.
-- The package's AngleSharp dependency defaults to version `1.5.0` and allows versions below `2.0.0`.
+- The current project version in `src/Directory.Build.props` is `1.3.0`.
+- The package's AngleSharp dependency defaults to version `1.9.0` and allows versions below `2.0.0`.
 - There is no repository-level AGENTS.md or copilot instruction file other than this one.
 - The worktree should be checked with `git status --short` before making assumptions about local changes. Never discard changes that are already present.
 
@@ -67,7 +67,7 @@ The scripts:
 The default local target runs restore, compile, tests, and package creation. The build reads the version from `CHANGELOG.md` and supports parameters such as:
 
 ```sh
-./build.sh -AngleSharpVersion 1.5.0
+./build.sh -AngleSharpVersion 1.9.0
 ./build.sh -Target RunUnitTests
 ./build.sh -Target Compile
 ./build.sh -Target Package
@@ -105,7 +105,7 @@ The solution is `src/AngleSharp.Xml.sln`; it contains the library, tests, and bu
 
 `.github/workflows/ci.yml` runs on push and pull request.
 
-- Linux uses .NET `10.0.x` and runs `./build.sh -AngleSharpVersion 1.5.0`.
+- Linux uses .NET `10.0.x` and runs `./build.sh -AngleSharpVersion 1.9.0`.
 - Windows uses .NET `10.0.x` and runs `build.ps1`.
 - Windows publishes on `main`, pre-publishes on `devel`, and performs the default build for other refs.
 - Documentation deployment is conditional on repository secrets and the configured docs branch/path.
@@ -117,7 +117,7 @@ The solution is `src/AngleSharp.Xml.sln`; it contains the library, tests, and bu
 - `net10.0`
 - `net462` and `net472` on Windows only
 
-The project enables XML documentation generation, strong-name signing, SourceLink, symbols, and package metadata. Warnings are treated as errors through `src/Directory.Build.props`.
+The project enables XML documentation generation, strong-name signing, SourceLink, symbols, and package metadata. The `net8.0` and `net10.0` targets set `IsAotCompatible`, so trim and AOT analyzer warnings fail the build. Warnings are treated as errors through `src/Directory.Build.props`.
 
 ## Repository Layout
 
@@ -157,7 +157,7 @@ Parser files:
 - `Parser/XmlParser.cs`: parser facade and document creation.
 - `Parser/XmlDomBuilder.cs`: tree construction, DOCTYPE handling, DTD validation, and entity expansion.
 - `Parser/XmlTokenizer.cs`: XML lexical tokenizer and character/entity reference handling.
-- `Parser/XmlParserOptions.cs`: suppress-errors, source-reference, and element-created callback options.
+- `Parser/XmlParserOptions.cs`: suppress-errors, source-reference, element-created callback, entity expansion limit, and nesting depth limit options.
 - `Parser/XmlParseError*.cs`: parse error definitions and exception mapping.
 - `Parser/Tokens/`: token models for declarations, DOCTYPE, tags, text, CDATA, comments, processing instructions, and EOF.
 
@@ -179,15 +179,25 @@ DTD files:
 - `Parser/XmlNotWfDocuments.cs`: not-well-formed XML fixtures.
 - `Parser/XmlNotWfExtDtd.cs`: not-well-formed external DTD fixtures.
 - `Parser/XmlDtdImplementedCases.cs`: focused, currently supported DTD validation cases.
-- `Parser/XmlExternalDtdSupport.cs`: local-file external DTD/entity regression tests.
+- `Parser/XmlExternalDtdSupport.cs`: external DTD loading through the resource loader, with `Mocks/MockRequester.cs`.
 - `Tokenizer/XmlDTD.cs`: DTD tokenizer/parser samples, including historical commented assertions.
 - `Tokenizer/XmlTokenization.cs`: XML tokenizer tests.
 - `Dom/`: DOM samples and tree behavior.
 - `Xhtml/`: XHTML formatter and preservation tests.
 - `Mocks/MockEntityProvider.cs`: entity provider test double.
+- `Mocks/MockRequester.cs`: requester serving fixed resources for `mock:` and `http://*.test`, registered as the only requester so tests never reach the network.
 - `TestExtensions.cs`: test parsing helpers, including permissive conformance fallback behavior.
 
 The tests use NUnit 3, NUnit3TestAdapter, Microsoft.NET.Test.Sdk, and target `net8.0`.
+
+### Benchmarks: `src/AngleSharp.Xml.Benchmarks`
+
+BenchmarkDotNet project (`net8.0`, `net10.0`), not part of the solution or the Fallout build. See *Performance* below.
+
+- `ParseValidationBenchmark.cs`: `ParseDocument` including the validation walks, per document shape and DOCTYPE kind (none, internal subset, local external subset).
+- `TextContentBenchmark.cs`: `TextContent` of XML elements, from a single-text leaf to deep chains.
+- `Documents.cs`: the shared document shapes and their DTDs.
+- `Compare-Builds.ps1`: measures the working tree against a baseline commit.
 
 ### Documentation
 
@@ -235,6 +245,8 @@ The parser also supports streams, fragments, and asynchronous overloads. `XmlPar
 - `IsSuppressingErrors`: recovery mode; the parser attempts to return a document instead of throwing. The resulting DOM may be incomplete or surprising. Do not treat this as strict validation.
 - `IsKeepingSourceReferences`: keeps source token references on created elements for diagnostics/tooling.
 - `OnCreated`: callback receiving each created element and its `TextPosition`.
+- `MaxCharactersFromEntities`: cap on the characters produced by expanding DTD-declared entities (default `DefaultMaxCharactersFromEntities`, 10,000,000; 0 = no limit), counted in `XmlDomBuilder.ResolveEntityReferences` through `XmlTokenizer.ClaimEntityCharacters`. Any new entity expansion path must claim its characters there too.
+- `MaximumDepth`: the deepest level the parser nests elements at (root = level 1; default `DefaultMaximumDepth`, 512, as core's `HtmlParserOptions.MaximumDepth`; zero or negative restores the default, `Int32.MaxValue` lifts it). Beyond it the parser throws `MaximumDepthExceeded`; with `IsSuppressingErrors` the element is attached at the limit (`XmlDomBuilder.GetInsertionParent`). Tests and benchmarks that parse deeper documents must lift it, as `XmlDeepNesting` does.
 
 ### Validity
 
@@ -251,12 +263,12 @@ Currently supported or partially supported behavior includes:
 - Common element models such as `ANY`, `EMPTY`, mixed `(#PCDATA|name|...)*`, and simple ordered sequences.
 - Internal attribute checks, including undeclared attributes, `#REQUIRED`, and `#FIXED` cases.
 - Internal general entity replacement.
-- Local file-based external `SYSTEM` subset loading.
-- Local external general entity replacement in supported cases.
+- External `SYSTEM` subset loading through the browsing context's `IResourceLoader` (only with resource loading enabled; the requesters decide the protocols). `XmlDomBuilder.LoadExternalSubsetAsync` starts at the DOCTYPE and the parse goes on; `CompleteAsync` waits for it at the end (the synchronous parse blocks there), builds the DTD, and resolves the entity references the tokenizer kept as written (`XmlEntityReference`, offsets per text node or attribute) before validating. Resolve by recorded offset, never by searching the text: escaped `&amp;name;` reads as `&name;`. Never read files or URLs a document names directly.
+- Replacement of entities declared in a loaded external subset.
 
 Known limitations:
 
-- No HTTP/network retrieval for external DTDs/entities.
+- External entities are not loaded; the external subset only through the resource loader.
 - No complete PUBLIC identifier or XML catalog resolution workflow.
 - Parameter entities and external-subset semantics are not full XML conformance.
 - Complex content-model grammar and all quantifier combinations are not guaranteed by fallback validation paths.
@@ -309,6 +321,32 @@ For parser changes, include tests for:
 
 Conformance fixture suites are broad and include historical XML test cases that depend on external resources, complex DTD features, or behavior not fully implemented in this repository. Treat `ToXmlDocumentConformance` and similar helpers as compatibility/recovery harnesses, not as a replacement for strict parser assertions.
 
+## Performance
+
+A change to the parser, the validation walks, or DOM members such as `TextContent` must not make them slower on ordinary documents, and should make them faster where it can. Prove it with the benchmarks, not with reasoning:
+
+```sh
+dotnet run -c Release --project src/AngleSharp.Xml.Benchmarks -f net8.0 -- --list flat
+dotnet run -c Release --project src/AngleSharp.Xml.Benchmarks -f net8.0 -- --check
+dotnet run -c Release --project src/AngleSharp.Xml.Benchmarks -f net8.0 -- --filter '*TextContent*'
+```
+
+```powershell
+./src/AngleSharp.Xml.Benchmarks/Compare-Builds.ps1 -BaselineRef <commit>[, <commit>...] -AngleSharpVersion <version> -Rounds 3 -Affinity <mask>
+```
+
+- Pass the same `-AngleSharpVersion` to every build when the compared commits default to different AngleSharp versions; otherwise core's own changes end up in the comparison.
+- The script writes `summary.md` to its output directory: per case, each build's median of the rounds, its ratio to the working tree, the spread of the rounds, and the allocations.
+
+- `--check` runs every setup and benchmark body once without measuring. Run it on both builds before a long run; `Compare-Builds.ps1` does.
+- Compare builds with `Compare-Builds.ps1`: two separately built copies, alternated round by round. BenchmarkDotNet rebuilds the benchmark project it finds from the current directory, so the script runs each build from its own source tree and fails a round whose logs name the other build's AngleSharp.Xml module.
+- `MemoryDiagnoser` is on for every class; report the allocation column with the timings.
+- Benchmarks need an otherwise idle machine; on hybrid CPUs pin them to the fast cores (`--affinity`, or `-Affinity` on the script).
+- Keep the shapes within what the oldest compared build survives. Before the explicit-stack walks, the old code overflowed the call stack parsing at about 2600 levels with a DTD (2850 without) and in `TextContent` at about 5000 (net8.0, 1 MB stack), which is why the deep shapes stop at 2000 and 4000.
+- Every shape must stay valid against its DTD: an invalid document stops the walks at the first error and measures an early exit. `GlobalSetup` throws if one is not.
+- A parse allocates megabytes, so when the garbage collector runs during it can move a row by 5-10% either way, and the direction changes with the document size. That is why the catalog comes in three sizes (`catalog-500`, `catalog`, `catalog-2000`). A difference at one size alone is not proof. A change that really costs work shows at every size; one that flips sign between sizes is GC timing. To confirm, rerun with BenchmarkDotNet's `--envVars DOTNET_GCgen0size:20000000` (512 MB Gen0, so no Gen0 or Gen1 collection runs during a parse) and compare the work alone.
+- Parsing builds the tree through AngleSharp's `AppendChild`, which costs O(depth) per insert in AngleSharp up to 1.9.0, so the deep parse rows include core's quadratic tree building.
+
 ## Coding and Editing Conventions
 
 - C# uses four spaces; project files use two spaces.
@@ -319,6 +357,8 @@ Conformance fixture suites are broad and include historical XML test cases that 
 - Use explicit, descriptive variable names; follow the surrounding style.
 - Keep comments concise and explanatory only where needed.
 - Do not add license headers.
+- Stay trim- and AOT-clean. The library sets `IsAotCompatible` on its .NETCoreApp targets, so the trim and AOT analyzers run on every build and a warning breaks it. Reflection over a runtime type (`GetType().GetProperties()`, `Assembly.GetTypes()`) is what they reject: read members off an annotated generic parameter or use a fixed table instead. The analyzers only see the library itself; publishing a small `PublishAot` console app against it is the end-to-end check.
+- Walk trees with an explicit stack, not recursion. Documents can nest thousands of levels deep and a stack overflow kills the process; see `XmlDomBuilder.ValidateElements` and `XmlElement.TextContent`.
 - Do not commit, reset, checkout, or create branches unless explicitly requested.
 - Do not remove user changes from a dirty worktree.
 - Keep generated `bin/`, `obj/`, `.fallout/`, and test-result artifacts out of source changes unless the task explicitly concerns them.
@@ -332,7 +372,7 @@ Conformance fixture suites are broad and include historical XML test cases that 
 - XML entity names passed to the built-in provider include the trailing semicolon (`amp;`, not `amp`).
 - `IsSuppressingErrors` changes control flow and can produce a non-null but structurally unreliable document.
 - A passing broad conformance helper test does not prove strict XML conformance.
-- External DTD support is local-file-oriented and must not be described as network/catalog-aware.
+- External DTD support depends on the configured resource loader and requesters; it has no PUBLIC identifier or catalog resolution.
 - DTD `IsValid` is not XSD validation and does not replace domain-specific validation.
 - The docs index and DTD support matrix should be updated when DTD behavior changes.
 
