@@ -93,7 +93,7 @@ var parser = new XmlParser(new XmlParserOptions
 
 ### OnCreated
 
-Callback invoked when an element has been created, including source position.
+Callback invoked when an element has been created, including source position. References to DTD-declared entities are only resolved at the end of the parse, so the element's attribute values still hold them as written.
 
 ```cs
 var parser = new XmlParser(new XmlParserOptions

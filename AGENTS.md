@@ -245,7 +245,7 @@ The parser also supports streams, fragments, and asynchronous overloads. `XmlPar
 - `IsSuppressingErrors`: recovery mode; the parser attempts to return a document instead of throwing. The resulting DOM may be incomplete or surprising. Do not treat this as strict validation.
 - `IsKeepingSourceReferences`: keeps source token references on created elements for diagnostics/tooling.
 - `OnCreated`: callback receiving each created element and its `TextPosition`.
-- `MaxCharactersFromEntities`: cap on the characters produced by expanding DTD-declared entities (default `DefaultMaxCharactersFromEntities`, 10,000,000; 0 = no limit), counted in the tokenizer and in `XmlDomBuilder.ExpandInternalEntities` through `XmlTokenizer.ClaimEntityCharacters`. Any new entity expansion path must claim its characters there too.
+- `MaxCharactersFromEntities`: cap on the characters produced by expanding DTD-declared entities (default `DefaultMaxCharactersFromEntities`, 10,000,000; 0 = no limit), counted in `XmlDomBuilder.ResolveEntityReferences` through `XmlTokenizer.ClaimEntityCharacters`. Any new entity expansion path must claim its characters there too.
 - `MaximumDepth`: the deepest level the parser nests elements at (root = level 1; default `DefaultMaximumDepth`, 512, as core's `HtmlParserOptions.MaximumDepth`; zero or negative restores the default, `Int32.MaxValue` lifts it). Beyond it the parser throws `MaximumDepthExceeded`; with `IsSuppressingErrors` the element is attached at the limit (`XmlDomBuilder.GetInsertionParent`). Tests and benchmarks that parse deeper documents must lift it, as `XmlDeepNesting` does.
 
 ### Validity
@@ -263,7 +263,7 @@ Currently supported or partially supported behavior includes:
 - Common element models such as `ANY`, `EMPTY`, mixed `(#PCDATA|name|...)*`, and simple ordered sequences.
 - Internal attribute checks, including undeclared attributes, `#REQUIRED`, and `#FIXED` cases.
 - Internal general entity replacement.
-- External `SYSTEM` subset loading through the browsing context's `IResourceLoader` (only with resource loading enabled; the requesters decide the protocols). `XmlDomBuilder.LoadExternalSubsetAsync` is the one loading path; the synchronous parse waits for it. Never read files or URLs a document names directly.
+- External `SYSTEM` subset loading through the browsing context's `IResourceLoader` (only with resource loading enabled; the requesters decide the protocols). `XmlDomBuilder.LoadExternalSubsetAsync` starts at the DOCTYPE and the parse goes on; `CompleteAsync` waits for it at the end (the synchronous parse blocks there), builds the DTD, and resolves the entity references the tokenizer kept as written (`XmlEntityReference`, offsets per text node or attribute) before validating. Resolve by recorded offset, never by searching the text: escaped `&amp;name;` reads as `&name;`. Never read files or URLs a document names directly.
 - Replacement of entities declared in a loaded external subset.
 
 Known limitations:

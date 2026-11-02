@@ -13,6 +13,7 @@ namespace AngleSharp.Xml.Parser.Tokens
         #region Fields
 
         private readonly List<KeyValuePair<String, String>> _attributes;
+        private Dictionary<Int32, List<XmlEntityReference>> _attributeReferences;
         private String _name;
         private Boolean _selfClosing;
 
@@ -89,6 +90,31 @@ namespace AngleSharp.Xml.Parser.Tokens
         {
             _attributes[_attributes.Count - 1] = new KeyValuePair<String, String>(_attributes[_attributes.Count - 1].Key, value);
         }
+
+        /// <summary>
+        /// Sets the value of the last added attribute, with the entity references it keeps as
+        /// written.
+        /// </summary>
+        /// <param name="value">The value to set.</param>
+        /// <param name="references">The references in the value, or null if there are none.</param>
+        public void SetAttributeValue(String value, List<XmlEntityReference> references)
+        {
+            SetAttributeValue(value);
+
+            if (references != null)
+            {
+                _attributeReferences = _attributeReferences ?? new Dictionary<Int32, List<XmlEntityReference>>();
+                _attributeReferences[_attributes.Count - 1] = references;
+            }
+        }
+
+        /// <summary>
+        /// Gets the entity references the value of the attribute at the given index keeps as
+        /// written, or null if there are none.
+        /// </summary>
+        /// <param name="index">The index of the attribute.</param>
+        public List<XmlEntityReference> GetAttributeReferences(Int32 index) =>
+            _attributeReferences != null && _attributeReferences.TryGetValue(index, out var references) ? references : null;
 
         /// <summary>
         /// Gets the value of the attribute with the given name or an empty

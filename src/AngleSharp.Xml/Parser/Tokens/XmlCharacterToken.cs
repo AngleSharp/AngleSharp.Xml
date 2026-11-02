@@ -2,6 +2,7 @@ namespace AngleSharp.Xml.Parser.Tokens
 {
     using AngleSharp.Text;
     using System;
+    using System.Collections.Generic;
 
     /// <summary>
     /// The character token that contains a single character.
@@ -61,6 +62,16 @@ namespace AngleSharp.Xml.Parser.Tokens
         /// Gets if the token data contains characters created from references.
         /// </summary>
         public Boolean IsReferenceSource => _isReferenceSource;
+
+        /// <summary>
+        /// Gets or sets the entity references the data keeps as written, to be resolved at the
+        /// end of the parse; null if there are none.
+        /// </summary>
+        public List<XmlEntityReference> EntityReferences
+        {
+            get;
+            set;
+        }
 
         #endregion
     }

@@ -99,7 +99,9 @@ var document = await context.GetService<IXmlParser>().ParseDocumentAsync(source)
 
 WithDefaultLoader adds AngleSharp's HTTP requester when no requester is configured, so DTDs then load over HTTP from the URLs documents name; only enable resource loading for documents you trust. Local files need a ile: requester, such as the one in AngleSharp.Io. External entities declared in a DTD are not loaded.
 
-The synchronous ParseDocument waits for the download. Parse asynchronously when the caller runs on a synchronization context (a UI thread, classic ASP.NET) that the requesters resume on, as blocking that thread can deadlock.
+The download runs while the document is parsed. References to declared entities are resolved at the end of the parse, once the whole DTD is known, so the parse only waits for the download when it completes. The synchronous ParseDocument then blocks; parse asynchronously when the caller runs on a synchronization context (a UI thread, classic ASP.NET) that the requesters resume on, as blocking that thread can deadlock.
+
+`XmlParserOptions.OnCreated` runs while parsing, so it sees attribute values with their entity references as written.
 ## DTD ID lookup
 
 DTD-declared IDs can be inspected and looked up after parsing:
