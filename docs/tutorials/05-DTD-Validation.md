@@ -81,11 +81,25 @@ Current DTD-related behavior includes:
   - ENTITY and ENTITIES values must name declared unparsed entities
   - Unparsed entities and NOTATION attributes must reference declared notations
 - Internal general entity replacement in text nodes for declared internal entities
-- External subset loading for local file-based SYSTEM identifiers
-  - Absolute file paths are supported
-  - Relative paths are resolved against the current process working directory
-- External general entity replacement when entities are declared in loaded local external subsets
+- External subset loading through the browsing context's resource loader (see [Loading the external subset](#loading-the-external-subset))
+  - Relative SYSTEM identifiers are resolved against the document's URL
+- Replacement of entities declared in a loaded external subset
 
+## Loading the external subset
+
+A DOCTYPE's SYSTEM identifier names a resource the document chooses, so it is fetched like the document's other resources: through the browsing context's resource loader, which only exists when resource loading is enabled, and its requesters, which decide which protocols are served. Without them, SYSTEM identifiers are ignored.
+
+```cs
+var config = Configuration.Default
+  .WithXml()
+  .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
+var context = BrowsingContext.New(config);
+var document = await context.GetService<IXmlParser>().ParseDocumentAsync(source);
+```
+
+WithDefaultLoader adds AngleSharp's HTTP requester when no requester is configured, so DTDs then load over HTTP from the URLs documents name; only enable resource loading for documents you trust. Local files need a ile: requester, such as the one in AngleSharp.Io. External entities declared in a DTD are not loaded.
+
+The synchronous ParseDocument waits for the download. Parse asynchronously when the caller runs on a synchronization context (a UI thread, classic ASP.NET) that the requesters resume on, as blocking that thread can deadlock.
 ## DTD ID lookup
 
 DTD-declared IDs can be inspected and looked up after parsing:
@@ -106,6 +120,8 @@ Expanding declared entities can multiply a small document into a huge one: each 
 You should be aware of these boundaries:
 
 - External DTD/entity retrieval is limited
+  - The external subset only loads with resource loading enabled and a requester for its protocol
+  - External entities are not loaded
   - HTTP/network retrieval is not implemented
   - PUBLIC identifier resolution/catalog behavior is not implemented
 - Parameter entity and external-subset behavior is not a full XML 1.0 conformance implementation
@@ -120,7 +136,7 @@ You should be aware of these boundaries:
 For production XML workflows:
 
 1. Use internal subset validation where feasible if you rely on built-in IsValid.
-2. Use local file-based SYSTEM identifiers if you need external subset declarations without adding extra tooling.
+2. Load external subsets through the resource loader only for trusted documents, and parse asynchronously.
 3. Treat IsValid as practical DTD validation, not full standards-compliance validation.
 4. If you need strict external DTD processing (for example, network retrieval or XML catalog workflows) or full conformance, add a dedicated XML validation layer.
 

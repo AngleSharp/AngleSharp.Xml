@@ -2,9 +2,9 @@ namespace AngleSharp.Xml.Tests.Parser
 {
     using AngleSharp.Xml.Dom;
     using AngleSharp.Xml.Parser;
+    using AngleSharp.Xml.Tests.Mocks;
     using NUnit.Framework;
     using System;
-    using System.IO;
     using System.Text;
 
     /// <summary>
@@ -56,23 +56,14 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void DeeplyNestedDocumentIsValidAgainstExternalSubset()
         {
-            var directory = CreateTempDirectory();
+            const String dtdUrl = "mock://dtd.test/deep.dtd";
+            var configuration = new MockRequester().Serve(dtdUrl, "<!ELEMENT a ANY>").CreateConfiguration();
 
-            try
-            {
-                var dtdPath = Path.Combine(directory, "deep.dtd");
-                File.WriteAllText(dtdPath, "<!ELEMENT a ANY>");
+            var valid = ParseWithoutDepthLimit(Nest($@"<!DOCTYPE a SYSTEM ""{dtdUrl}"">", "x"), configuration);
+            var invalid = ParseWithoutDepthLimit(Nest($@"<!DOCTYPE a SYSTEM ""{dtdUrl}"">", "<b/>"), configuration);
 
-                var valid = ParseWithoutDepthLimit(Nest($@"<!DOCTYPE a SYSTEM ""{dtdPath}"">", "x"));
-                var invalid = ParseWithoutDepthLimit(Nest($@"<!DOCTYPE a SYSTEM ""{dtdPath}"">", "<b/>"));
-
-                Assert.IsTrue(valid.IsValid);
-                Assert.IsFalse(invalid.IsValid);
-            }
-            finally
-            {
-                DeleteDirectory(directory);
-            }
+            Assert.IsTrue(valid.IsValid);
+            Assert.IsFalse(invalid.IsValid);
         }
 
         [Test]
@@ -111,25 +102,10 @@ namespace AngleSharp.Xml.Tests.Parser
             return source.ToString();
         }
 
-        private static IXmlDocument ParseWithoutDepthLimit(String source)
+        private static IXmlDocument ParseWithoutDepthLimit(String source, IConfiguration configuration = null)
         {
-            var context = BrowsingContext.New(Configuration.Default.WithXml());
+            var context = BrowsingContext.New(configuration ?? Configuration.Default.WithXml());
             return new XmlParser(new XmlParserOptions { MaximumDepth = Int32.MaxValue }, context).ParseDocument(source);
-        }
-
-        private static String CreateTempDirectory()
-        {
-            var path = Path.Combine(Path.GetTempPath(), "anglesharp-xml-tests-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(path);
-            return path;
-        }
-
-        private static void DeleteDirectory(String path)
-        {
-            if (Directory.Exists(path))
-            {
-                Directory.Delete(path, true);
-            }
         }
     }
 }

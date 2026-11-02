@@ -1,9 +1,9 @@
 namespace AngleSharp.Xml.Tests.Parser
 {
     using AngleSharp.Xml.Dom;
+    using AngleSharp.Xml.Tests.Mocks;
     using NUnit.Framework;
     using System;
-    using System.IO;
 
     [TestFixture]
     public class XmlDtdIdentityValidation
@@ -92,23 +92,14 @@ namespace AngleSharp.Xml.Tests.Parser
         [Test]
         public void ExternalDtdIdentityDeclarationsAreValidated()
         {
-            var directory = Path.Combine(Path.GetTempPath(), "anglesharp-xml-dtd-id-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(directory);
+            const String dtdUrl = "mock://dtd.test/identity.dtd";
+            var requester = new MockRequester().Serve(dtdUrl, "<!ELEMENT root (item,ref)><!ELEMENT item EMPTY><!ELEMENT ref EMPTY><!ATTLIST item key ID #REQUIRED><!ATTLIST ref target IDREF #REQUIRED>");
+            var configuration = requester.CreateConfiguration();
+            var valid = $"<!DOCTYPE root SYSTEM '{dtdUrl}'><root><item key='known'/><ref target='known'/></root>".ToXmlDocument(configuration, validating: true);
+            var invalid = $"<!DOCTYPE root SYSTEM '{dtdUrl}'><root><item key='known'/><ref target='missing'/></root>".ToXmlDocument(configuration, validating: true);
 
-            try
-            {
-                var dtdPath = Path.Combine(directory, "identity.dtd");
-                File.WriteAllText(dtdPath, "<!ELEMENT root (item,ref)><!ELEMENT item EMPTY><!ELEMENT ref EMPTY><!ATTLIST item key ID #REQUIRED><!ATTLIST ref target IDREF #REQUIRED>");
-                var valid = $"<!DOCTYPE root SYSTEM '{dtdPath}'><root><item key='known'/><ref target='known'/></root>".ToXmlDocument(validating: true);
-                var invalid = $"<!DOCTYPE root SYSTEM '{dtdPath}'><root><item key='known'/><ref target='missing'/></root>".ToXmlDocument(validating: true);
-
-                Assert.IsTrue(valid.IsValid);
-                Assert.IsFalse(invalid.IsValid);
-            }
-            finally
-            {
-                Directory.Delete(directory, true);
-            }
+            Assert.IsTrue(valid.IsValid);
+            Assert.IsFalse(invalid.IsValid);
         }
 
         private static IXmlDocument CreateIdDocument(string children) => $@"<!DOCTYPE root [

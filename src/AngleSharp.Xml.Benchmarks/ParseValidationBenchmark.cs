@@ -72,6 +72,13 @@ namespace AngleSharp.Xml.Benchmarks
             {
                 throw new InvalidOperationException($"The {Shape} document with {Doctype} DOCTYPE is not valid.");
             }
+
+            // A DTD that was not applied leaves every document valid, so a document breaking it
+            // must come out invalid: the root's model and the required ID both reject the element
+            if (Doctype != DoctypeKind.None && parser.ParseDocument($"{doctype}<{root}><undeclared/></{root}>").IsValid)
+            {
+                throw new InvalidOperationException($"The {Doctype} DTD of the {Shape} document was not applied.");
+            }
         }
 
         [GlobalCleanup]
@@ -87,15 +94,22 @@ namespace AngleSharp.Xml.Benchmarks
         public Boolean Parse() => parser.ParseDocument(source).IsValid;
 
         /// <summary>
-        /// A parser without a depth limit, so the deep shapes measure their full depth. Builds
-        /// with XmlParserOptions.MaximumDepth stop at 512 levels by default; older builds have
-        /// no limit and lack the option, so it is set when present.
+        /// A parser without a depth limit, so the deep shapes measure their full depth, in a
+        /// browsing context that loads the External rows' DTD from the local file. Builds with
+        /// XmlParserOptions.MaximumDepth stop at 512 levels by default; older builds have no
+        /// limit and lack the option, so it is set when present. Builds that fetch the external
+        /// subset through the resource loader need resource loading and a file: requester;
+        /// older builds read the file themselves and ignore both.
         /// </summary>
         private static XmlParser CreateParser()
         {
             Object options = new XmlParserOptions();
             typeof(XmlParserOptions).GetProperty("MaximumDepth")?.SetValue(options, Int32.MaxValue);
-            return new XmlParser((XmlParserOptions)options);
+            var configuration = Configuration.Default
+                .WithXml()
+                .With(new LocalFileRequester())
+                .WithDefaultLoader(new Io.LoaderOptions { IsResourceLoadingEnabled = true });
+            return new XmlParser((XmlParserOptions)options, BrowsingContext.New(configuration));
         }
     }
 }

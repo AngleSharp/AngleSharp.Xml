@@ -97,6 +97,6 @@ namespace AngleSharp.Xml.Benchmarks
         /// The DOCTYPE referencing the local external subset at <paramref name="path"/>.
         /// </summary>
         public static String ExternalDoctype(String root, String path) =>
-            "<!DOCTYPE " + root + " SYSTEM \"" + path + "\">";
+            "<!DOCTYPE " + root + " SYSTEM \"" + new Uri(path).AbsoluteUri + "\">";
     }
 }

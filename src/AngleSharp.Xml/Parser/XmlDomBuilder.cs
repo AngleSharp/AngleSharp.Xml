@@ -3,6 +3,7 @@ namespace AngleSharp.Xml.Parser
     using AngleSharp.Xml.Dtd.Declaration;
     using AngleSharp.Xml.Dtd.Parser;
     using AngleSharp.Dom;
+    using AngleSharp.Io;
     using AngleSharp.Text;
     using AngleSharp.Xml.Dom;
     using AngleSharp.Xml.Parser.Tokens;
@@ -10,6 +11,8 @@ namespace AngleSharp.Xml.Parser
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Net;
+    using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -35,6 +38,8 @@ namespace AngleSharp.Xml.Parser
         private readonly HashSet<String> _fallbackNotations;
         private DtdContainer _dtd;
         private String _doctypeName;
+        private String _externalSubset;
+        private String _externalSubsetUrl;
 
         private XmlParserOptions _options;
         private XmlTreeMode _currentMode;
@@ -114,6 +119,12 @@ namespace AngleSharp.Xml.Parser
                 }
 
                 token = _tokenizer.Get();
+
+                if (IsDoctypeToBeConsumed(token))
+                {
+                    await LoadExternalSubsetAsync((XmlDoctypeToken)token, cancelToken).ConfigureAwait(false);
+                }
+
                 Consume(token);
             }
             while (token.Type != XmlTokenType.EndOfFile);
@@ -137,6 +148,15 @@ namespace AngleSharp.Xml.Parser
             do
             {
                 token = _tokenizer.Get();
+
+                // The same loading as the asynchronous path, waited for: a caller that parses
+                // synchronously with requesters configured must not run them on a
+                // synchronization context this thread is blocking
+                if (IsDoctypeToBeConsumed(token))
+                {
+                    LoadExternalSubsetAsync((XmlDoctypeToken)token, CancellationToken.None).GetAwaiter().GetResult();
+                }
+
                 Consume(token);
             }
             while (token.Type != XmlTokenType.EndOfFile);
@@ -145,6 +165,14 @@ namespace AngleSharp.Xml.Parser
 
             return _document;
         }
+
+        /// <summary>
+        /// Checks if the token is a DOCTYPE the current mode accepts, whose external subset is
+        /// then loaded before the token is consumed.
+        /// </summary>
+        private Boolean IsDoctypeToBeConsumed(XmlToken token) =>
+            token.Type == XmlTokenType.Doctype &&
+            (_currentMode == XmlTreeMode.Initial || _currentMode == XmlTreeMode.Prolog);
 
         /// <summary>
         /// Switches to the fragment algorithm with the specified context
@@ -575,7 +603,9 @@ namespace AngleSharp.Xml.Parser
             _fallbackUnparsedEntities.Clear();
             _fallbackNotations.Clear();
 
-            var hasExternalSubset = TryLoadExternalSubset(doctypeToken.SystemIdentifier, out var externalSubset, out var externalSubsetPath);
+            var externalSubset = _externalSubset;
+            var externalSubsetPath = _externalSubsetUrl;
+            var hasExternalSubset = externalSubset != null;
 
             if (hasExternalSubset || subset.Length > 0)
             {
@@ -735,71 +765,65 @@ namespace AngleSharp.Xml.Parser
             }
         }
 
-        private Boolean TryLoadExternalSubset(String systemIdentifier, out String content, out String fullPath)
+        /// <summary>
+        /// Loads the external subset a DOCTYPE token names, before the token is consumed. The
+        /// document names the resource, so it is fetched like any other resource of the document:
+        /// through the browsing context's resource loader, which only exists when resource loading
+        /// is enabled, and its requesters, which decide which protocols (http:, file:, ...) are
+        /// served. Without them nothing is loaded. Both parse paths use this method; the
+        /// synchronous one waits for it.
+        /// </summary>
+        /// <param name="doctypeToken">The DOCTYPE token about to be consumed.</param>
+        /// <param name="cancel">The token to cancel the download with.</param>
+        private async Task LoadExternalSubsetAsync(XmlDoctypeToken doctypeToken, CancellationToken cancel)
         {
-            content = String.Empty;
-            fullPath = String.Empty;
+            _externalSubset = null;
+            _externalSubsetUrl = String.Empty;
 
-            if (String.IsNullOrWhiteSpace(systemIdentifier))
+            var systemIdentifier = doctypeToken.SystemIdentifier;
+            var loader = _document.Context?.GetService<IResourceLoader>();
+
+            if (loader == null || String.IsNullOrWhiteSpace(systemIdentifier))
             {
-                return false;
+                return;
             }
 
-            if (!TryResolveSystemPath(systemIdentifier, out fullPath))
+            var baseUrl = _document.BaseUrl;
+            var target = baseUrl != null && !baseUrl.IsInvalid ? new Url(baseUrl, systemIdentifier) : new Url(systemIdentifier);
+
+            if (target.IsInvalid)
             {
-                return false;
+                return;
             }
 
-            try
-            {
-                content = File.ReadAllText(fullPath);
-                return true;
-            }
-            catch
-            {
-                content = String.Empty;
-                fullPath = String.Empty;
-                return false;
-            }
-        }
+            // A resource request names the element it is made for, for its origin and referrer;
+            // the DOCTYPE comes before any element, so a detached one of the document stands in
+            var request = new ResourceRequest(new XmlElement(_document, doctypeToken.Name ?? "doctype"), target);
+            var download = loader.FetchAsync(request);
 
-        private Boolean TryResolveSystemPath(String systemIdentifier, out String fullPath)
-        {
-            fullPath = String.Empty;
-
-            try
+            using (cancel.Register(download.Cancel))
             {
-                if (Path.IsPathRooted(systemIdentifier) && File.Exists(systemIdentifier))
+                try
                 {
-                    fullPath = Path.GetFullPath(systemIdentifier);
-                    return true;
-                }
-
-                if (Uri.TryCreate(systemIdentifier, UriKind.Absolute, out var uri) && uri.IsFile)
-                {
-                    var localPath = uri.LocalPath;
-
-                    if (File.Exists(localPath))
+                    using (var response = await download.Task.ConfigureAwait(false))
                     {
-                        fullPath = Path.GetFullPath(localPath);
-                        return true;
+                        if (response != null && response.StatusCode == HttpStatusCode.OK)
+                        {
+                            using (var reader = new StreamReader(response.Content, Encoding.UTF8, true))
+                            {
+                                _externalSubset = await reader.ReadToEndAsync().ConfigureAwait(false);
+                                _externalSubsetUrl = target.Href;
+                            }
+                        }
                     }
                 }
-
-                var baseDirectory = Environment.CurrentDirectory;
-                var combinedPath = Path.Combine(baseDirectory, systemIdentifier);
-
-                if (File.Exists(combinedPath))
+                catch (Exception) when (!cancel.IsCancellationRequested)
                 {
-                    fullPath = Path.GetFullPath(combinedPath);
-                    return true;
+                    // An external subset that cannot be loaded is ignored, as an unreadable file was
+                    _externalSubset = null;
+                    _externalSubsetUrl = String.Empty;
                 }
             }
-            catch
-            {
-            }
-
-            return false;
         }
 
         private void ApplyValidation()

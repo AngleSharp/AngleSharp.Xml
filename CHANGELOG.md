@@ -11,6 +11,7 @@ Released on Sunday, November 1 2026.
 - Fixed unbounded expansion of nested entities ("billion laughs"), which let a small document exhaust memory; expansion now stops at `XmlParserOptions.MaxCharactersFromEntities`
 - Added trimming and Native AOT compatibility (`IsAotCompatible`) for the .NET 8 and .NET 10 targets
 - Added `XmlParserOptions.MaxCharactersFromEntities` (default 10,000,000, 0 for no limit), like `System.Xml`'s setting of the same name
+- Changed the external DTD subset to load through the browsing context's resource loader and requesters: only with resource loading enabled, and from the protocols the requesters serve, so local files need a `file:` requester such as AngleSharp.Io's. Documents could make the parser read any local file or UNC path before; external entities are no longer read at all
 - Added `XmlParserOptions.MaximumDepth` (default 512), like `HtmlParserOptions.MaximumDepth`: deeper elements throw, or are attached at the limit when errors are suppressed
 
 # 1.2.0
