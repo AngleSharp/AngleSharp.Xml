@@ -197,7 +197,6 @@ BenchmarkDotNet project (`net8.0`, `net10.0`), not part of the solution or the F
 - `ParseValidationBenchmark.cs`: `ParseDocument` including the validation walks, per document shape and DOCTYPE kind (none, internal subset, local external subset).
 - `TextContentBenchmark.cs`: `TextContent` of XML elements, from a single-text leaf to deep chains.
 - `Documents.cs`: the shared document shapes and their DTDs.
-- `Compare-Builds.ps1`: measures the working tree against a baseline commit.
 
 ### Documentation
 
@@ -331,17 +330,11 @@ dotnet run -c Release --project src/AngleSharp.Xml.Benchmarks -f net8.0 -- --che
 dotnet run -c Release --project src/AngleSharp.Xml.Benchmarks -f net8.0 -- --filter '*TextContent*'
 ```
 
-```powershell
-./src/AngleSharp.Xml.Benchmarks/Compare-Builds.ps1 -BaselineRef <commit>[, <commit>...] -AngleSharpVersion <version> -Rounds 3 -Affinity <mask>
-```
-
-- Pass the same `-AngleSharpVersion` to every build when the compared commits default to different AngleSharp versions; otherwise core's own changes end up in the comparison.
-- The script writes `summary.md` to its output directory: per case, each build's median of the rounds, its ratio to the working tree, the spread of the rounds, and the allocations.
-
-- `--check` runs every setup and benchmark body once without measuring. Run it on both builds before a long run; `Compare-Builds.ps1` does.
-- Compare builds with `Compare-Builds.ps1`: two separately built copies, alternated round by round. BenchmarkDotNet rebuilds the benchmark project it finds from the current directory, so the script runs each build from its own source tree and fails a round whose logs name the other build's AngleSharp.Xml module.
+- To compare two commits, build each from its own source tree and alternate them round by round, so drift over the run favours neither. BenchmarkDotNet rebuilds the benchmark project it finds from the current directory; every run prints the `// AngleSharp.Xml module` it measured, which shows that a round ran the intended build.
+- Build every compared commit with the same `AngleSharpVersion` (an MSBuild property, also read from the environment) when they default to different AngleSharp versions; otherwise core's own changes end up in the comparison.
+- `--check` runs every setup and benchmark body once without measuring. Run it on every build before a long run.
 - `MemoryDiagnoser` is on for every class; report the allocation column with the timings.
-- Benchmarks need an otherwise idle machine; on hybrid CPUs pin them to the fast cores (`--affinity`, or `-Affinity` on the script).
+- Benchmarks need an otherwise idle machine; on hybrid CPUs pin them to the fast cores (`--affinity`).
 - Keep the shapes within what the oldest compared build survives. Before the explicit-stack walks, the old code overflowed the call stack parsing at about 2600 levels with a DTD (2850 without) and in `TextContent` at about 5000 (net8.0, 1 MB stack), which is why the deep shapes stop at 2000 and 4000.
 - Every shape must stay valid against its DTD: an invalid document stops the walks at the first error and measures an early exit. `GlobalSetup` throws if one is not.
 - A parse allocates megabytes, so when the garbage collector runs during it can move a row by 5-10% either way, and the direction changes with the document size. That is why the catalog comes in three sizes (`catalog-500`, `catalog`, `catalog-2000`). A difference at one size alone is not proof. A change that really costs work shows at every size; one that flips sign between sizes is GC timing. To confirm, rerun with BenchmarkDotNet's `--envVars DOTNET_GCgen0size:20000000` (512 MB Gen0, so no Gen0 or Gen1 collection runs during a parse) and compare the work alone.
