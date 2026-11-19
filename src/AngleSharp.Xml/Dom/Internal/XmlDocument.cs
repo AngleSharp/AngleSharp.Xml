@@ -1,9 +1,11 @@
 namespace AngleSharp.Xml.Dom
 {
     using AngleSharp.Dom;
+    using AngleSharp.Html.Dom;
     using AngleSharp.Io;
     using AngleSharp.Text;
     using System;
+    using System.Linq;
 
     /// <summary>
     /// Represents a document node that contains only XML nodes.
@@ -72,8 +74,23 @@ namespace AngleSharp.Xml.Dom
 
         #region Helpers
 
+        /// <summary>
+        /// The title of an XHTML document is its first title element (in the HTML namespace).
+        /// </summary>
+        protected override String GetTitle()
+        {
+            var title = DocumentElement?.Descendants<IHtmlTitleElement>().FirstOrDefault();
+            return title?.TextContent.CollapseAndStrip() ?? base.GetTitle();
+        }
+
         protected override void SetTitle(String value)
         {
+            var title = DocumentElement?.Descendants<IHtmlTitleElement>().FirstOrDefault();
+
+            if (title is not null)
+            {
+                title.TextContent = value ?? String.Empty;
+            }
         }
 
         internal void SetValidity(Boolean isValid)
