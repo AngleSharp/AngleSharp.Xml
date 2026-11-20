@@ -1,3 +1,11 @@
+# 1.3.1
+
+Released on tbd.
+
+- Fixed `document.title` of XHTML documents always being empty
+- Fixed `createDocument` not being available to scripts (AngleSharp.Js) until a document was parsed
+- Added running the scripts of the XHTML elements of a navigated XML document
+
 # 1.3.0
 
 Released on Sunday, November 1 2026.
