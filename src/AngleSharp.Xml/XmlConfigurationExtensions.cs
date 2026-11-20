@@ -74,32 +74,9 @@ namespace AngleSharp
             document.Setup(options.Response, options.ContentType, options.ImportAncestor);
             context.NavigateTo(document);
 
-            try
-            {
-                await parser.ParseDocumentAsync(document, cancellationToken).ConfigureAwait(false);
-            }
-            catch (XmlParseException ex) when (!cancellationToken.IsCancellationRequested)
-            {
-                // like a browser, a document that isn't well-formed is shown as the error (and
-                // its scripts don't run), but it is a document still, which loads
-                ShowParseError(document, ex);
-                return document;
-            }
-
+            await parser.ParseDocumentAsync(document, cancellationToken).ConfigureAwait(false);
             await RunScriptsAsync(context, document, cancellationToken).ConfigureAwait(false);
             return document;
-        }
-
-        private static void ShowParseError(Document document, XmlParseException error)
-        {
-            while (document.HasChildNodes)
-            {
-                document.RemoveChild(((INode)document).FirstChild);
-            }
-
-            var root = document.CreateElement(ParserErrorNamespace, "parsererror");
-            root.TextContent = error.Message;
-            document.AppendChild(root);
         }
 
         /// <summary>
@@ -142,7 +119,5 @@ namespace AngleSharp
                 }
             }
         }
-
-        private static readonly String ParserErrorNamespace = "http://www.mozilla.org/newlayout/xml/parsererror.xml";
     }
 }

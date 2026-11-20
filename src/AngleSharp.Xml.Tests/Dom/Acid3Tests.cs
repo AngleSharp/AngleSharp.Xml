@@ -35,16 +35,22 @@ namespace AngleSharp.Xml.Tests.Dom
         }
 
         [Test]
-        public async Task DocumentThatIsNotWellFormedIsShownAsTheError()
+        public async Task DocumentThatIsNotWellFormedFailsToOpen()
         {
+            // showing the error instead is up to the application (IDocumentErrorHandler)
             var context = BrowsingContext.New(Configuration.Default.WithXml());
-            var document = await context.OpenAsync(res => res
-                .Address("http://localhost/xhtml.2")
-                .Content("<html xmlns='http://www.w3.org/1999/xhtml'><body><p><strong/> Parsing Test </strong></p></body></html>")
-                .Header(HeaderNames.ContentType, MimeTypeNames.Xml));
 
-            Assert.AreEqual("parsererror", document.DocumentElement.LocalName);
-            Assert.AreEqual(0, document.QuerySelectorAll("p").Length);
+            try
+            {
+                await context.OpenAsync(res => res
+                    .Address("http://localhost/xhtml.2")
+                    .Content("<html xmlns='http://www.w3.org/1999/xhtml'><body><p><strong/> Parsing Test </strong></p></body></html>")
+                    .Header(HeaderNames.ContentType, MimeTypeNames.Xml));
+                Assert.Fail("The parse error should propagate.");
+            }
+            catch (XmlParseException)
+            {
+            }
         }
 
         [Test]

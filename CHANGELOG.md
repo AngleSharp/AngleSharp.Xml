@@ -2,7 +2,6 @@
 
 Released on tbd.
 
-- Fixed a navigated document that isn't well-formed failing the navigation (no document, no `load` event); it is shown as a `parsererror` element
 - Fixed `document.title` of XHTML documents always being empty
 - Fixed `createDocument` not being available to scripts (AngleSharp.Js) until a document was parsed
 - Added running the scripts of the XHTML elements of a navigated XML document
