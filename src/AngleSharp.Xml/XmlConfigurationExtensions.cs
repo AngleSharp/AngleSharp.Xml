@@ -72,11 +72,30 @@ namespace AngleSharp
         {
             var parser = context.GetService<IXmlParser>() ?? throw new InvalidOperationException("The IXmlParser service has been removed. Cannot continue.");
             document.Setup(options.Response, options.ContentType, options.ImportAncestor);
-            context.NavigateTo(document);
+
+            //  a document that is just data (e.g. of DOMParser or XMLHttpRequest) neither replaces the page, nor runs anything
+            if (!IsSet(options, "IsNavigationDisabled"))
+            {
+                context.NavigateTo(document);
+            }
 
             await parser.ParseDocumentAsync(document, cancellationToken).ConfigureAwait(false);
-            await RunScriptsAsync(context, document, cancellationToken).ConfigureAwait(false);
+
+            if (!IsSet(options, "IsNavigationDisabled") && !IsSet(options, "IsScriptingDisabled"))
+            {
+                await RunScriptsAsync(context, document, cancellationToken).ConfigureAwait(false);
+            }
+
             return document;
+        }
+
+        /// <summary>
+        /// Reads an option of AngleSharp 1.10 (or later), which is not set with an earlier version.
+        /// </summary>
+        private static Boolean IsSet(CreateDocumentOptions options, String name)
+        {
+            var property = typeof(CreateDocumentOptions).GetProperty(name);
+            return property?.GetValue(options) is true;
         }
 
         /// <summary>

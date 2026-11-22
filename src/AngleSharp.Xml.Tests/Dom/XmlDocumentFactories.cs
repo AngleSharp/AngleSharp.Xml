@@ -1,13 +1,38 @@
 namespace AngleSharp.Xml.Tests.Dom
 {
     using AngleSharp.Dom;
+    using AngleSharp.Io;
     using AngleSharp.Xml.Dom;
     using NUnit.Framework;
     using System;
+    using System.Threading;
+    using System.Threading.Tasks;
 
     [TestFixture]
     public class XmlDocumentFactories
     {
+        [Test]
+        public async Task DocumentThatIsJustDataDoesNotReplaceThePage()
+        {
+            var navigationDisabled = typeof(CreateDocumentOptions).GetProperty("IsNavigationDisabled");
+
+            if (navigationDisabled is null)
+            {
+                Assert.Ignore("The option is part of AngleSharp 1.10.");
+            }
+
+            var context = BrowsingContext.New(Configuration.Default.WithXml());
+            var page = await context.OpenAsync(res => res.Content("<!doctype html><title>page</title>").Address("http://localhost/"));
+            var response = VirtualResponse.Create(res => res.Content("<root/>").Address("http://localhost/data.xml").Header("Content-Type", "application/xml"));
+            var options = new CreateDocumentOptions(response);
+            navigationDisabled.SetValue(options, true);
+
+            var document = await context.GetService<IDocumentFactory>().CreateAsync(context, options, CancellationToken.None);
+
+            Assert.AreEqual("root", document.DocumentElement.LocalName);
+            Assert.AreSame(page, context.Active);
+        }
+
         [Test]
         public void DeclarationMetadataIsExposed()
         {
