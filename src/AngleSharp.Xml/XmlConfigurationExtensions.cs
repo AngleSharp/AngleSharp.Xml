@@ -38,22 +38,7 @@ namespace AngleSharp
                 documentFactory.Register(MimeTypeNames.Svg, LoadSvgAsync);
             }
 
-            // AngleSharp.Js exposes the DOM extensions of the libraries it finds services of, but
-            // only sees the parser once it was created (e.g. createDocument would be missing)
-            if (!configuration.Services.OfType<XmlLibrary>().Any())
-            {
-                configuration = configuration.With(XmlLibrary.Instance);
-            }
-
             return configuration.WithOnly<IXmlParser>(ctx => new XmlParser(ctx));
-        }
-
-        /// <summary>
-        /// Marks a configuration as using this library.
-        /// </summary>
-        private sealed class XmlLibrary
-        {
-            public static readonly XmlLibrary Instance = new XmlLibrary();
         }
 
         private static Task<IDocument> LoadXmlAsync(IBrowsingContext context, CreateDocumentOptions options, CancellationToken cancellationToken)
