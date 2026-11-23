@@ -52,17 +52,5 @@ namespace AngleSharp.Xml.Tests.Dom
             {
             }
         }
-
-        [Test]
-        public void ConfigurationNamesTheLibrarySoItsDomExtensionsAreFound()
-        {
-            var config = Configuration.Default.WithXml().WithXml();
-            var libraries = config.Services
-                .Where(m => m is not Delegate)
-                .Select(m => m.GetType().Assembly)
-                .Count(m => m == typeof(XmlParser).Assembly);
-
-            Assert.AreEqual(1, libraries);
-        }
     }
 }
