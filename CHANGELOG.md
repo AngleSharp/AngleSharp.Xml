@@ -1,6 +1,6 @@
 # 1.3.2
 
-Released on tbd.
+Released on Monday, November 23 2026.
 
 - Fixed a document created without navigating (e.g. by `DOMParser` or `XMLHttpRequest`) replacing the page and running its scripts
 
