@@ -24,6 +24,18 @@ AngleSharp.Xml extends the AngleSharp ecosystem with XML-native parsing and seri
 - Normalize and look up live `xml:id` values
 - Resolve inherited `xml:lang` values
 
+## Scripting without reflection
+
+AngleSharp.Js finds the DOM of this library by reflecting over its DOM attributes by default. A trimmed or natively compiled (AoT) application can instead hand it the registration generated for this library at build time, `AngleSharp.Xml.XmlDom.Register` (a `DomRegistration` of AngleSharp). It declares the XML and SVG document types of the library:
+
+```cs
+var config = Configuration.Default
+    .WithXml()
+    .WithJs(XmlDom.Register);
+```
+
+The registration describes the version of the library in use, so it never has to be kept in sync by hand. Several libraries are combined with `DomRegistrations.Combine`.
+
 ## Namespace handling
 
 - Supports prefixed and default namespaces
