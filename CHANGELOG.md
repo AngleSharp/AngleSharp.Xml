@@ -1,3 +1,9 @@
+# 1.4.0
+
+Released on Tuesday, November 24 2026.
+
+- Added `XmlDom.Register`, the DOM of this library declared for a scripting engine
+
 # 1.3.2
 
 Released on Monday, November 23 2026.
